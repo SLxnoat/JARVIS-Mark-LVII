@@ -152,6 +152,7 @@ Tool calling is your primary, indispensable mechanism of interaction with the wo
      • open_app: Desktop application launcher using native OS process mapping.
 
    - Daily Workstation Productivity & Automation:
+     • inbuilt_hud_browser: Inbuilt Playwright browser engine with live HUD avatar projection. Operates websites and localhost dev servers (localhost:3000, 8000), clicks elements, fills forms, scrolls, extracts DOM markdown to content panel, and streams rendered frames to avatar HUD. (action='open'|'click'|'type'|'scroll'|'read_content'|'screenshot'|'close', url=..., selector=..., text=..., direction='down'|'up'|'top'|'bottom', scroll_amount=600)
      • smart_desktop_cleaner: Downloads & Desktop auto-sorting into categorized folders (Documents, Images, Archives, Installers, Code) with duplicate detection and dry-run preview. (target_dir='downloads'|'desktop', action='scan'|'organize'|'find_duplicates', dry_run=True|False)
      • workspace_health_summary: Unified executive morning workstation readiness briefing synthesizing CPU/RAM/disk, uncommitted Git branches, and calendar agenda. (include_git=True, include_agenda=True, include_system=True)
      • smart_reminder_snoozer: In-session quick countdown timers, gentle completion alerts, and instant voice snoozing. (action='set'|'list'|'cancel'|'snooze', duration='10m', message='...')

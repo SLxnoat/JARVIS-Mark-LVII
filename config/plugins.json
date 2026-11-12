@@ -1,6 +1,6 @@
 {
   "version": "Mark-LVII",
-  "total_plugins": 68,
+  "total_plugins": 69,
   "plugins": [
     {
       "name": "ai_meeting_summarizer",
@@ -253,6 +253,68 @@
       "description": "Generates an AI image from a descriptive text prompt. Saves the image locally and displays it directly on the screen.",
       "parameters": {},
       "tier": "extra"
+    },
+    {
+      "name": "inbuilt_hud_browser",
+      "file": "inbuilt_hud_browser.py",
+      "category": "Productivity & Workstation",
+      "enabled": true,
+      "description": "Inbuilt Playwright web browser engine with live HUD avatar projection. Allows JARVIS to navigate to web addresses (including localhost dev servers), click buttons, type into search inputs, scroll pages, extract article content, and project live rendered viewport frames directly into the center HUD display. Trigger phrases: 'open website on hud', 'browse to <url>', 'show web page', 'click <element>', 'scroll down the page', 'read web page', 'close the browser'.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "action": {
+            "type": "STRING",
+            "description": "Action to perform: 'open' (navigate to URL and project onto HUD), 'click' (click element by text or CSS selector), 'type' (fill text into an input field), 'scroll' (scroll down, up, top, or bottom), 'read_content' (extract readable text and headings to content panel), 'screenshot' (refresh HUD viewport frame capture), 'close' (close browser and restore cybernetic hologram avatar).",
+            "enum": [
+              "open",
+              "click",
+              "type",
+              "scroll",
+              "read_content",
+              "screenshot",
+              "close"
+            ]
+          },
+          "url": {
+            "type": "STRING",
+            "description": "Website or local server URL (e.g. 'https://news.ycombinator.com', 'http://localhost:8000/docs')."
+          },
+          "selector": {
+            "type": "STRING",
+            "description": "CSS selector or element text to target (e.g. 'input[name=q]', 'text=Sign In', 'button.submit')."
+          },
+          "text": {
+            "type": "STRING",
+            "description": "Text to enter into the input field for 'type' action."
+          },
+          "direction": {
+            "type": "STRING",
+            "description": "Scroll direction: 'down', 'up', 'top', or 'bottom' (default 'down').",
+            "enum": [
+              "down",
+              "up",
+              "top",
+              "bottom"
+            ]
+          },
+          "scroll_amount": {
+            "type": "INTEGER",
+            "description": "Scroll distance in pixels (default 600)."
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "tier": "core",
+      "settings": {
+        "viewport_width": 1024,
+        "viewport_height": 640,
+        "color_scheme": "dark",
+        "default_scroll": 600,
+        "navigation_timeout_ms": 15000
+      }
     },
     {
       "name": "multilingual_live_translator",

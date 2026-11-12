@@ -6,7 +6,7 @@
 [![PyQt6 HUD](https://img.shields.io/badge/GUI-PyQt6%20HUD-success?logo=qt&logoColor=white)](https://riverbankcomputing.com/software/pyqt/)
 [![Gemini Live API](https://img.shields.io/badge/AI-Google%20Gemini%20Live-orange?logo=google&logoColor=white)](https://ai.google.dev/)
 [![ChromaDB Vector Store](https://img.shields.io/badge/Memory-ChromaDB%20Local-purple?logo=databricks&logoColor=white)](https://www.trychroma.com/)
-[![Plugins](https://img.shields.io/badge/Autonomous%20Plugins-68%20Active-brightgreen)](https://github.com/SLxnoat/JARVIS-Mark-LVII)
+[![Plugins](https://img.shields.io/badge/Autonomous%20Plugins-69%20Active-brightgreen)](https://github.com/SLxnoat/JARVIS-Mark-LVII)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ---
@@ -15,7 +15,7 @@
 
 **J.A.R.V.I.S. Mark LVII** is a production-grade, multimodal, native desktop AI assistant engineered for deep operating system orchestration, autonomous software development, cybersecurity monitoring, and real-time environmental awareness. 
 
-Unlike traditional browser wrappers or conversational chatbots, JARVIS executes with **direct OS-level authority** across your local machine. It combines low-latency bidirectional voice streaming via **Gemini Live**, an **8,000-particle software-rendered cybernetic hologram face**, a **human-brain-inspired self-learning engine**, a **hybrid ChromaDB vector memory**, and a fleet of **68 auto-discovered autonomous plugins**.
+Unlike traditional browser wrappers or conversational chatbots, JARVIS executes with **direct OS-level authority** across your local machine. It combines low-latency bidirectional voice streaming via **Gemini Live**, an **8,000-particle software-rendered cybernetic hologram face**, a **human-brain-inspired self-learning engine**, a **hybrid ChromaDB vector memory**, and a fleet of **69 auto-discovered autonomous plugins**.
 
 JARVIS runs wherever you work: directly through the interactive Qt6 voice HUD, headlessly in the background via the **Autonomous Task Engine**, remotely through an authenticated **Telegram Command Center**, or via a secure local **Web Dashboard**.
 
@@ -35,7 +35,7 @@ JARVIS runs wherever you work: directly through the interactive Qt6 voice HUD, h
 
 ---
 
-## 🧩 Complete 68-Plugin Catalog
+## 🧩 Complete 69-Plugin Catalog
 
 All plugins reside in `plugins/` and are auto-discovered on startup without manual configuration or registry edits.
 
@@ -105,9 +105,10 @@ All plugins reside in `plugins/` and are auto-discovered on startup without manu
 
 ---
 
-### 6. 💼 Daily Workstation Productivity & Automation (9 Plugins)
+### 6. 💼 Daily Workstation Productivity & Automation (10 Plugins)
 | Plugin | Capabilities | Example Voice Prompt |
 |---|---|---|
+| **`inbuilt_hud_browser.py`** | Playwright Chromium browser engine with live HUD avatar projection; operates websites & localhost dev servers, clicks, fills, scrolls, and restores hologram avatar on close. | *"Browse to localhost:8000/docs on the HUD and click authorize"* |
 | **`smart_desktop_cleaner.py`** | Categorizes and sorts `~/Downloads` and `~/Desktop` files into subfolders; identifies duplicate download versions. | *"Scan my Downloads folder and find duplicate files"* |
 | **`workspace_health_summary.py`** | Unified morning executive workstation readiness briefing: CPU/RAM/disk vitals, uncommitted Git repos, and agenda. | *"Good morning Jarvis, give me the workstation briefing"* |
 | **`smart_reminder_snoozer.py`** | In-session voice-activated countdown timers with HUD countdown board, completion audio alert, and voice snooze. | *"Set a timer for 15 minutes to check the server"* |
@@ -246,7 +247,7 @@ JARVIS-Mark-LVII/
 │   ├── overlays.py           # Confirmation modal gates (restart, shutdown, wifi toggle)
 │   └── providers_panel.py    # Engine switcher: Gemini Live vs Local Ollama vs Piper TTS
 ├── core/                     # Foundational Runtime Systems
-│   ├── prompt.txt            # Master system prompt with 68-plugin disambiguation catalog
+│   ├── prompt.txt            # Master system prompt with 69-plugin disambiguation catalog
 │   ├── plugin_loader.py      # Dynamic auto-discovery and validation engine for plugins/
 │   ├── action_loader.py      # Dynamic auto-discovery engine for actions/
 │   ├── gemini.py             # Multi-tier LLM engine (FAST, SMART) with auto-fallback ladder
@@ -261,7 +262,8 @@ JARVIS-Mark-LVII/
 │   ├── general.md            # Multi-step operational and analytical workflows
 │   ├── researcher.md         # Primary-source investigative intelligence researcher
 │   └── coder.md              # Principal software architect and production code author
-├── plugins/                  # 68 Auto-Discovered Autonomous Plugins
+├── plugins/                  # 69 Auto-Discovered Autonomous Plugins
+│   ├── inbuilt_hud_browser.py        # Inbuilt Playwright web browser with live avatar HUD projection
 │   ├── cognitive_neuro_cortex.py     # Human-brain self-learning engine (rules, habits, mesh)
 │   ├── smart_desktop_cleaner.py      # Downloads & Desktop auto-organizer and duplicate scanner
 │   ├── workspace_health_summary.py   # Unified executive morning workstation briefing

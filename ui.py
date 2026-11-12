@@ -347,6 +347,21 @@ class JarvisUI:
         """
         self._win._image_open_sig.emit(str(path or ""), str(title or ""))
 
+    def show_ar_browser(self, url: str, image_bytes: bytes, title: str = "") -> None:
+        """Thread-safe: project a live web viewport into the floating AR Layer 2 surface."""
+        if hasattr(self._win, "_browser_holo_sig"):
+            self._win._browser_holo_sig.emit(bytes(image_bytes), str(url or ""), str(title or ""))
+
+    def close_ar_browser(self) -> None:
+        """Thread-safe: close the floating AR browser surface and restore avatar."""
+        if hasattr(self._win, "_browser_close_sig"):
+            self._win._browser_close_sig.emit()
+
+    def highlight_ar_browser_beacon(self, norm_x: float, norm_y: float) -> None:
+        """Thread-safe: fire an expanding laser reticle at normalized coordinates on the AR browser."""
+        if hasattr(self._win, "_browser_beacon_sig"):
+            self._win._browser_beacon_sig.emit(float(norm_x), float(norm_y))
+
     def stop_video(self) -> None:
         """Thread-safe: close the video and give the HUD back to the avatar."""
         self._win._video_close_sig.emit()

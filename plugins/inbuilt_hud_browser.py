@@ -359,6 +359,23 @@ class BrowserSessionManager:
         self._run_coroutine(self._async_close(), timeout=10.0)
 
 
+def _dispatch_frame_to_player(player, screenshot_path: str, url: str, title: str) -> None:
+    """Dispatches a viewport screenshot to the player AR surface and fallback image display."""
+    if not player or not screenshot_path:
+        return
+    try:
+        if os.path.exists(screenshot_path):
+            with open(screenshot_path, "rb") as f:
+                img_bytes = f.read()
+            if hasattr(player, "show_ar_browser"):
+                player.show_ar_browser(url=url, image_bytes=img_bytes, title=title)
+    except Exception:
+        pass
+
+    if hasattr(player, "show_image"):
+        player.show_image(screenshot_path, title=f"HUD Web: {title[:35]}")
+
+
 def run(parameters: dict, player=None, session_memory=None) -> str:
     """Execute HUD browser action and project frames to avatar HUD display."""
     if not PLAYWRIGHT_AVAILABLE:
@@ -381,8 +398,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             screenshot_path = res.get("screenshot")
 
             if player:
-                if hasattr(player, "show_image") and screenshot_path:
-                    player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                _dispatch_frame_to_player(player, screenshot_path, res.get("url", url), page_title)
                 if hasattr(player, "write_log"):
                     player.write_log(f"🌐 [HUD Browser] Opened {res.get('url')} ({page_title})")
 
@@ -398,8 +414,9 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             screenshot_path = res.get("screenshot")
 
             if player:
-                if hasattr(player, "show_image") and screenshot_path:
-                    player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                _dispatch_frame_to_player(player, screenshot_path, res.get("url", ""), page_title)
+                if hasattr(player, "highlight_ar_browser_beacon"):
+                    player.highlight_ar_browser_beacon(0.5, 0.5)
                 if hasattr(player, "write_log"):
                     player.write_log(f"🌐 [HUD Browser] Clicked '{selector}'")
 
@@ -416,8 +433,9 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             screenshot_path = res.get("screenshot")
 
             if player:
-                if hasattr(player, "show_image") and screenshot_path:
-                    player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                _dispatch_frame_to_player(player, screenshot_path, res.get("url", ""), page_title)
+                if hasattr(player, "highlight_ar_browser_beacon"):
+                    player.highlight_ar_browser_beacon(0.5, 0.5)
                 if hasattr(player, "write_log"):
                     player.write_log(f"🌐 [HUD Browser] Typed '{text}' into '{selector or 'active element'}'")
 
@@ -433,8 +451,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             screenshot_path = res.get("screenshot")
 
             if player:
-                if hasattr(player, "show_image") and screenshot_path:
-                    player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                _dispatch_frame_to_player(player, screenshot_path, res.get("url", ""), page_title)
                 if hasattr(player, "write_log"):
                     player.write_log(f"🌐 [HUD Browser] Scrolled {direction} by {amount}px")
 
@@ -460,8 +477,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             screenshot_path = res.get("screenshot")
 
             if player:
-                if hasattr(player, "show_image") and screenshot_path:
-                    player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                _dispatch_frame_to_player(player, screenshot_path, res.get("url", ""), page_title)
                 if hasattr(player, "write_log"):
                     player.write_log("🌐 [HUD Browser] Refreshed HUD viewport frame")
 
@@ -471,6 +487,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             manager.close()
 
             if player:
+                if hasattr(player, "close_ar_browser"):
+                    player.close_ar_browser()
                 if hasattr(player, "stop_video"):
                     # Closes image surface and restores the 8K cybernetic hologram avatar
                     player.stop_video()

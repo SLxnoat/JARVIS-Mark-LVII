@@ -117,6 +117,9 @@ class MainWindow(QMainWindow):
     _quiz_sig       = pyqtSignal(str, object, object)  # (topic, questions, grader)
     _quiz_hide_sig  = pyqtSignal()
     _review_sig     = pyqtSignal(str, str, object, object)  # document review payload
+    _browser_holo_sig   = pyqtSignal(bytes, str, str)  # (image_bytes, url, title) — floating AR browser viewport
+    _browser_close_sig  = pyqtSignal()                 # close floating AR browser surface
+    _browser_beacon_sig = pyqtSignal(float, float)     # (norm_x, norm_y) — trigger laser beacon reticle
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -416,6 +419,10 @@ class MainWindow(QMainWindow):
         self._quiz_sig.connect(self._show_quiz)
         self._quiz_hide_sig.connect(self._hide_quiz)
         self._review_sig.connect(self._show_review)
+        self._browser_viewport = None
+        self._browser_holo_sig.connect(self._on_browser_holo)
+        self._browser_close_sig.connect(self._on_browser_close)
+        self._browser_beacon_sig.connect(self._on_browser_beacon)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -598,6 +605,56 @@ class MainWindow(QMainWindow):
         self._video_on = True
         self._sync_mic_for_video()
         self._fit_video()
+
+    def _on_browser_holo(self, image_bytes: bytes, url: str, title: str) -> None:
+        """Projects a Playwright screenshot frame onto the floating 3D AR Layer 2 surface."""
+        if self._browser_viewport is None:
+            from gui.browser_viewport import BrowserViewport
+            self._browser_viewport = BrowserViewport(self)
+
+        pix = QPixmap()
+        if image_bytes:
+            pix.loadFromData(image_bytes)
+
+        self._browser_viewport.set_viewport_frame(pix, url=url, title=title)
+        ar_pix = self._browser_viewport.render_ar_pixmap(480, 300)
+
+        # Register into Layer 2 of HudCanvas
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="browser",
+                title=f"HUD Web: {title[:28]}",
+                center=(170.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=-18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_browser_close(self) -> None:
+        """Closes the floating AR browser surface and restores clean avatar state."""
+        if hasattr(self, "hud"):
+            self.hud.unregister_holo_pane("browser")
+            self.hud.update()
+
+    def _on_browser_beacon(self, norm_x: float, norm_y: float) -> None:
+        """Triggers an expanding holographic laser beacon reticle on the AR browser."""
+        if self._browser_viewport is not None and hasattr(self, "hud"):
+            self._browser_viewport.trigger_interaction_beacon(norm_x, norm_y)
+            ar_pix = self._browser_viewport.render_ar_pixmap(480, 300)
+            self.hud.register_holo_pane(
+                pane_id="browser",
+                title=f"HUD Web: {self._browser_viewport._page_title[:28]}",
+                center=(170.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=-18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
 
     def _fit_video(self, *_a) -> None:
         """Size whatever is on the surface to the panel, keeping its shape."""

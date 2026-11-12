@@ -1,7 +1,8 @@
 # ⚙️ MARK LVII (57)
-### The Ultimate Cross-Platform Personal AI Assistant — By FatihMakes
+### The Ultimate Cross-Platform Personal AI Assistant — Extended & Maintained by SLxnoat (Xnoat)
 
-> 📺 **[Watch the full setup video on YouTube](https://www.youtube.com/@FatihMakes)**
+> 🔗 **Repository:** [https://github.com/SLxnoat/JARVIS-Mark-LVII](https://github.com/SLxnoat/JARVIS-Mark-LVII)  
+> 📺 **Upstream Origin:** [FatihMakes Mark-LVII](https://www.youtube.com/@FatihMakes)
 
 A real-time voice AI that can hear, see, speak, and control your computer — on any OS. Supports Windows, macOS, and Linux. Built on the Gemini Live API for native audio streaming, delivering zero subscriptions and total digital autonomy.
 
@@ -881,8 +882,8 @@ It is held in memory only, deliberately: writing it to disk would make a fresh l
 ## ⚡ Quick Start
 
 ```bash
-git clone https://github.com/FatihMakes/Mark-LVII.git
-cd Mark-LVII
+git clone https://github.com/SLxnoat/JARVIS-Mark-LVII.git
+cd JARVIS-Mark-LVII
 python setup.py        # installs deps for YOUR OS + the browser automation engine
 python main.py
 ```
@@ -1092,12 +1093,14 @@ Licensed under **[Creative Commons BY-NC 4.0](https://creativecommons.org/licens
 
 ---
 
-## 👤 Connect with the Creator
+## 👤 Connect with the Maintainer & Developer
 
-Engineered by a developer building a real-world JARVIS-style assistant.
-⭐ **Star the repository to support the journey to Mark 100.**
+Maintained, enhanced, and developed by **SLxnoat (Xnoat)**.
+⭐ **Star the repository to support ongoing development.**
 
 | Platform | Link |
 | --- | --- |
-| YouTube | [@FatihMakes](https://www.youtube.com/@FatihMakes) |
-| Instagram | [@fatihmakes](https://www.instagram.com/fatihmakes) |
+| GitHub | [@SLxnoat](https://github.com/SLxnoat) |
+| Repository | [JARVIS-Mark-LVII](https://github.com/SLxnoat/JARVIS-Mark-LVII) |
+| Academic / Contact | [itbin-2211-0148@horizoncampus.edu.lk](mailto:itbin-2211-0148@horizoncampus.edu.lk) |
+| Original Upstream Base | [FatihMakes Mark-LVII](https://www.youtube.com/@FatihMakes) |

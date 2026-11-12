@@ -313,6 +313,58 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.assertTrue(self.win._left_panel.isVisible())
         self.assertTrue(self.win._right_panel.isVisible())
 
+    def test_global_keyboard_shortcuts(self):
+        from PyQt6.QtCore import QEvent
+        from PyQt6.QtGui import QKeyEvent
+
+        self.win.show()
+
+        # 1. Ctrl+K opens Command Spotlight
+        self.assertFalse(self.win._command_spotlight.isVisible())
+        ev_ctrl_k = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_K, Qt.KeyboardModifier.ControlModifier)
+        self.win._key_filter.eventFilter(self.win._input, ev_ctrl_k)
+        self.assertTrue(self.win._command_spotlight.isVisible())
+
+        # Escape closes it
+        ev_esc = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        self.win._key_filter.eventFilter(self.win._command_spotlight._txt_search, ev_esc)
+        self.assertFalse(self.win._command_spotlight.isVisible())
+
+        # 2. Tab shows Radial Quick Wheel, release confirms/hides
+        self.assertFalse(self.win._radial_wheel.isVisible())
+        ev_tab_press = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Tab, Qt.KeyboardModifier.NoModifier)
+        self.win._key_filter.eventFilter(self.win, ev_tab_press)
+        self.assertTrue(self.win._radial_wheel.isVisible())
+
+        ev_tab_rel = QKeyEvent(QEvent.Type.KeyRelease, Qt.Key.Key_Tab, Qt.KeyboardModifier.NoModifier)
+        self.win._key_filter.eventFilter(self.win, ev_tab_rel)
+        self.assertFalse(self.win._radial_wheel.isVisible())
+
+        # 3. Ctrl+[ and Ctrl+] toggle left/right drawers
+        init_left = self.win._left_collapsed
+        ev_drawer_l = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_BracketLeft, Qt.KeyboardModifier.ControlModifier)
+        self.win._key_filter.eventFilter(self.win._input, ev_drawer_l)
+        self.assertNotEqual(self.win._left_collapsed, init_left)
+
+        init_right = self.win._right_collapsed
+        ev_drawer_r = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_BracketRight, Qt.KeyboardModifier.ControlModifier)
+        self.win._key_filter.eventFilter(self.win._input, ev_drawer_r)
+        self.assertNotEqual(self.win._right_collapsed, init_right)
+
+        # 4. F4 toggles mute
+        init_muted = self.win._muted
+        ev_f4 = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_F4, Qt.KeyboardModifier.NoModifier)
+        self.win._key_filter.eventFilter(self.win, ev_f4)
+        self.assertNotEqual(self.win._muted, init_muted)
+
+        # 5. F11 toggles holodeck
+        init_holo = self.win._is_holodeck
+        ev_f11 = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_F11, Qt.KeyboardModifier.NoModifier)
+        self.win._key_filter.eventFilter(self.win, ev_f11)
+        self.assertNotEqual(self.win._is_holodeck, init_holo)
+        # Restore normal
+        self.win.toggle_holodeck_mode()
+
     def test_bridge_methods(self):
         # Trigger defense alert via player
         self.player.trigger_defense_alert("BREACH_TEST", "High severity alert")

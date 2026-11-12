@@ -69,7 +69,11 @@ class RadialQuickWheel(QWidget):
             sz = int(self._r_outer * 2 + 50.0)
             self.resize(sz, sz)
             self._center_pos = QPointF(sz / 2.0, sz / 2.0)
-            self.move(parent_pos.x() - sz // 2, parent_pos.y() - sz // 2)
+            pw = self.parentWidget().width()
+            ph = self.parentWidget().height()
+            nx = max(10, min(pw - sz - 10, parent_pos.x() - sz // 2))
+            ny = max(10, min(ph - sz - 10, parent_pos.y() - sz // 2))
+            self.move(nx, ny)
         self._hovered_idx = -1
         self.show()
         self.raise_()

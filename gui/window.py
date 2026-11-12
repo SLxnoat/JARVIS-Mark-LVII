@@ -17,13 +17,13 @@ from pathlib import Path
 import psutil
 
 from PyQt6.QtCore import (
-    QEasingCurve, QLineF, QMimeData, QObject, QParallelAnimationGroup, QPointF,
+    QEasingCurve, QEvent, QLineF, QMimeData, QObject, QParallelAnimationGroup, QPointF,
     QPoint, QPropertyAnimation, QRect, QRectF, QSize, QSizeF, Qt, QTimer,
     QUrl, pyqtSignal,
 )
 from PyQt6.QtGui import (
-    QBrush, QColor, QConicalGradient, QDragEnterEvent, QDropEvent, QFont,
-    QFontDatabase, QKeySequence, QLinearGradient, QPainter, QPainterPath,
+    QBrush, QColor, QConicalGradient, QCursor, QDragEnterEvent, QDropEvent, QFont,
+    QFontDatabase, QKeyEvent, QKeySequence, QLinearGradient, QPainter, QPainterPath,
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
 from PyQt6.QtWidgets import (
@@ -94,6 +94,82 @@ from gui.widgets import (ArcLogo, CommandFrame, DataRow, HeaderBar, HoloPanel, I
                          TaskRow)
 
 
+class _JarvisKeyFilter(QObject):
+    """Global keyboard event filter ensuring all AR HUD shortcuts work across all widgets."""
+
+    def __init__(self, window: MainWindow) -> None:
+        super().__init__(window)
+        self.win = window
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            k = event.key()
+            mod = event.modifiers()
+            ctrl = bool(mod & Qt.KeyboardModifier.ControlModifier)
+            alt = bool(mod & Qt.KeyboardModifier.AltModifier)
+            shift = bool(mod & Qt.KeyboardModifier.ShiftModifier)
+
+            # 1. Universal Command Spotlight: Ctrl+K or F1
+            if (ctrl and k == Qt.Key.Key_K) or k == Qt.Key.Key_F1:
+                if hasattr(self.win, "_command_spotlight"):
+                    if self.win._command_spotlight.isVisible():
+                        self.win._command_spotlight.hide()
+                    else:
+                        self.win._command_spotlight.show_centered()
+                return True
+
+            # 2. Radial Quick Wheel: Tab (press/hold)
+            if k == Qt.Key.Key_Tab and not ctrl and not alt:
+                # Do not intercept tab if in an editable multi-line text editor
+                if not (isinstance(obj, QTextEdit) and not obj.isReadOnly()):
+                    if hasattr(self.win, "_radial_wheel"):
+                        if not self.win._radial_wheel.isVisible():
+                            self.win._radial_wheel.show_at(QCursor.pos())
+                    return True
+
+            # 3. Tactical Drawer Toggles:
+            # Left drawer: Ctrl+[ or Alt+[ or Ctrl+B
+            if (ctrl or alt) and (k == Qt.Key.Key_BracketLeft or (ctrl and k == Qt.Key.Key_B and not shift)):
+                self.win.toggle_left_drawer()
+                return True
+
+            # Right drawer: Ctrl+] or Alt+] or Ctrl+Shift+B
+            if (ctrl or alt) and (k == Qt.Key.Key_BracketRight or (ctrl and k == Qt.Key.Key_B and shift)):
+                self.win.toggle_right_drawer()
+                return True
+
+            # 4. Mute toggle: F4
+            if k == Qt.Key.Key_F4:
+                self.win._toggle_mute()
+                return True
+
+            # 5. Fullscreen / Holodeck: F11
+            if k == Qt.Key.Key_F11:
+                self.win.toggle_holodeck_mode()
+                return True
+
+            # 6. Escape: Close open spotlight / radial wheel / holodeck / interrupt
+            if k == Qt.Key.Key_Escape:
+                if hasattr(self.win, "_command_spotlight") and self.win._command_spotlight.isVisible():
+                    self.win._command_spotlight.hide()
+                    return True
+                if hasattr(self.win, "_radial_wheel") and self.win._radial_wheel.isVisible():
+                    self.win._radial_wheel.hide()
+                    return True
+                self.win._do_interrupt()
+                return True
+
+        elif event.type() == QEvent.Type.KeyRelease:
+            k = event.key()
+            # Radial Wheel release-to-activate: releasing Tab confirms selection
+            if k == Qt.Key.Key_Tab:
+                if hasattr(self.win, "_radial_wheel") and self.win._radial_wheel.isVisible():
+                    self.win._radial_wheel._confirm_selection()
+                    return True
+
+        return super().eventFilter(obj, event)
+
+
 class MainWindow(QMainWindow):
     _log_sig        = pyqtSignal(str)
     _state_sig      = pyqtSignal(str)
@@ -162,6 +238,9 @@ class MainWindow(QMainWindow):
         self.ptt_hold          = None   # callable: (held: bool) -> None — windowed chord
         self.wake_get_state    = None   # callable: () -> dict {enabled, awake, ready}
         self._muted            = False
+        self._left_collapsed: bool = False
+        self._right_collapsed: bool = False
+        self._is_holodeck: bool = False
         self._current_file: str | None = None
         self._remote_overlay: RemoteKeyOverlay | None = None
         self._customize_overlay: CustomizeOverlay | None = None
@@ -448,33 +527,55 @@ class MainWindow(QMainWindow):
         if not self._ready:
             self._show_setup()
 
-        # Universal Command Spotlight (Ctrl+K)
+        # Universal Command Spotlight (Ctrl+K / F1)
         from gui.command_spotlight import CommandSpotlight
         self._command_spotlight = CommandSpotlight(self)
         self._command_spotlight.command_executed.connect(self._on_spotlight_command_executed)
-        sc_spotlight = QShortcut(QKeySequence("Ctrl+K"), self)
-        sc_spotlight.activated.connect(self._command_spotlight.show_centered)
 
         # 2D Radial Quick Wheel (Tab / Right-click)
         from gui.radial_wheel import RadialQuickWheel
-        from PyQt6.QtGui import QCursor
         self._radial_wheel = RadialQuickWheel(self.centralWidget())
         self._radial_wheel.node_activated.connect(self._on_radial_node_activated)
-        sc_tab = QShortcut(QKeySequence(Qt.Key.Key_Tab), self)
-        sc_tab.activated.connect(lambda: self._radial_wheel.show_at(QCursor.pos()))
+        if hasattr(self, "hud") and hasattr(self.hud, "right_clicked"):
+            self.hud.right_clicked.connect(self._radial_wheel.show_at)
 
-        # Tactical Drawer Shortcuts
-        sc_left_drawer = QShortcut(QKeySequence("Ctrl+["), self)
-        sc_left_drawer.activated.connect(self.toggle_left_drawer)
-        sc_right_drawer = QShortcut(QKeySequence("Ctrl+]"), self)
-        sc_right_drawer.activated.connect(self.toggle_right_drawer)
+        # Global event filter: guarantees shortcuts execute even when child widgets have focus
+        self._key_filter = _JarvisKeyFilter(self)
+        _app = QApplication.instance()
+        if _app is not None:
+            _app.installEventFilter(self._key_filter)
+        self.installEventFilter(self._key_filter)
 
-        sc_mute = QShortcut(QKeySequence("F4"), self)
-        sc_mute.activated.connect(self._toggle_mute)
-        sc_full = QShortcut(QKeySequence("F11"), self)
-        sc_full.activated.connect(self._toggle_fullscreen)
-        sc_intr = QShortcut(QKeySequence("Escape"), self)
-        sc_intr.activated.connect(self._do_interrupt)
+        # Persistent Application-level QShortcut instances (second-layer fallback)
+        self._shortcuts: list[QShortcut] = []
+        def _bind_sc(key_seq: str, callback):
+            sc = QShortcut(QKeySequence(key_seq), self)
+            sc.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            sc.activated.connect(callback)
+            self._shortcuts.append(sc)
+            return sc
+
+        _bind_sc("Ctrl+K", self._command_spotlight.show_centered)
+        _bind_sc("F1", self._command_spotlight.show_centered)
+        _bind_sc("Ctrl+[", self.toggle_left_drawer)
+        _bind_sc("Ctrl+B", self.toggle_left_drawer)
+        _bind_sc("Ctrl+]", self.toggle_right_drawer)
+        _bind_sc("Ctrl+Shift+B", self.toggle_right_drawer)
+        _bind_sc("F4", self._toggle_mute)
+        _bind_sc("F11", self.toggle_holodeck_mode)
+        _bind_sc("Escape", self._do_interrupt)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if hasattr(self, "_key_filter") and self._key_filter.eventFilter(self, event):
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        if hasattr(self, "_key_filter") and self._key_filter.eventFilter(self, event):
+            event.accept()
+            return
+        super().keyReleaseEvent(event)
 
     def _show_camera_frame(self, img_bytes: bytes):
         """Slot — display camera preview overlay (main thread)."""

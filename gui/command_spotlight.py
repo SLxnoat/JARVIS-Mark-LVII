@@ -105,6 +105,8 @@ class CommandSpotlight(QWidget):
             }}
         """)
         self._txt_search.textChanged.connect(self._on_search_changed)
+        self._txt_search.returnPressed.connect(self._execute_selected)
+        self._txt_search.installEventFilter(self)
         search_row.addWidget(self._txt_search, stretch=1)
         frame_layout.addLayout(search_row)
 
@@ -209,6 +211,27 @@ class CommandSpotlight(QWidget):
         scored.sort(key=lambda x: x[0], reverse=True)
         results = [cmd for _, cmd in scored]
         self._populate_list(results)
+
+    def eventFilter(self, obj, e) -> bool:
+        if obj is self._txt_search and e.type() == QEvent.Type.KeyPress:
+            if e.key() == Qt.Key.Key_Escape:
+                self.hide()
+                self.closed.emit()
+                return True
+            elif e.key() in (Qt.Key.Key_Down, Qt.Key.Key_Tab):
+                cur = self._list.currentRow()
+                if cur < self._list.count() - 1:
+                    self._list.setCurrentRow(cur + 1)
+                return True
+            elif e.key() == Qt.Key.Key_Up:
+                cur = self._list.currentRow()
+                if cur > 0:
+                    self._list.setCurrentRow(cur - 1)
+                return True
+            elif e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                self._execute_selected()
+                return True
+        return super().eventFilter(obj, e)
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if e.key() == Qt.Key.Key_Escape:

@@ -55,6 +55,8 @@ _FACE_STYLES = ("face", "face_solid", "face_holo", "face_hologram", "face_matrix
 
 
 class HudCanvas(QWidget):
+    right_clicked = pyqtSignal(QPoint)
+
     def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
@@ -151,6 +153,13 @@ class HudCanvas(QWidget):
                 self._avatar.glance(dx, dy, hold)
         except Exception:
             pass
+
+    def mousePressEvent(self, e) -> None:
+        if e.button() == Qt.MouseButton.RightButton:
+            self.right_clicked.emit(e.globalPosition().toPoint())
+            e.accept()
+            return
+        super().mousePressEvent(e)
 
     def mouseMoveEvent(self, e) -> None:
         pos = e.position()

@@ -212,7 +212,7 @@ def _validate(module, filename: str) -> PluginRecord:
 
     # Optional, self-describing settings schema (rendered by the settings UI).
     # A malformed schema is ignored, never fatal — the plugin still loads.
-    settings = getattr(module, "PLUGIN_SETTINGS", None)
+    settings = getattr(module, "PLUGIN_SETTINGS", None) or plugin_meta.get("PLUGIN_SETTINGS")
     if not (isinstance(settings, dict) and isinstance(settings.get("fields"), list)):
         settings = None
 

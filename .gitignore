@@ -54,6 +54,7 @@ desktop.ini
 logs/
 downloads/
 screenshots/
+generated_images/
 config/api_keys.json
 config/telegram_paired.json
 config/telegram_qr.png

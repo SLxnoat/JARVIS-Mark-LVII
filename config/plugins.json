@@ -1,0 +1,618 @@
+{
+  "version": "Mark-LVII",
+  "total_plugins": 68,
+  "plugins": [
+    {
+      "name": "ai_meeting_summarizer",
+      "file": "ai_meeting_summarizer.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "JARVIS Meeting Scribe: Processes meeting transcripts or rough discussion notes. Extracts structured Key Decisions, Topic Summaries, and Assigned Action Items with deadlines. Displays an executive meeting card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "ai_terminal_copilot",
+      "file": "ai_terminal_copilot.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Terminal Copilot: Translates natural language commands into safe, optimal Linux bash/zsh shell one-liners. Explains flags, assesses command destruction risk, and displays an interactive terminal card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "air_quality_sentinel",
+      "file": "air_quality_sentinel.py",
+      "category": "Space & Environmental",
+      "enabled": true,
+      "description": "JARVIS Environmental Sentinel: Atmospheric air quality radar. Measures PM2.5, PM10, Carbon Monoxide (CO), Nitrogen Dioxide (NO2), and Ozone (O3). Calculates AQI index and provides respiratory health & outdoor advisories. Renders an environmental card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "audio_deepfake_detector",
+      "file": "audio_deepfake_detector.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Audio Deepfake Detector: Forensically inspects audio clips for synthetic AI voice cloning artifacts (vocoder spectral cutoffs, phase anomalies, robotic pitch). Calculates a Synthetic Voice Probability score and displays audio forensics on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "audio_spectrum_analyzer",
+      "file": "audio_spectrum_analyzer.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "JARVIS Acoustic Sensor: Analyzes ambient room noise, computes FFT frequency distribution (20 Hz - 20 kHz), measures background noise floor (dB SPL), and detects fan hum, acoustic resonance, or coil whine. Displays an acoustic spectrum on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "bluetooth_governor",
+      "file": "bluetooth_governor.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "Inspect and manage Bluetooth devices, wireless headphones, and peripherals on Linux. Can list paired devices ('list'), query battery percentages ('battery'), connect to a device ('connect'), disconnect ('disconnect'), or check adapter state ('status'). Use this tool when the user asks about Bluetooth devices, headphone battery, or connecting audio gear.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "calendar_control",
+      "file": "calendar_control.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Reads upcoming calendar events, shows your schedule for today or tomorrow, and creates new appointments or meetings.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "calorie_counter",
+      "file": "calorie_counter.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Estimates calories and macronutrients (protein, carbs, fat) from a webcam photo or image file of a meal, and logs it to your daily nutrition history.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "celestial_ephemeris",
+      "file": "celestial_ephemeris.py",
+      "category": "Space & Environmental",
+      "enabled": true,
+      "description": "JARVIS Celestial Ephemeris: Astronomical observation telemetry. Calculates lunar phase and illumination percentage, planetary positions (Venus, Mars, Jupiter, Saturn), twilight thresholds, and meteor shower peaks. Renders a celestial map on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "chat_takeover",
+      "file": "chat_takeover.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Reads an incoming chat message or conversation (from clipboard or text) and drafts an intelligent, contextual reply matching your requested tone.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "code_architecture_mapper",
+      "file": "code_architecture_mapper.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Code Architecture Mapper: Parses Python source files into Abstract Syntax Trees (AST). Extracts class inheritance, module import coupling, and circular dependencies. Generates an interactive visual Mermaid architecture diagram on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "code_debugger_sandbox",
+      "file": "code_debugger_sandbox.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Autonomous Code Sandbox: Executes Python snippets in an isolated sandbox. Intercepts runtime tracebacks and autonomously patches and repairs code errors in a self-healing loop. Renders the execution trace and repaired code on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "cognitive_neuro_cortex",
+      "file": "cognitive_neuro_cortex.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "Human-brain-inspired self-learning engine. Ingests operator corrections into permanent rules, discovers procedural habits from tool patterns, conducts hippocampal memory consolidation during idle states, and queries associative concept graphs.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "crypto_vault_sentinel",
+      "file": "crypto_vault_sentinel.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Cryptographic Sentinel: Audits local SSH key hygiene (~/.ssh/), computes cryptographic hashes (SHA-256, SHA-512, BLAKE2b) for files, and calculates Shannon entropy to detect encrypted payloads or assess password strength. Displays crypto telemetry on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "digital_footprint_scanner",
+      "file": "digital_footprint_scanner.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Digital Footprint Sentinel: Securely checks if credentials or email addresses have been exposed in public dark web breaches using zero-knowledge k-Anonymity SHA-1 hashes. Renders a credential exposure audit card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "dns_propagator",
+      "file": "dns_propagator.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Global DNS Cartographer: Tests domain propagation and verifies record consistency across global anycast DNS resolvers (Cloudflare 1.1.1.1, Google 8.8.8.8, Quad9 9.9.9.9, OpenDNS). Detects ISP DNS poisoning, hijacking, and measures resolution latencies. Displays a DNS matrix on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "docker_sentinel",
+      "file": "docker_sentinel.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Container Fleet Radar: Audits local Docker & Podman containers. Inspects running and stopped containers, port mappings, crash restart loops, failed health checks, and dangling images. Displays a tactical container fleet map on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "document_review",
+      "file": "document_review.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Reviews a document or text file and displays a structured review with summary and critical findings on screen. Supports markdown, text, code, docx, or pdf.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "excel_writer",
+      "file": "excel_writer.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Creates, reads, or appends rows to an Excel (.xlsx) spreadsheet or CSV file. Useful for tabular data, budgets, inventory, and exports.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "file_xray_decompiler",
+      "file": "file_xray_decompiler.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS File X-Ray: Forensically inspects binary executables (ELF/PE) and documents without running them. Extracts linked shared libraries, embedded URLs/IPs, compiler signatures, and detects UPX packers. Displays an X-ray forensic breakdown on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "firewall_warden",
+      "file": "firewall_warden.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Tactical Firewall Warden: Audits workstation packet filtering rules (UFW/iptables/nftables), inspects default chain policies (ACCEPT vs DROP), correlates open listening sockets against firewall shields, and displays a defensive network posture report on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "focus_flowstate_guardian",
+      "file": "focus_flowstate_guardian.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "JARVIS Flow-State Guardian: Engages cognitive focus shields by tracking deep work duration, suppressing non-urgent interruptions, and recording session milestones. Displays a glowing flow-state timer on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "git_time_machine",
+      "file": "git_time_machine.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Git Time Machine: Visualizes repository evolution over time. Analyzes code churn (lines added/deleted), detects high-risk 'hotspot' files with frequent modifications, and tracks author velocity. Displays a git timeline card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "git_workspace",
+      "file": "git_workspace.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "Inspect and check local Git repositories across your workspace. Can check the current branch and uncommitted files ('status'), view recent commit history ('commits'), summarize uncommitted line changes ('diff'), or scan all workspace projects for uncommitted files ('scan'). Use this tool when the user asks about git status, commits, branches, or uncommitted work.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "gmail_control",
+      "file": "gmail_control.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Reads unread emails, searches messages, drafts replies, and sends emails through Gmail. Supports IMAP/SMTP and Google API OAuth.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "hologram_visualizer_3d",
+      "file": "hologram_visualizer_3d.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS 3D Holographic Visualizer: Projects rotating 3D wireframe models (Mark Armor Helmet, Hypercube Tesseract, Geodesic Telemetry Sphere) onto the HUD using depth-cued perspective transformation matrices. Renders a tactical 3D hologram card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "home_assistant",
+      "file": "home_assistant.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "Controls smart home devices via Home Assistant. Allows listing entities, querying entity states, and turning on/off/toggling lights and switches.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "image_generator",
+      "file": "image_generator.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Generates an AI image from a descriptive text prompt. Saves the image locally and displays it directly on the screen.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "multilingual_live_translator",
+      "file": "multilingual_live_translator.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS Live Multilingual Interpreter: Translates speech or text across 50+ languages. Provides phonetic pronunciation guides for non-Latin scripts and displays dual-language subtitles and cultural nuance notes on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "network_speed",
+      "file": "network_speed.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "Test and diagnose your local internet connection health, latency, and download speed. Can perform a quick latency & packet loss check ('ping'), a real-time download bandwidth test ('speed'), or inspect local default gateway information ('gateway'). Use this tool when the user asks about internet speed, network latency, ping, or connection quality.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "network_topology",
+      "file": "network_topology.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "JARVIS Tactical Network Radar: Actively sweeps and maps the local authorized network topology, identifies device vendors, inspects active LAN devices, grabs service banners, checks TLS certificate health, flags legacy/insecure protocol exposure, and displays a tactical network map on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "obsidian_vault",
+      "file": "obsidian_vault.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Reads, searches, creates, and appends notes in a local Obsidian Markdown vault. Supports daily notes, tag searches, and full-text searches.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "open_rss_briefing",
+      "file": "open_rss_briefing.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Fetch and summarize the latest tech, AI, security, or Linux developer news from free, open RSS feeds. Can fetch Hacker News ('tech'), ArXiv AI research ('ai'), or cybersecurity ('security'). Use this tool when the user asks for tech headlines, developer news, or what is trending on Hacker News.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "orbital_tracker",
+      "file": "orbital_tracker.py",
+      "category": "Space & Environmental",
+      "enabled": true,
+      "description": "JARVIS Orbital Radar: Real-time satellite & ISS telemetry. Calculates current coordinates, orbital velocity (~27,600 km/h), altitude (~420 km), and overhead pass schedule relative to the operator's position. Displays an orbital tracking map on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "pci_hardware_radar",
+      "file": "pci_hardware_radar.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "JARVIS Tactical Hardware Radar: Deep inspection of PCIe bus link speeds, NVMe SSD health & wear indicators, CPU core frequency governors, and physical memory architecture. Renders a hardware topology card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "pomodoro",
+      "file": "pomodoro.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Controls a Pomodoro focus timer. Supports starting a 25-minute focus session, short/long breaks, pausing, resuming, stopping, and querying current status.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "printer_control",
+      "file": "printer_control.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "Monitors and controls 3D printers running OctoPrint, Moonraker, or Klipper. Allows checking nozzle and bed temperatures, print progress, pausing, and resuming jobs.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "process_forensics",
+      "file": "process_forensics.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Process Forensics: Inspects the Linux process tree for in-memory anomalies, including unlinked running binaries (/proc/[pid]/exe (deleted)), executions out of /tmp or /dev/shm, and anomalous resource hogs. Renders a forensic threat card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "prompt_engineering_forge",
+      "file": "prompt_engineering_forge.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Prompt Engineering Forge: Transforms rough prompt ideas into production-grade LLM prompts with Chain-of-Thought scaffolding, few-shot framing, and strict edge-case guards. Displays the optimized prompt and benchmark test cases on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "pushup_counter",
+      "file": "pushup_counter.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Tracks pushup workouts and counts repetitions using the camera or manual logging. Supports starting a session, stopping, checking count, and viewing workout history.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "quiz",
+      "file": "quiz.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Generates an interactive multiple-choice quiz on any topic and displays it on the screen. The user answers directly on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "screen_agent",
+      "file": "screen_agent.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Inspects what is currently displayed on your screen, identifies UI elements, and gives step-by-step instructions or coordinates to accomplish tasks.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "shopping_list",
+      "file": "shopping_list.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Manages a persistent shopping or grocery checklist. Allows adding items, removing items, marking items as bought, listing all items, and clearing.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "smart_clipboard_ai",
+      "file": "smart_clipboard_ai.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Smart Clipboard: Inspects clipboard data, detects format (JSON, curl, JWT, base64, timestamp), and pre-computes instant transformations (curl to Python requests, JWT decode, JSON formatting). Displays transformed data on the HUD ready for use.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "smart_desktop_cleaner",
+      "file": "smart_desktop_cleaner.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "Intelligently scans, categorizes, and organizes files in ~/Downloads, ~/Desktop, or custom directories into structured subfolders (Documents, Images, Audio, Video, Archives, Installers, Code). Detects duplicate download versions and stale temp files with safe dry-run preview mode before moving.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "smart_home_scene_automator",
+      "file": "smart_home_scene_automator.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "JARVIS Scene Protocols: Executes Iron Man style multi-device protocol scenes ('Protocol Nightfall', 'Protocol Workstation', 'Protocol Stealth', 'Protocol Focus'). Orchestrates desktop settings, audio, and smart home lighting simultaneously. Displays protocol status on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "smart_reminder_snoozer",
+      "file": "smart_reminder_snoozer.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "In-session countdown timer and snooze manager. Sets quick voice-activated countdown timers (seconds, minutes, hours), lists active timers on the HUD, alerts upon completion, and supports snoozing active or expired timers.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "smart_unit_converter",
+      "file": "smart_unit_converter.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "High-precision technical, networking, and scientific unit conversion engine. Converts digital data transfer rates (Mbps to GB/h), binary vs decimal storage (TiB to TB / GiB), download/transfer duration estimates, temperature, pressure, energy, and speed.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "solar_space_weather",
+      "file": "solar_space_weather.py",
+      "category": "Space & Environmental",
+      "enabled": true,
+      "description": "JARVIS Space Weather Monitor: Real-time NOAA solar flare activity (X-ray flux A/B/C/M/X), Planetary K-index geomagnetic storm levels (Kp 0-9), and solar wind telemetry. Advises on HF radio propagation and GPS precision. Renders a space weather radar on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "spaced_repetition",
+      "file": "spaced_repetition.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Spaced repetition flashcard memory system. Add new cards with front/back text, review cards currently due for study, rate recall (1-5), or view deck statistics.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "speech_emotion_tone_detector",
+      "file": "speech_emotion_tone_detector.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS Vocal Emotion Detector: Analyzes the operator's speech prosody, pitch variance, energy dynamics, and speech rhythm to detect stress, fatigue, or high-energy focus. Displays a vocal tone radar on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "stealth_browser_recon",
+      "file": "stealth_browser_recon.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS Web Intelligence Recon: Fetches any web article or documentation page, strips ads, popups, and cookie walls, and extracts clean, readable Markdown text with an executive summary. Displays the clean article on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "system_matrix_hud",
+      "file": "system_matrix_hud.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "JARVIS Tactical Command Matrix: Assembles an all-in-one Iron Man sci-fi command screen featuring multi-core CPU bar graphs, memory gauges, disk storage status, network throughput, and active security shields. Displays a master command matrix on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "systemd_sentinel",
+      "file": "systemd_sentinel.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "Inspect, check status, or diagnose Linux systemd services and daemons (e.g. docker, ollama, bluetooth, nginx, cups, NetworkManager). Can check if a service is running, inspect recent error logs via journalctl, or list failed system units. Use this tool when the user asks about background services, crashed daemons, or server logs.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "task_planner",
+      "file": "task_planner.py",
+      "category": "Engineering & Terminal",
+      "enabled": true,
+      "description": "JARVIS Autonomous Goal Planner & Multi-Tool Combiner: Formulates and executes an autonomous, multi-step plan to achieve complex goals by dynamically selecting, chaining, and combining any available system tools. Use when a user request requires multiple steps, diagnosis, cross-tool investigation, or compound workflows.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "telegram_bridge",
+      "file": "telegram_bridge.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Send proactive push messages, alerts, or reports to the user's paired Telegram phone. Use this tool when you want to send a text notification, update, or link to the user on Telegram.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "telegram_remote",
+      "file": "telegram_remote.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Checks pairing status and manages remote control over Telegram. Allows generating pairing QR codes, revoking pairings, and checking connection status.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "threat_intel_radar",
+      "file": "threat_intel_radar.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS Threat Intelligence Radar: Audits suspicious IP addresses, domain names, or file hashes against global threat feeds (malware, C2 botnets, phishing). Calculates a Threat Risk Score and displays a threat assessment card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "upload_video",
+      "file": "upload_video.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Prepares and uploads video files from your Desktop or downloads folder to YouTube. Allows setting title, description, tags, and privacy status (public, unlisted, private).",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "usb_sentinel",
+      "file": "usb_sentinel.py",
+      "category": "Cybersecurity & Defense",
+      "enabled": true,
+      "description": "JARVIS USB Sentry: Audits physical USB ports, classifies connected peripherals, and detects BadUSB / Rubber Ducky spoofing attacks (e.g. storage dongles or microcontrollers impersonating keyboards). Renders a physical port matrix on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "voice_biometrics_sentinel",
+      "file": "voice_biometrics_sentinel.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS Voice Biometrics: Analyzes acoustic pitch contour (F0), formant resonances (F1-F3), and vocal spectral centroid. Matches voiceprint against the operator's profile to compute an authentication confidence score. Displays a voiceprint biometric card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "water_reminder",
+      "file": "water_reminder.py",
+      "category": "Health, Lifestyle & Media",
+      "enabled": true,
+      "description": "Logs daily water intake and checks hydration progress towards a daily goal (e.g. 2500 ml). Allows logging a glass of water, checking status, updating goals, or resetting.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "weather_astronomy_briefing",
+      "file": "weather_astronomy_briefing.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "Provides real-time meteorological forecasts, hourly precipitation probability (rain radar), UV index, wind speeds, and astronomical solar schedule using the 100% free Open-Meteo API. Displays a rich hourly forecast card on the HUD without opening browser windows.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "webcam_posture_fatigue_sentinel",
+      "file": "webcam_posture_fatigue_sentinel.py",
+      "category": "Perception & Multimodal",
+      "enabled": true,
+      "description": "JARVIS Posture & Fatigue Sentinel: Uses workstation camera vision to audit operator head tilt angle, slouching, and eye fatigue indicators. Provides proactive ergonomic corrections and displays an ergonomic health card on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "whatsapp_call",
+      "file": "whatsapp_call.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Places or ends WhatsApp voice and video calls to contacts or phone numbers. Supports WhatsApp Desktop and WhatsApp Web.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "whatsapp_guard",
+      "file": "whatsapp_guard.py",
+      "category": "Knowledge & Documents",
+      "enabled": true,
+      "description": "Screens incoming WhatsApp calls and manages auto-reply rules. Allows toggling modes (accept_all, whitelist_only, do_not_disturb) and sending automated responses.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "wifi_radar",
+      "file": "wifi_radar.py",
+      "category": "Hardware & Telemetry",
+      "enabled": true,
+      "description": "JARVIS Tactical Wi-Fi Radar: Inspects current Wi-Fi link health (signal dBm, bitrate, channel), scans ambient wireless networks, analyzes channel congestion (2.4 GHz & 5 GHz), flags insecure open/WEP networks, and renders an RF spectrum heatmap on the HUD.",
+      "parameters": {},
+      "tier": "extra"
+    },
+    {
+      "name": "workspace_health_summary",
+      "file": "workspace_health_summary.py",
+      "category": "Workstation Productivity",
+      "enabled": true,
+      "description": "Generates a unified executive morning workstation readiness briefing. Synthesizes system vitals (CPU load, RAM usage, disk storage, battery, uptime), uncommitted Git repositories, and today's calendar schedule into a high-density HUD dashboard and crisp verbal summary.",
+      "parameters": {},
+      "tier": "extra"
+    }
+  ]
+}

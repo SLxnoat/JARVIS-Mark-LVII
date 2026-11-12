@@ -161,12 +161,18 @@ class HudCanvas(QWidget):
         ny = max(-1.0, min(1.0, (pos.y() - H / 2.0) / (H / 2.0)))
         self._parallax_target = QPointF(nx, ny)
         if self._avatar is not None:
-            self._avatar.glance(nx * 0.85, -ny * 0.85, hold=0.8)
+            self._avatar.set_parallax(nx, ny)
+        if self._reactor is not None and hasattr(self._reactor, "set_parallax"):
+            self._reactor.set_parallax(nx, ny)
         super().mouseMoveEvent(e)
 
     def leaveEvent(self, e) -> None:
         self._cursor_active = False
         self._parallax_target = QPointF(0.0, 0.0)
+        if self._avatar is not None:
+            self._avatar.set_parallax(0.0, 0.0)
+        if self._reactor is not None and hasattr(self._reactor, "set_parallax"):
+            self._reactor.set_parallax(0.0, 0.0)
         super().leaveEvent(e)
 
     def push_visemes(self, frames, hop: float, at: float) -> None:

@@ -95,6 +95,10 @@ class Reactor3D:
                         float(rng.uniform(-0.55, 0.55)), float(rng.uniform(0.25, 0.9)))
                        for _ in range(22)]
         self.spin = 0.0
+        self._px = 0.0
+        self._py = 0.0
+        self._px_tgt = 0.0
+        self._py_tgt = 0.0
         self._view = _rx(_PITCH)
         self._cache_key = None
         self._under: QPixmap | None = None      # platform + back half of the latitudes
@@ -102,10 +106,18 @@ class Reactor3D:
         self._box = QRectF()
 
     # ── motion ────────────────────────────────────────────────────────────────
+    def set_parallax(self, nx: float, ny: float) -> None:
+        """Update interactive parallax coordinates (-1.0 to 1.0)."""
+        self._px_tgt = max(-1.0, min(1.0, float(nx)))
+        self._py_tgt = max(-1.0, min(1.0, float(ny)))
+
     def step(self, dt: float, speaking: bool, thinking: bool, muted: bool) -> None:
         dt = min(0.10, max(0.0, dt))
         rate = 0.12 if muted else 0.38 + (1.5 if thinking else 0.0) + (0.8 if speaking else 0.0)
         self.spin += dt * rate
+        self._px += (self._px_tgt - self._px) * 0.15
+        self._py += (self._py_tgt - self._py) * 0.15
+        self._view = _rx(_PITCH + self._py * 0.15) @ _ry(self._px * 0.22)
 
     # ── projection ────────────────────────────────────────────────────────────
     def _project(self, pts, cx, cy, r):

@@ -98,6 +98,46 @@ class TestHudARVibeCanvas(unittest.TestCase):
         self.assertLess(self.hud._parallax_offset.x(), 0.0)
         self.assertLess(self.hud._parallax_offset.y(), 0.0)
 
+    def test_avatar_parallax_face_motion(self):
+        from core.avatar import HoloAvatar
+        av = HoloAvatar()
+        # Initial neutral state
+        self.assertEqual(av._parallax[0], 0.0)
+        self.assertEqual(av._parallax[1], 0.0)
+
+        # Set parallax to bottom-right cursor (nx=0.8, ny=0.7)
+        av.set_parallax(0.8, 0.7)
+        self.assertAlmostEqual(av._parallax_tgt[0], 0.8)
+        self.assertAlmostEqual(av._parallax_tgt[1], 0.7)
+
+        # Step animation multiple frames to simulate smoothing
+        for _ in range(15):
+            av.step(0.016, amp=0.0)
+
+        # Yaw should turn right (positive)
+        self.assertGreater(av._yaw, 0.15)
+        # Pitch should nod down (positive)
+        self.assertGreater(av._pitch, 0.10)
+        # Roll should bank slightly into turn (negative for right turn)
+        self.assertLess(av._roll, -0.01)
+        # Eye gaze should track towards cursor
+        self.assertGreater(av._gaze[0], 0.10)
+        self.assertGreater(av._gaze[1], 0.10)
+
+        # Test vertex pose transformation
+        verts, norms = av._pose()
+        self.assertEqual(verts.shape, av._v0.shape)
+        self.assertEqual(norms.shape, av._n0.shape)
+
+    def test_reactor_parallax_tilt(self):
+        from gui.reactor import Reactor3D
+        rc = Reactor3D()
+        rc.set_parallax(0.5, -0.6)
+        for _ in range(10):
+            rc.step(0.016, speaking=False, thinking=False, muted=False)
+        self.assertGreater(rc._px, 0.2)
+        self.assertLess(rc._py, -0.2)
+
     def test_hud_frame_render_budget_60fps(self):
         pix = QPixmap(960, 600)
         p = QPainter(pix)

@@ -171,6 +171,9 @@ class HoloAvatar:
         self._sway = 0.0           # integrated sway phase — see step()
         self._yaw = 0.0
         self._pitch = 0.0
+        self._roll = 0.0
+        self._parallax = np.array([0.0, 0.0], dtype=np.float32)
+        self._parallax_tgt = np.array([0.0, 0.0], dtype=np.float32)
         self._mouth = 0.0          # 0..1 smoothed jaw opening
         self._glow = 0.0           # 0..1 smoothed overall energy
         self._scan = -1.6          # vertical position of the energy sweep
@@ -293,6 +296,12 @@ class HoloAvatar:
         amp = max(0.0, min(1.0, float(amp)))
         live = speaking and not muted
 
+        # Smooth tracking of interactive parallax for 3D face motion
+        p_rate = _rate(dt, 0.08)
+        self._parallax += (self._parallax_tgt - self._parallax) * p_rate
+        px_x = float(self._parallax[0])
+        px_y = float(self._parallax[1])
+
         # Idle sway. The phase is *integrated* rather than taken as
         # sin(t * rate * speed): multiplying absolute time by a speed that
         # changes when JARVIS starts or stops talking jumps the phase by
@@ -302,9 +311,19 @@ class HoloAvatar:
         speed = 0.28 if not muted else 0.15
         self._sway += dt * speed
         s = self._sway
-        self._yaw = 0.045 * math.sin(s * 0.40) + 0.015 * math.sin(s * 0.90 + 1.3)
-        self._pitch = (0.020 * math.sin(s * 0.30 + 0.7)
+        sway_yaw = 0.045 * math.sin(s * 0.40) + 0.015 * math.sin(s * 0.90 + 1.3)
+        sway_pitch = (0.020 * math.sin(s * 0.30 + 0.7)
                        + 0.008 * math.sin(s * 0.70))
+
+        # Dynamic Parallax Face Motion:
+        # Head turns directly toward the cursor location across the viewport
+        interact_yaw = px_x * 0.35      # Up to ~20 deg horizontal turn
+        interact_pitch = px_y * 0.26    # Up to ~15 deg vertical tilt
+        interact_roll = -px_x * 0.06    # Subtle ~3.5 deg organic banking
+
+        self._yaw = sway_yaw + interact_yaw
+        self._pitch = sway_pitch + interact_pitch
+        self._roll = interact_roll
 
         # Mouth. Which level is driving it matters more than any rate here.
         #
@@ -393,25 +412,29 @@ class HoloAvatar:
         self._brow_bias += (brow_bias - self._brow_bias) * 0.06
 
         # Gaze: calm, steady, attentive gaze focused towards operator
-        if t >= self._gaze_at:
+        if abs(px_x) > 0.005 or abs(px_y) > 0.005:
+            # Eyes dynamically lead the head turn to meet the operator's cursor
+            self._gaze_tgt = [px_x * 0.38, px_y * 0.32]
+        elif t >= self._gaze_at:
             reach = 0.18 if live else (0.08 if thinking else 0.12)
             self._gaze_tgt = [random.uniform(-1.0, 1.0) * reach,
                               random.uniform(-1.0, 1.0) * reach * 0.45]
             gap = 3.6 if live else (4.8 if thinking else 4.2)
             self._gaze_at = t + gap + 2.2 * random.random()
 
-        # A deliberate glance (something appeared on screen) overrides the
-        # wandering for a moment, then hands control back.
-        if self._glance is not None:
+        # A deliberate glance (something appeared on screen) overrides
+        # when mouse parallax is at neutral rest
+        if abs(px_x) <= 0.005 and abs(px_y) <= 0.005 and self._glance is not None:
             gx, gy, until = self._glance
             if t < until:
                 self._gaze_tgt = [gx * 0.4, gy * 0.4]
             else:
                 self._glance = None
 
+        gaze_speed = 0.14 if (abs(px_x) > 0.005 or abs(px_y) > 0.005) else 0.06
         for i, b in enumerate(self._gaze_bias):
-            tgt = max(-0.35, min(0.35, self._gaze_tgt[i] + b * 0.25))
-            self._gaze[i] += (tgt - self._gaze[i]) * 0.06
+            tgt = max(-0.38, min(0.38, self._gaze_tgt[i] + b * 0.25))
+            self._gaze[i] += (tgt - self._gaze[i]) * gaze_speed
 
         # Lips lead the jaw slightly in real speech, so they track a touch
         # faster; they also relax to neutral the moment the voice stops.
@@ -449,6 +472,11 @@ class HoloAvatar:
                         max(-1.0, min(1.0, float(dy))),
                         self._t + max(0.1, float(hold)))
 
+    def set_parallax(self, nx: float, ny: float) -> None:
+        """Update interactive parallax coordinates (-1.0 to 1.0) driving 3D face motion."""
+        self._parallax_tgt[0] = max(-1.0, min(1.0, float(nx)))
+        self._parallax_tgt[1] = max(-1.0, min(1.0, float(ny)))
+
     # ── posing ──────────────────────────────────────────────────────────────
 
     def _pose(self):
@@ -482,11 +510,17 @@ class HoloAvatar:
 
         cy, sy = math.cos(self._yaw), math.sin(self._yaw)
         cp, sp = math.cos(self._pitch), math.sin(self._pitch)
+        cr, sr = math.cos(self._roll), math.sin(self._roll)
         m = np.array([
-            [cy, 0.0, sy],
-            [sp * sy, cp, -sp * cy],
-            [-cp * sy, sp, cp * cy],
+            [cr * cy - sr * sp * sy, -sr * cp, cr * sy + sr * sp * cy],
+            [sr * cy + cr * sp * sy,  cr * cp, sr * sy - cr * sp * cy],
+            [-cp * sy,                sp,      cp * cy],
         ], dtype=np.float32)
+
+        px_x, px_y = float(self._parallax[0]), float(self._parallax[1])
+        if abs(px_x) > 0.001 or abs(px_y) > 0.001:
+            v[:, 0] += px_x * 0.06
+            v[:, 1] -= px_y * 0.05
 
         return v @ m.T, self._n0 @ m.T
 

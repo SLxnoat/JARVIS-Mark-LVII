@@ -1042,6 +1042,10 @@ Rules for the code:
   match that file exactly — names, arguments, command-line flags, data keys.
 - Never throw away errors from code you start or call: no output sent to
   DEVNULL without a log, no success reported without checking it happened.
+- Write complete, robust, type-annotated code adhering to the project's architecture and libraries.
+- Never introduce dummy stubs, empty pass blocks, or placeholders such as "# TODO".
+- If modifying JARVIS: NEVER create or touch Qt widgets (PyQt6.QtWidgets / PyQt6.QtGui)
+  from worker threads. Use thread-safe player methods or signals instead.
 
 Return ONLY the complete new content of {rel} — every line, not just the
 changed parts. No explanation, no markdown fences, no placeholders such as

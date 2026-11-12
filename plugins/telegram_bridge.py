@@ -774,13 +774,14 @@ class TelegramBridge:
                     pass
 
                 prompt = (
-                    "You are JARVIS, an executive AI assistant communicating with your creator via Telegram.\n"
+                    f"You are {asst_name}, an executive AI assistant communicating with your operator via Telegram.\n"
                     f"Current Date and Time: {now_str}\n"
                     f"Host Telemetry: CPU {cpu:.0f}%, RAM {ram:.0f}%\n"
                     f"World News Context:\n{news_text[:1200]}\n\n"
-                    "Provide a crisp, professional, high-level executive morning/daily briefing. "
-                    "Include a formal greeting, datetime, system health check, and 3 brief headline highlights. "
-                    "Keep tone polite, composed, and concise."
+                    "Provide a crisp, professional, high-level executive briefing. "
+                    "Structure into: Greeting & Status, System Health, and Top 3 Key Highlights. "
+                    "Tone: composed, dry, understated, addressing the user respectfully as Sir. "
+                    "Keep it under 180 words. Use clean Telegram HTML formatting (<b>bold</b> titles, bullet points)."
                 )
                 briefing_res = gemini.text(prompt, tier=gemini.SMART, timeout_ms=35000)
                 if not briefing_res:
@@ -1042,9 +1043,11 @@ class TelegramBridge:
                 pass
 
             prompt = (
-                f"You are {asst_name}, an advanced AI assistant connected to the user via Telegram.\n"
+                f"You are {asst_name}, an executive AI assistant communicating with your operator via Telegram.\n"
                 f"User command: {cmd}\n\n"
-                f"Reply concisely, accurately, and politely in the user's language."
+                "You are running directly on their local machine with local tool capabilities. "
+                "Reply concisely, accurately, and with your characteristic dry, composed tone in the user's language. "
+                "Use clean formatting suitable for mobile display."
             )
             reply = gemini.text(prompt, tier=gemini.SMART, timeout_ms=30000)
             if not reply:
@@ -1073,9 +1076,17 @@ class TelegramBridge:
 
             from core import gemini
 
-            user_caption = caption.strip() or "Describe this image in detail and identify any key items, code, or context."
+            user_caption = caption.strip() or "Analyze this image and identify any key items, text, code, or context."
+            system_instruction = (
+                f"You are {asst_name}'s high-resolution visual analysis engine. "
+                "Examine the image with engineering precision. Structure your response concisely: "
+                "1. Brief Overview (1 sentence), "
+                "2. Key Visual Details / Extracted Text or Code, "
+                "3. Operational Insights / Actionable Takeaway. "
+                "Tone: calm, direct, and factual. Avoid generic commentary."
+            )
             contents = [
-                user_caption,
+                f"{system_instruction}\n\nUser Request: {user_caption}",
                 {"inline_data": {"mime_type": "image/jpeg", "data": b64_data}},
             ]
             analysis = gemini.text(contents, tier=gemini.SMART, timeout_ms=40000)

@@ -2,7 +2,7 @@
 plugins/network_topology.py - Tactical Local Network Radar & Topology Cartographer.
 
 Iron Man / JARVIS style local network situational awareness:
-- Actively sweeps the local /24 subnet (ping + ARP) to discover live hosts.
+- Actively sweeps the local /24 subnet (ping + ARP + TCP handshake probe) to discover live hosts.
 - Identifies local gateway and subnet interface telemetry.
 - Resolves MAC vendor (OUI) for discovered devices.
 - Probes authorized local home services (SSH, Home Assistant, Web, Media).
@@ -40,6 +40,7 @@ import sys
 import threading
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 PLUGIN = {
     "name": "network_topology",
@@ -97,8 +98,7 @@ _COMMON_HOME_SERVICES = {
     32400: "Plex Media Server",
 }
 
-# Compact, commonly-seen OUI (first 3 MAC octets) -> vendor map. Not exhaustive;
-# unresolved prefixes just report "Unknown Vendor" rather than failing.
+# Compact, normalized 6-hex-digit OUI -> vendor map.
 _OUI_VENDORS = {
     "B827EB": "Raspberry Pi Foundation",
     "DCA632": "Raspberry Pi Foundation",
@@ -153,7 +153,6 @@ _OUI_VENDORS = {
     "F0B429": "Xiaomi",
     "34CE00": "Espressif (ESP8266/32 IoT)",
     "A020A6": "Espressif (ESP8266/32 IoT)",
-    "CC50E3": "Espressif (ESP8266/32 IoT)",
     "483FDA": "Sonos",
     "000E58": "Sonos",
 }
@@ -196,23 +195,51 @@ def _get_default_gateway() -> tuple[str, str]:
     return "192.168.1.1", "default"
 
 
-def _get_local_ip() -> str:
+def _get_local_ip(gw_ip: str = "192.168.1.1") -> str:
     """Best-effort local IP of the primary outbound interface."""
+    for target in [(gw_ip, 80), ("8.8.8.8", 80), ("1.1.1.1", 80)]:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.settimeout(0.5)
+                s.connect(target)
+                ip = s.getsockname()[0]
+                if ip and not ip.startswith("127."):
+                    return ip
+        except Exception:
+            continue
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            s.settimeout(1)
-            s.connect(("8.8.8.8", 80))
-            return s.getsockname()[0]
+        h_ip = socket.gethostbyname(socket.gethostname())
+        if h_ip and not h_ip.startswith("127."):
+            return h_ip
     except Exception:
-        return "127.0.0.1"
+        pass
+    return "127.0.0.1"
 
 
 def _get_arp_neighbors() -> list[dict]:
-    """Read local ARP neighbor cache passively."""
+    """Read local ARP neighbor cache passively across Linux procfs, ip neigh, and arp."""
     neighbors = []
-    try:
-        if sys.platform.startswith("linux"):
-            r = subprocess.run(["ip", "neigh", "show"], capture_output=True, text=True, timeout=3)
+    seen_ips = set()
+
+    # 1. Linux /proc/net/arp (instantaneous, zero subprocess)
+    if Path("/proc/net/arp").is_file():
+        try:
+            with open("/proc/net/arp", "r", encoding="utf-8") as f:
+                lines = f.readlines()[1:]
+            for line in lines:
+                parts = line.split()
+                if len(parts) >= 4:
+                    ip, hw_flags, mac = parts[0], parts[2], parts[3]
+                    if hw_flags != "0x0" and mac != "00:00:00:00:00:00" and ip not in seen_ips:
+                        neighbors.append({"ip": ip, "mac": mac, "state": "REACHABLE"})
+                        seen_ips.add(ip)
+        except Exception:
+            pass
+
+    # 2. Linux ip neigh
+    if sys.platform.startswith("linux"):
+        try:
+            r = subprocess.run(["ip", "neigh", "show"], capture_output=True, text=True, timeout=2)
             for line in r.stdout.splitlines():
                 parts = line.split()
                 if len(parts) >= 4 and "lladdr" in parts:
@@ -220,49 +247,63 @@ def _get_arp_neighbors() -> list[dict]:
                     mac_idx = parts.index("lladdr") + 1
                     mac = parts[mac_idx] if mac_idx < len(parts) else "Unknown"
                     state = parts[-1]
-                    if state not in ("FAILED", "INCOMPLETE"):
+                    if state not in ("FAILED", "INCOMPLETE") and mac != "00:00:00:00:00:00" and ip not in seen_ips:
                         neighbors.append({"ip": ip, "mac": mac, "state": state})
-        else:
-            r = subprocess.run(["arp", "-a"], capture_output=True, text=True, timeout=3)
+                        seen_ips.add(ip)
+        except Exception:
+            pass
+
+    # 3. Windows/macOS arp -a
+    if not neighbors:
+        try:
+            r = subprocess.run(["arp", "-a"], capture_output=True, text=True, timeout=2)
             for line in r.stdout.splitlines():
                 m = re.search(r"\(?(\d+\.\d+\.\d+\.\d+)\)?\s+(?:at\s+)?([0-9a-fA-F:-]{11,17})", line)
                 if m:
-                    neighbors.append({"ip": m.group(1), "mac": m.group(2).replace("-", ":"), "state": "ACTIVE"})
-    except Exception:
-        pass
+                    ip, mac = m.group(1), m.group(2).replace("-", ":")
+                    if mac.lower() not in ("ff:ff:ff:ff:ff:ff", "00:00:00:00:00:00") and ip not in seen_ips:
+                        neighbors.append({"ip": ip, "mac": mac, "state": "ACTIVE"})
+                        seen_ips.add(ip)
+        except Exception:
+            pass
+
     return neighbors
 
 
-def _ping_once(ip: str) -> bool:
-    """Single lightweight ping to coax the OS into populating its ARP cache."""
+def _probe_host_presence(ip: str) -> bool:
+    """Send a lightweight ICMP ping and TCP handshake attempt to register ARP in the kernel."""
+    # 1. ICMP ping
     try:
-        if sys.platform == "win32":
-            cmd = ["ping", "-n", "1", "-w", "300", ip]
-        else:
-            cmd = ["ping", "-c", "1", "-W", "1", ip]
-        r = subprocess.run(cmd, capture_output=True, timeout=2)
-        return r.returncode == 0
+        cmd = ["ping", "-n", "1", "-w", "250", ip] if sys.platform == "win32" else ["ping", "-c", "1", "-W", "1", ip]
+        r = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1.5)
+        if r.returncode == 0:
+            return True
     except Exception:
-        return False
-
-
-def _subnet_sweep(local_ip: str, max_workers: int = 48) -> list[dict]:
-    """
-    Active discovery across the local /24: ping-sweeps every host address so the
-    OS ARP cache gets populated, then reads that cache back. Read-only reachability
-    probing of the operator's own subnet only — no packet crafting, no spoofing.
-    """
+        pass
+    # 2. Fast TCP touch (coaxes ARP resolution even when ICMP is firewalled)
     try:
-        octets = local_ip.split(".")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.2)
+            s.connect_ex((ip, 80))
+    except Exception:
+        pass
+    return False
+
+
+def _subnet_sweep(local_ip: str, gw_ip: str, max_workers: int = 48) -> list[dict]:
+    """Active discovery across local /24 subnet."""
+    try:
+        ip_for_sweep = local_ip if not local_ip.startswith("127.") else gw_ip
+        octets = ip_for_sweep.split(".")
         if len(octets) != 4:
             return _get_arp_neighbors()
         base = ".".join(octets[:3])
         targets = [f"{base}.{i}" for i in range(1, 255)]
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
-            list(pool.map(_ping_once, targets))
+            list(pool.map(_probe_host_presence, targets))
 
-        time.sleep(0.3)  # let ARP cache settle
+        time.sleep(0.3)  # Let ARP cache settle
         return _get_arp_neighbors()
     except Exception:
         return _get_arp_neighbors()
@@ -284,26 +325,31 @@ def _probe_ports(host: str, ports_to_check: list[int]) -> list[tuple[int, str]]:
 
 
 def _grab_banner(host: str, port: int) -> str:
-    """
-    Read whatever a service volunteers on connect, or issue a minimal protocol-
-    standard probe (HTTP HEAD) and read the response header. Does not authenticate
-    or send any payload beyond a bare, unauthenticated request line.
-    """
+    """Read whatever a service volunteers on connect, extracting server/version headers."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(0.8)
             s.connect((host, port))
             if port in (80, 8080, 8000, 8123, 5000):
-                s.sendall(b"HEAD / HTTP/1.0\r\nHost: %s\r\n\r\n" % host.encode())
-            data = s.recv(256)
-            text = data.decode(errors="replace").strip().splitlines()
-            return text[0] if text else ""
+                s.sendall(f"HEAD / HTTP/1.0\r\nHost: {host}\r\nUser-Agent: JARVIS-Radar\r\n\r\n".encode())
+            data = s.recv(512)
+            if not data:
+                return ""
+            raw_text = data.decode(errors="replace").strip()
+            # If HTTP, check for Server: header
+            if port in (80, 8080, 8000, 8123, 5000) or raw_text.startswith("HTTP/"):
+                for line in raw_text.splitlines():
+                    if line.lower().startswith("server:"):
+                        return line.split(":", 1)[1].strip()
+            # Otherwise return first meaningful line
+            lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
+            return lines[0][:80] if lines else ""
     except Exception:
         return ""
 
 
 def _tls_cert_info(host: str, port: int = 443) -> dict:
-    """Fetch and summarize the TLS certificate presented on an HTTPS-style port."""
+    """Fetch and parse TLS certificate, extracting expiry and issuer via DER decoding."""
     info = {"ok": False}
     try:
         ctx = ssl.create_default_context()
@@ -311,25 +357,37 @@ def _tls_cert_info(host: str, port: int = 443) -> dict:
         ctx.verify_mode = ssl.CERT_NONE
         with socket.create_connection((host, port), timeout=1.5) as sock:
             with ctx.wrap_socket(sock, server_hostname=host) as ssock:
-                cert = ssock.getpeercert(binary_form=False) or {}
                 proto = ssock.version()
-                not_after = cert.get("notAfter")
+                der_cert = ssock.getpeercert(binary_form=True)
                 expiry = None
                 expired = None
-                if not_after:
+                issuer_str = "Unknown"
+
+                if der_cert:
                     try:
-                        expiry_dt = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=timezone.utc)
+                        from cryptography import x509
+                        cert = x509.load_der_x509_certificate(der_cert)
+                        expiry_dt = (
+                            cert.not_valid_after_utc
+                            if hasattr(cert, "not_valid_after_utc")
+                            else cert.not_valid_after.replace(tzinfo=timezone.utc)
+                        )
                         expiry = expiry_dt.strftime("%Y-%m-%d")
                         expired = expiry_dt < datetime.now(timezone.utc)
+                        for attr in cert.issuer:
+                            oid_name = attr.oid._name if hasattr(attr.oid, "_name") else ""
+                            if oid_name in ("organizationName", "commonName"):
+                                issuer_str = attr.value
+                                break
                     except Exception:
                         pass
-                issuer = dict(x[0] for x in cert.get("issuer", [])) if cert.get("issuer") else {}
+
                 info.update({
                     "ok": True,
                     "protocol": proto,
                     "expiry": expiry,
                     "expired": expired,
-                    "issuer": issuer.get("organizationName") or issuer.get("commonName") or "Unknown",
+                    "issuer": issuer_str,
                     "weak_protocol": proto in ("TLSv1", "TLSv1.1", "SSLv3"),
                 })
     except Exception:
@@ -338,11 +396,7 @@ def _tls_cert_info(host: str, port: int = 443) -> dict:
 
 
 def _exposure_flags(host: str, open_svcs: list[tuple[int, str]]) -> list[str]:
-    """
-    Heuristic, non-exploitative exposure flags: legacy plaintext protocols and
-    TLS/cert hygiene issues on the operator's own device. No CVE database lookup
-    (would require an external feed) and no automated exploitation.
-    """
+    """Heuristic, non-exploitative exposure audit flags."""
     flags = []
     port_map = dict(open_svcs)
 
@@ -360,10 +414,13 @@ def _exposure_flags(host: str, open_svcs: list[tuple[int, str]]) -> list[str]:
         if tls.get("ok"):
             if tls.get("expired"):
                 flags.append(f"🔴 TLS certificate EXPIRED on {tls.get('expiry')}")
-            if tls.get("weak_protocol"):
+            elif tls.get("weak_protocol"):
                 flags.append(f"🔴 Weak TLS protocol negotiated: {tls.get('protocol')}")
-            if not tls.get("expired") and not tls.get("weak_protocol"):
-                flags.append(f"🟢 TLS OK — {tls.get('protocol')}, issuer: {tls.get('issuer')}, expires {tls.get('expiry')}")
+            else:
+                expiry_str = f", expires {tls.get('expiry')}" if tls.get("expiry") else ""
+                flags.append(f"🟢 TLS OK — {tls.get('protocol')}, issuer: {tls.get('issuer')}{expiry_str}")
+        else:
+            flags.append("🟡 HTTPS (443) open but TLS handshake could not be inspected")
     if not flags:
         flags.append("🟢 No legacy/plaintext exposure detected on probed ports")
     return flags
@@ -380,7 +437,7 @@ def _resolve_hostname(ip: str) -> str:
 def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | None, player):
     try:
         gw_ip, iface = _get_default_gateway()
-        local_ip = _get_local_ip()
+        local_ip = _get_local_ip(gw_ip)
 
         if action == "service_check":
             host = target_ip or gw_ip
@@ -429,15 +486,19 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
                     pass
             return
 
-        # scan_lan / device_inventory / gateway_status / subnet_sweep all converge
-        # on a full topology map; subnet_sweep does the active ping sweep first.
+        # scan_lan / device_inventory / gateway_status / subnet_sweep
         if action == "subnet_sweep":
-            neighbors = _subnet_sweep(local_ip)
+            neighbors = _subnet_sweep(local_ip, gw_ip)
         else:
             neighbors = _get_arp_neighbors()
 
+        # Ensure gateway is present
         if not any(n["ip"] == gw_ip for n in neighbors):
             neighbors.insert(0, {"ip": gw_ip, "mac": "Gateway", "state": "REACHABLE"})
+
+        # Ensure local host is present
+        if local_ip != "127.0.0.1" and not any(n["ip"] == local_ip for n in neighbors):
+            neighbors.append({"ip": local_ip, "mac": "Host", "state": "REACHABLE"})
 
         nodes_info = []
         for n in neighbors[:20]:
@@ -452,12 +513,13 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
                 "hostname": hname,
                 "services": active_ports,
                 "is_gateway": (ip == gw_ip),
+                "is_host": (ip == local_ip),
             })
 
         hud_lines = [
             "### 🛰️ TACTICAL NETWORK RADAR (JARVIS MARK-LVII)\n",
             f"**Primary Gateway:** `{gw_ip}` *({iface})* — [ONLINE 🟢]\n",
-            f"**This Host:** `{local_ip}`\n",
+            f"**JARVIS Host Node:** `{local_ip}`\n",
             f"**Discovered Active Nodes:** `{len(nodes_info)}`\n",
             "```text",
             f"[ROUTER / GATEWAY: {gw_ip}]",
@@ -465,7 +527,7 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
 
         for idx, node in enumerate(nodes_info):
             prefix = "└── " if idx == len(nodes_info) - 1 else "├── "
-            label = " (DEFAULT GATEWAY)" if node["is_gateway"] else ""
+            label = " (DEFAULT GATEWAY)" if node["is_gateway"] else (" (JARVIS HOST)" if node["is_host"] else "")
             hname = f" [{node['hostname']}]" if node["hostname"] != "Unknown Node" else ""
             vendor_tag = f" <{node['vendor']}>" if node["vendor"] != "Unknown Vendor" else ""
             svcs = f" :: {', '.join(s[1] for s in node['services'])}" if node["services"] else ""

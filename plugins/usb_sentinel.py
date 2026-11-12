@@ -210,6 +210,8 @@ def _worker(action: str, player):
                 player.show_content("TACTICAL USB SENTRY", card)
                 susp = [d for d in devices if d.get("is_suspicious")]
                 if susp:
+                    if hasattr(player, "trigger_defense_alert"):
+                        player.trigger_defense_alert("ROGUE_USB", f"{len(susp)} suspicious USB device(s) flagged")
                     player.write_log(f"🚨 [USBSentry] Alert: {len(susp)} suspicious USB device(s) flagged!")
                 else:
                     player.write_log(f"🛡️ [USBSentry] Audited {len(devices)} physical USB devices. Perimeter secure.")

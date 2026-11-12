@@ -239,6 +239,11 @@ def _handle_learn_rule(params: dict, player=None) -> str:
         _link_concepts(tokens[0], tokens[1:5], relation="rule_context")
 
     if player:
+        if hasattr(player, "spark_neuro_learning"):
+            try:
+                player.spark_neuro_learning(r_id, trigger or "learning", 0.95)
+            except Exception:
+                pass
         player.write_log(f"Cortex: {res_msg}")
         _render_cortex_hud(player)
 
@@ -464,6 +469,11 @@ def _render_cortex_hud(player=None):
             "---\n*Self-Learning Neuro-Cortex • Hippocampal Consolidation & Dopaminergic Feedback Ready*"
         )
         player.show_content("Cognitive Neuro-Cortex", md)
+        if hasattr(player, "show_neuro_cortex"):
+            try:
+                player.show_neuro_cortex()
+            except Exception:
+                pass
     except Exception as e:
         print(f"[Cortex HUD Error] {e}")
 

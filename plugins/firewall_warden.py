@@ -188,6 +188,8 @@ def _worker(action: str, player):
 
         if player:
             try:
+                if hasattr(player, "show_defense_radar"):
+                    player.show_defense_radar()
                 player.show_content("TACTICAL FIREWALL WARDEN", card)
                 pub_count = len([s for s in sockets if s.get("public")])
                 player.write_log(f"🛡️ [FirewallWarden] {fw['engine']} policy: {fw['default_input']}. {pub_count} public socket(s).")

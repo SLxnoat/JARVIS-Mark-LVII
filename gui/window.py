@@ -117,6 +117,11 @@ class MainWindow(QMainWindow):
     _quiz_sig       = pyqtSignal(str, object, object)  # (topic, questions, grader)
     _quiz_hide_sig  = pyqtSignal()
     _review_sig     = pyqtSignal(str, str, object, object)  # document review payload
+    _radar_show_sig     = pyqtSignal()
+    _radar_alert_sig    = pyqtSignal(str, str)             # (threat_type, details)
+    _synaptic_show_sig  = pyqtSignal()
+    _synaptic_spark_sig = pyqtSignal(str, str, float)      # (rule_id, trigger, confidence)
+    _mission_show_sig   = pyqtSignal()
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -182,6 +187,9 @@ class MainWindow(QMainWindow):
         self.hud.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._content_panel = self._build_content_panel()
         self._quiz_panel = self._build_quiz_panel()
+        self._radar_panel = self._build_radar_panel()
+        self._synaptic_panel = self._build_synaptic_panel()
+        self._mission_panel = self._build_mission_panel()
 
         # Live camera container — replaces HUD when camera stream is active
         _cam_cont = QWidget()
@@ -362,6 +370,9 @@ class MainWindow(QMainWindow):
         self._center_split.addWidget(self._hud_cam_stack)
         self._center_split.addWidget(self._content_panel)
         self._center_split.addWidget(self._quiz_panel)
+        self._center_split.addWidget(self._radar_panel)
+        self._center_split.addWidget(self._synaptic_panel)
+        self._center_split.addWidget(self._mission_panel)
         self._center_split.setStretchFactor(0, 3)
         self._center_split.setStretchFactor(1, 1)
         self._center_split.setCollapsible(0, False)
@@ -416,6 +427,11 @@ class MainWindow(QMainWindow):
         self._quiz_sig.connect(self._show_quiz)
         self._quiz_hide_sig.connect(self._hide_quiz)
         self._review_sig.connect(self._show_review)
+        self._radar_show_sig.connect(self.show_tactical_radar)
+        self._radar_alert_sig.connect(self._on_radar_alert)
+        self._synaptic_show_sig.connect(self.show_synaptic_board)
+        self._synaptic_spark_sig.connect(self._on_synaptic_spark)
+        self._mission_show_sig.connect(self.show_mission_control)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -430,6 +446,27 @@ class MainWindow(QMainWindow):
         self._ready = self._check_config()
         if not self._ready:
             self._show_setup()
+
+        # Universal Command Spotlight (Ctrl+K)
+        from gui.command_spotlight import CommandSpotlight
+        self._command_spotlight = CommandSpotlight(self)
+        self._command_spotlight.command_executed.connect(self._on_spotlight_command_executed)
+        sc_spotlight = QShortcut(QKeySequence("Ctrl+K"), self)
+        sc_spotlight.activated.connect(self._command_spotlight.show_centered)
+
+        # 2D Radial Quick Wheel (Tab / Right-click)
+        from gui.radial_wheel import RadialQuickWheel
+        from PyQt6.QtGui import QCursor
+        self._radial_wheel = RadialQuickWheel(self.centralWidget())
+        self._radial_wheel.node_activated.connect(self._on_radial_node_activated)
+        sc_tab = QShortcut(QKeySequence(Qt.Key.Key_Tab), self)
+        sc_tab.activated.connect(lambda: self._radial_wheel.show_at(QCursor.pos()))
+
+        # Tactical Drawer Shortcuts
+        sc_left_drawer = QShortcut(QKeySequence("Ctrl+["), self)
+        sc_left_drawer.activated.connect(self.toggle_left_drawer)
+        sc_right_drawer = QShortcut(QKeySequence("Ctrl+]"), self)
+        sc_right_drawer.activated.connect(self.toggle_right_drawer)
 
         sc_mute = QShortcut(QKeySequence("F4"), self)
         sc_mute.activated.connect(self._toggle_mute)
@@ -1127,10 +1164,45 @@ class MainWindow(QMainWindow):
             self._log.append_log(f"ERR: Shortcut failed — {e}")
 
     def _toggle_fullscreen(self):
-        if self.isFullScreen():
-            self.showNormal()
-        else:
+        self.toggle_holodeck_mode()
+
+    def toggle_holodeck_mode(self):
+        """Fullscreen Holodeck Mode (F11): Hides desktop bezels and expands HUD to 100%."""
+        self._is_holodeck = not getattr(self, "_is_holodeck", False)
+        if self._is_holodeck:
+            if hasattr(self, "_header"):
+                self._header.hide()
+            if hasattr(self, "_footer"):
+                self._footer.hide()
+            if hasattr(self, "_left_panel"):
+                self._left_panel.hide()
+            if hasattr(self, "_right_panel"):
+                self._right_panel.hide()
             self.showFullScreen()
+        else:
+            if hasattr(self, "_header"):
+                self._header.show()
+            if hasattr(self, "_footer"):
+                self._footer.show()
+            if hasattr(self, "_left_panel"):
+                self._left_panel.show()
+            if hasattr(self, "_right_panel"):
+                self._right_panel.show()
+            self.showNormal()
+
+    def toggle_left_drawer(self):
+        """Collapses or expands the left telemetry drawer."""
+        self._left_collapsed = not getattr(self, "_left_collapsed", False)
+        target_w = 0 if self._left_collapsed else _LEFT_W
+        self._left_panel.setVisible(not self._left_collapsed)
+        self._left_panel.setFixedWidth(target_w)
+
+    def toggle_right_drawer(self):
+        """Collapses or expands the right activity drawer."""
+        self._right_collapsed = not getattr(self, "_right_collapsed", False)
+        target_w = 0 if self._right_collapsed else _RIGHT_W
+        self._right_panel.setVisible(not self._right_collapsed)
+        self._right_panel.setFixedWidth(target_w)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -2106,6 +2178,106 @@ class MainWindow(QMainWindow):
         self._quiz = None
         return w
 
+    def _build_radar_panel(self) -> QWidget:
+        w = HoloPanel("TACTICAL RADAR", "Perimeter Sentry & Network Sockets")
+        w.setObjectName("RadarPanel")
+        w.hide()
+        quit_btn = IconButton("close", 22)
+        quit_btn.setToolTip("Dismiss")
+        quit_btn.clicked.connect(w.hide)
+        w.add_header_widget(quit_btn)
+
+        from gui.tactical_radar import TacticalRadarWidget
+        self._radar_widget = TacticalRadarWidget(w)
+        w.body.addWidget(self._radar_widget)
+        return w
+
+    def _build_synaptic_panel(self) -> QWidget:
+        w = HoloPanel("SYNAPTIC BOARD", "Cognitive Self-Learning & Memory Rules")
+        w.setObjectName("SynapticPanel")
+        w.hide()
+        quit_btn = IconButton("close", 22)
+        quit_btn.setToolTip("Dismiss")
+        quit_btn.clicked.connect(w.hide)
+        w.add_header_widget(quit_btn)
+
+        from gui.synaptic_board import SynapticBoardWidget
+        self._synaptic_widget = SynapticBoardWidget(w)
+        self._synaptic_widget.node_selected.connect(
+            lambda nid, lbl, trig: self._log.append_log(f"SYNAPSE: {lbl} [{trig}]")
+        )
+        w.body.addWidget(self._synaptic_widget)
+        return w
+
+    def _build_mission_panel(self) -> QWidget:
+        w = HoloPanel("MISSION CONTROL", "Autonomous Agent Background Tasks")
+        w.setObjectName("MissionPanel")
+        w.hide()
+        quit_btn = IconButton("close", 22)
+        quit_btn.setToolTip("Dismiss")
+        quit_btn.clicked.connect(w.hide)
+        w.add_header_widget(quit_btn)
+
+        from gui.mission_capsules import MissionControlCapsules
+        self._mission_widget = MissionControlCapsules(w)
+        self._mission_widget.report_requested.connect(self._show_content)
+        w.body.addWidget(self._mission_widget)
+        return w
+
+    def show_tactical_radar(self) -> None:
+        """Reveals the 2D Tactical Sentry Radar below the HUD."""
+        self._reveal_below_hud(self._radar_panel, 260)
+
+    def _on_radar_alert(self, threat_type: str, details: str) -> None:
+        """Passes threat anomaly to the tactical radar."""
+        self._radar_widget.trigger_alert(threat_type, details)
+        self.show_tactical_radar()
+
+    def show_synaptic_board(self) -> None:
+        """Reveals the 2D Cognitive Synaptic Board below the HUD."""
+        self._reveal_below_hud(self._synaptic_panel, 260)
+
+    def _on_synaptic_spark(self, rule_id: str, trigger: str, confidence: float) -> None:
+        """Emits a dopaminergic spark on the synaptic board."""
+        self._synaptic_widget.spark_learning(rule_id, trigger, confidence)
+
+    def show_mission_control(self) -> None:
+        """Reveals autonomous agent task capsules below the HUD."""
+        self._reveal_below_hud(self._mission_panel, 260)
+
+    def _on_radial_node_activated(self, node_id: str) -> None:
+        """Dispatches workspace selection from the radial wheel."""
+        if node_id == "radar":
+            self.show_tactical_radar()
+        elif node_id == "synaptic":
+            self.show_synaptic_board()
+        elif node_id == "tasks":
+            self.show_mission_control()
+        elif node_id == "browser":
+            self._show_content("Web Browser", "Browser interface ready. Open links or invoke web search.")
+        elif node_id == "terminal":
+            self._show_content("Autonomous Dev Sandbox", "Dev agent & sandbox ready for instruction.")
+        elif node_id == "settings":
+            self._providers_panel.show_providers()
+
+    def _on_spotlight_command_executed(self, cmd_id: str, title: str) -> None:
+        """Dispatches commands selected from the Universal Command Spotlight."""
+        self._log.append_log(f"SPOTLIGHT // {title} [{cmd_id}]")
+        if cmd_id == "tactical_radar":
+            self.show_tactical_radar()
+        elif cmd_id == "synaptic_board":
+            self.show_synaptic_board()
+        elif cmd_id == "mission_control":
+            self.show_mission_control()
+        elif cmd_id == "holodeck_mode":
+            self.toggle_holodeck_mode()
+        elif cmd_id == "toggle_drawers":
+            self.toggle_left_drawer()
+            self.toggle_right_drawer()
+        elif cmd_id.startswith("plugin_"):
+            plugin_name = cmd_id[len("plugin_"):]
+            self._log.append_log(f"SYS: Invoked plugin {plugin_name}")
+
     def _show_quiz(self, topic: str, questions, grader=None):
         """Slot — Qt main thread. Puts a fresh quiz on the board."""
         if not questions:
@@ -2874,6 +3046,15 @@ class MainWindow(QMainWindow):
     # ────────────────────────────────────────────────────────────────────────────
 
     def _do_interrupt(self):
+        if hasattr(self, "_command_spotlight") and self._command_spotlight.isVisible():
+            self._command_spotlight.hide()
+            return
+        if hasattr(self, "_radial_wheel") and self._radial_wheel.isVisible():
+            self._radial_wheel.hide()
+            return
+        if getattr(self, "_is_holodeck", False):
+            self.toggle_holodeck_mode()
+            return
         if self.on_interrupt:
             self.on_interrupt()
 

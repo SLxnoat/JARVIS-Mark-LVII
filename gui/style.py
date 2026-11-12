@@ -16,6 +16,8 @@ palette at paint time, so it re-themes for free.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from PyQt6.QtCore import QPointF, QRectF
 from PyQt6.QtGui import QColor, QFont, QPolygonF
 
@@ -74,20 +76,111 @@ def px_font(px: float, weight=QFont.Weight.Normal, mono: bool = False,
     return f
 
 
+_HEX_RGB_CACHE: dict[str, tuple[int, int, int]] = {}
+_BLEND_CACHE: dict[tuple[Any, Any, int], QColor] = {}
+
+
+def _parse_rgb(c) -> tuple[int, int, int]:
+    if isinstance(c, tuple) and len(c) >= 3:
+        return int(c[0]), int(c[1]), int(c[2])
+    if isinstance(c, QColor):
+        return c.red(), c.green(), c.blue()
+    s = str(c).strip().lower()
+    rgb = _HEX_RGB_CACHE.get(s)
+    if rgb is not None:
+        return rgb
+    if s.startswith("#") and len(s) == 7:
+        try:
+            rgb = (int(s[1:3], 16), int(s[3:5], 16), int(s[5:7], 16))
+        except ValueError:
+            qc = QColor(c)
+            rgb = (qc.red(), qc.green(), qc.blue())
+    else:
+        qc = QColor(c)
+        rgb = (qc.red(), qc.green(), qc.blue())
+    _HEX_RGB_CACHE[s] = rgb
+    return rgb
+
+
+def blend_fast(col, a: float, base=None) -> QColor:
+    """High-performance pre-blended color LUT bypassing runtime QColor parsing."""
+    k_int = int(round(max(0.0, min(1.0, float(a))) * 255.0))
+    col_k = col.rgba() if isinstance(col, QColor) else (col if isinstance(col, tuple) else str(col))
+    base_k = base.rgba() if isinstance(base, QColor) else (base if isinstance(base, tuple) else (str(base) if base is not None else None))
+    key = (col_k, base_k, k_int)
+    cached = _BLEND_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    r1, g1, b1 = _parse_rgb(col)
+    r0, g0, b0 = _parse_rgb(base if base is not None else C.BG)
+    inv_k = 255 - k_int
+    r = (r0 * inv_k + r1 * k_int) // 255
+    g = (g0 * inv_k + g1 * k_int) // 255
+    b = (b0 * inv_k + b1 * k_int) // 255
+    res = QColor(r, g, b)
+    if len(_BLEND_CACHE) > 4096:
+        _BLEND_CACHE.clear()
+    _BLEND_CACHE[key] = res
+    return res
+
+
 def blend(col, a: float, base=None) -> QColor:
     """`col` mixed onto the background (or `base`) by `a` — opaque, so it is
     drawn on the raster engine's fast path."""
-    col, bg = QColor(col), QColor(base if base is not None else C.BG)
-    k = max(0.0, min(1.0, float(a)))
-    return QColor(int(bg.red() + (col.red() - bg.red()) * k),
-                  int(bg.green() + (col.green() - bg.green()) * k),
-                  int(bg.blue() + (col.blue() - bg.blue()) * k))
+    return blend_fast(col, a, base)
 
 
 def with_alpha(col, a: float) -> QColor:
     c = QColor(col)
     c.setAlphaF(max(0.0, min(1.0, float(a))))
     return c
+
+
+def draw_corner_brackets(p, r: QRectF, size: float = 6.0, color=None, width: float = 1.0) -> None:
+    """Draws tactical sci-fi L-brackets at the 4 corners of a rectangle."""
+    from PyQt6.QtCore import QLineF
+    from PyQt6.QtGui import QPen
+    pen = QPen(color if color is not None else blend_fast(C.PRI, 0.70), width)
+    p.setPen(pen)
+    x0, y0, x1, y1 = r.left(), r.top(), r.right(), r.bottom()
+    lines = [
+        # Top-left
+        QLineF(x0, y0, x0 + size, y0), QLineF(x0, y0, x0, y0 + size),
+        # Top-right
+        QLineF(x1 - size, y0, x1, y0), QLineF(x1, y0, x1, y0 + size),
+        # Bottom-left
+        QLineF(x0, y1, x0 + size, y1), QLineF(x0, y1, x0, y1 - size),
+        # Bottom-right
+        QLineF(x1 - size, y1, x1, y1), QLineF(x1, y1, x1, y1 - size),
+    ]
+    p.drawLines(lines)
+
+
+def draw_tech_badge(p, x: float, y: float, text: str, color_hex: str = C.PRI, filled: bool = False) -> float:
+    """Draws a compact sci-fi pill badge with monospace text. Returns badge width."""
+    from PyQt6.QtGui import QBrush, QFont, QPen
+    f = px_font(7.5, QFont.Weight.Medium, mono=True, spacing=0.5)
+    p.setFont(f)
+    p.save()
+    pad_h, pad_v = 6.0, 2.5
+    fm = p.fontMetrics()
+    tw = fm.horizontalAdvance(text)
+    th = fm.height()
+    bw = tw + pad_h * 2
+    bh = th + pad_v * 2
+    rect = QRectF(x, y, bw, bh)
+    if filled:
+        p.setPen(QPen(blend_fast(color_hex, 0.8), 1.0))
+        p.setBrush(QBrush(blend_fast(color_hex, 0.15)))
+    else:
+        p.setPen(QPen(blend_fast(color_hex, 0.5), 1.0))
+        p.setBrush(QBrush(blend_fast(C.PANEL2, 0.8)))
+    p.drawRoundedRect(rect, 2.0, 2.0)
+    p.setPen(QPen(blend_fast(color_hex, 0.95)))
+    p.drawText(rect, 0x0084, text)  # AlignCenter
+    p.restore()
+    return bw
 
 
 def chamfer(r: QRectF, cut: float, corners=("tl", "br")) -> QPolygonF:

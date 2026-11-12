@@ -392,3 +392,28 @@ class JarvisUI:
     def stop_speaking(self):
         if not self.muted:
             self.set_state("LISTENING")
+
+    def trigger_defense_alert(self, threat_type: str, details: str) -> None:
+        """Thread-safe: trigger perimeter breach alert on Tactical Radar."""
+        if hasattr(self._win, "_radar_alert_sig"):
+            self._win._radar_alert_sig.emit(str(threat_type or "PERIMETER"), str(details or ""))
+
+    def show_defense_radar(self) -> None:
+        """Thread-safe: reveal Tactical Sentry Radar below HUD."""
+        if hasattr(self._win, "_radar_show_sig"):
+            self._win._radar_show_sig.emit()
+
+    def spark_neuro_learning(self, rule_id: str, trigger: str, confidence: float = 0.9) -> None:
+        """Thread-safe: emit dopaminergic spark on Cognitive Synaptic Board."""
+        if hasattr(self._win, "_synaptic_spark_sig"):
+            self._win._synaptic_spark_sig.emit(str(rule_id), str(trigger), float(confidence))
+
+    def show_neuro_cortex(self) -> None:
+        """Thread-safe: reveal Cognitive Synaptic Board below HUD."""
+        if hasattr(self._win, "_synaptic_show_sig"):
+            self._win._synaptic_show_sig.emit()
+
+    def show_mission_control(self) -> None:
+        """Thread-safe: reveal Mission Control task capsules below HUD."""
+        if hasattr(self._win, "_mission_show_sig"):
+            self._win._mission_show_sig.emit()

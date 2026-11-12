@@ -39,7 +39,9 @@ from gui.theme import (
     qcol,
 )
 
-from gui.style import blend, chamfer, px_font, with_alpha
+from gui.style import (
+    blend, blend_fast, chamfer, draw_corner_brackets, draw_tech_badge, px_font, with_alpha
+)
 from gui.ambient import AmbientLighting, AIWaveformVisualizer, CognitiveTelemetry
 
 try:
@@ -129,6 +131,13 @@ class HudCanvas(QWidget):
         self._visualizer = AIWaveformVisualizer()
         self._telemetry = CognitiveTelemetry()
 
+        # Tactical AR Vibe Reticle and Telemetry
+        self.setMouseTracking(True)
+        self._cursor_pos: QPointF = QPointF(200.0, 200.0)
+        self._cursor_target: QPointF = QPointF(200.0, 200.0)
+        self._cursor_active: bool = False
+        self._scanline_y: float = 0.0
+
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(16)
@@ -140,6 +149,15 @@ class HudCanvas(QWidget):
                 self._avatar.glance(dx, dy, hold)
         except Exception:
             pass
+
+    def mouseMoveEvent(self, e) -> None:
+        self._cursor_target = e.position()
+        self._cursor_active = True
+        super().mouseMoveEvent(e)
+
+    def leaveEvent(self, e) -> None:
+        self._cursor_active = False
+        super().leaveEvent(e)
 
     def push_visemes(self, frames, hop: float, at: float) -> None:
         """Thread-safe: hand over a schedule of (level, openness, width) frames.
@@ -386,6 +404,11 @@ class HudCanvas(QWidget):
         self._ambient.step(dt, self.state, self.speaking, self.muted, amp)
         self._visualizer.step(dt, self.state, self.speaking, self.muted, amp)
         self._telemetry.step(dt, self.state, self.speaking)
+
+        # Step tactical reticle and scanline
+        if self._cursor_active:
+            self._cursor_pos += (self._cursor_target - self._cursor_pos) * 0.25
+        self._scanline_y = (self._scanline_y + 1.2) % max(1.0, float(self.height()))
 
         self._blink_tick += 1
         if self._blink_tick >= 38:
@@ -715,4 +738,118 @@ class HudCanvas(QWidget):
         self._visualizer.paint(p, cx, wy, W * 0.60, self.state, self.speaking,
                                self.muted, amp, amb_col)
 
+        # ── Audio Viseme Orbit Ring ──────────────────────────────────────────
+        orbit_cy = head_cy if (self._avatar is not None and self.hud_style in _FACE_STYLES) else (core_cy if self._reactor is not None else band_t + band_h / 2.0)
+        orbit_r = r_head if (self._avatar is not None and self.hud_style in _FACE_STYLES) else r
+        self._paint_audio_viseme_orbit(p, cx, orbit_cy, orbit_r)
+
+        # ── Tactical AR Vibe Overlays ────────────────────────────────────────
+        self._paint_tactical_vibe_hud(p, float(W), float(H), cx, orbit_cy, orbit_r)
+
         p.end()   # end deterministically so the backing store never flushes an active painter
+
+    def _paint_audio_viseme_orbit(self, p: QPainter, cx: float, cy: float, r: float) -> None:
+        """Draws a 32-point reactive circular equalizer orbiting the avatar jawline."""
+        n_pts = 32
+        r_orbit = r * 0.98
+        amp = self._amp_disp
+        live = (self.speaking or amp > 0.03) and not self.muted
+        t = self._core_phase
+
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        lines = []
+        dots = []
+
+        main_col = blend_fast(C.ACC if self.speaking else (C.GREEN if self.state == "LISTENING" else C.PRI), 0.75)
+        for i in range(n_pts):
+            theta = math.radians(i * (360.0 / n_pts) - 90.0)
+            cos_t, sin_t = math.cos(theta), math.sin(theta)
+
+            # High-frequency ripple
+            wave = 0.5 + 0.5 * math.sin(t * 3.8 + i * 0.85)
+            h = (amp * 28.0 * wave) if live else (3.0 + 2.0 * math.sin(t * 1.5 + i * 0.4))
+
+            # Inward spikes for listening (absorbing), outward spikes for speaking (transmitting)
+            dirn = -1.0 if self.state == "LISTENING" else 1.0
+            p0 = QPointF(cx + cos_t * r_orbit, cy + sin_t * r_orbit)
+            p1 = QPointF(cx + cos_t * (r_orbit + h * dirn), cy + sin_t * (r_orbit + h * dirn))
+            lines.append(QLineF(p0, p1))
+            if live and i % 2 == 0:
+                dots.append(p1)
+
+        p.setPen(QPen(main_col, 1.4))
+        p.drawLines(lines)
+
+        if dots:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(blend_fast(C.WHITE, 0.85)))
+            for d in dots:
+                p.drawEllipse(d, 1.4, 1.4)
+        p.restore()
+
+    def _paint_tactical_vibe_hud(self, p: QPainter, W: float, H: float, cx: float, cy: float, r: float) -> None:
+        """Renders 2D tactical sci-fi HUD elements: corner brackets, badges, scanline & targeting reticle."""
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        # 1. Outer Corner L-Brackets framing the HUD
+        draw_corner_brackets(p, QRectF(14, 14, W - 28, H - 28), size=12.0, color=blend_fast(C.PRI, 0.40), width=1.2)
+
+        # 2. Cybernetic Badges
+        draw_tech_badge(p, 24, 20, "◈ MK-LVII // TACTICAL HUD", C.PRI)
+        status_txt = "MUTED" if self.muted else ("TRANSMITTING" if self.speaking else "SYS // ARMED")
+        status_col = C.MUTED_C if self.muted else (C.ACC if self.speaking else C.GREEN)
+        draw_tech_badge(p, W - 128, 20, status_txt, status_col)
+
+        # 3. Drifting Laser Scanline
+        if H > 60:
+            lg = QLinearGradient(0, self._scanline_y, W, self._scanline_y)
+            lg.setColorAt(0.0, with_alpha(C.PRI, 0.0))
+            lg.setColorAt(0.5, with_alpha(C.PRI, 0.10))
+            lg.setColorAt(1.0, with_alpha(C.PRI, 0.0))
+            p.setPen(QPen(QBrush(lg), 1.0))
+            p.drawLine(QLineF(0, self._scanline_y, W, self._scanline_y))
+
+        # 4. Circular HUD Telemetry Arc Calibration Marks
+        t = self._core_phase
+        arc_r = r * 1.38
+        p.setPen(QPen(blend_fast(C.PRI, 0.18), 1.0, Qt.PenStyle.DashLine))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(QPointF(cx, cy), arc_r, arc_r)
+
+        # 4 Cardinal Compass Angles
+        compass_angles = [(0, "090°"), (90, "180°"), (180, "270°"), (270, "000°")]
+        p.setFont(px_font(6.5, QFont.Weight.Medium, mono=True))
+        p.setPen(QPen(blend_fast(C.TEXT_DIM, 0.55), 1.0))
+        for deg, label in compass_angles:
+            rad = math.radians(deg + t * 4.0)
+            px = cx + math.cos(rad) * (arc_r + 9.0)
+            py = cy + math.sin(rad) * (arc_r + 9.0)
+            p.drawText(QRectF(px - 16, py - 6, 32, 12), Qt.AlignmentFlag.AlignCenter, label)
+
+        # 5. Interactive Cursor Reticle
+        if self._cursor_active:
+            cur_x, cur_y = self._cursor_pos.x(), self._cursor_pos.y()
+            p.setPen(QPen(blend_fast(C.PRI, 0.70), 1.0))
+            sz = 14.0
+            p.drawLines([
+                QLineF(cur_x - sz, cur_y - 4, cur_x - sz, cur_y - sz),
+                QLineF(cur_x - sz, cur_y - sz, cur_x - 4, cur_y - sz),
+                QLineF(cur_x + sz, cur_y - 4, cur_x + sz, cur_y - sz),
+                QLineF(cur_x + sz, cur_y - sz, cur_x + 4, cur_y - sz),
+                QLineF(cur_x - sz, cur_y + 4, cur_x - sz, cur_y + sz),
+                QLineF(cur_x - sz, cur_y + sz, cur_x - 4, cur_y + sz),
+                QLineF(cur_x + sz, cur_y + 4, cur_x + sz, cur_y + sz),
+                QLineF(cur_x + sz, cur_y + sz, cur_x + 4, cur_y + sz),
+            ])
+            # Center target pip
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(blend_fast(C.ACC if self.speaking else C.PRI, 0.85)))
+            p.drawEllipse(QPointF(cur_x, cur_y), 1.6, 1.6)
+            # Coordinate Telemetry
+            p.setFont(px_font(7.5, QFont.Weight.Medium, mono=True))
+            p.setPen(QPen(blend_fast(C.TEXT_MED, 0.85), 1.0))
+            p.drawText(QPointF(cur_x + 18, cur_y + 12), f"X:{int(cur_x)} Y:{int(cur_y)} LOC")
+
+        p.restore()

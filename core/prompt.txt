@@ -170,6 +170,12 @@ precision, zero hesitation, and minimal round-trip latency:
      • Drafting chat replies from clipboard/context -> chat_takeover
      • Gmail read unread, search, draft, send -> gmail_control
      • Calendar meetings & daily schedule -> calendar_control
+   - Daily Workstation Productivity:
+     • Downloads/Desktop auto-sorting & duplicate file detection -> smart_desktop_cleaner
+     • Unified morning workstation readiness & agenda briefing -> workspace_health_summary
+     • In-session countdown timer, reminder alerts & snooze queue -> smart_reminder_snoozer
+     • Hourly rain radar, weather forecast & solar twilight -> weather_astronomy_briefing
+     • Technical data rates, download time & computing storage unit engine -> smart_unit_converter
    - Health, Fitness & Vision:
      • Focus & break timer -> pomodoro
      • Daily hydration tracking -> water_reminder

@@ -363,6 +363,35 @@ Five powerful, open-source, zero-cost plugins built with zero new dependencies (
   * Fast, non-blocking chunked streaming bandwidth download test via Cloudflare CDN edge servers.
   * *Voice prompts:* *"Test my network speed"*, *"Jarvis, ping 1.1.1.1"*, *"Check network latency and packet loss"*.
 
+### 💼 Daily Workstation Productivity Plugins
+
+Built for daily engineering, software development, and personal workstation efficiency with zero commercial APIs and zero sci-fi gimmicks:
+
+* **🧹 Workspace & Downloads Cleaner (`plugins/smart_desktop_cleaner.py`):**
+  * Scans, categorizes, and organizes `~/Downloads`, `~/Desktop`, or custom paths into structured folders (`Documents`, `Images`, `Archives`, `Installers`, `Code`).
+  * Detects duplicate download versions (e.g. `file (1).pdf`) and stale installers with safe dry-run preview simulation before moving files.
+  * *Voice prompts:* *"Jarvis, scan my Downloads folder"*, *"Organize my downloads with dry run"*, *"Find duplicate downloads"*.
+
+* **☀️ Workstation Readiness Briefing (`plugins/workspace_health_summary.py`):**
+  * Synthesizes system vitals (CPU load, RAM, disk storage, battery, uptime), uncommitted Git repositories, and today's calendar schedule into a unified HUD dashboard.
+  * Speaks a crisp, natural morning executive briefing.
+  * *Voice prompts:* *"Morning briefing"*, *"Workstation readiness check"*, *"How is the system looking today?"*.
+
+* **⏱️ Quick Countdown Timers & Snooze Manager (`plugins/smart_reminder_snoozer.py`):**
+  * In-session voice-activated countdown timers with natural time parsing (`"10m"`, `"30s"`, `"1h"`).
+  * Real-time HUD countdown board, gentle audio alerts on completion, and instant voice snoozing (`"snooze timer T1"`).
+  * *Voice prompts:* *"Set a timer for 15 minutes to check the oven"*, *"Show active timers"*, *"Snooze timer for 5 minutes"*.
+
+* **🌧️ Hourly Weather Radar & Solar Twilight Briefing (`plugins/weather_astronomy_briefing.py`):**
+  * Queries the 100% free Open-Meteo API for real-time temperature, "feels like" factor, humidity, wind velocity, and UV index.
+  * Renders next 12-hour precipitation probability bar charts directly on the HUD without launching external browsers.
+  * *Voice prompts:* *"What's the weather in London?"*, *"Will it rain this afternoon?"*, *"Show hourly rain radar"*.
+
+* **📐 Technical & Digital Unit Engine (`plugins/smart_unit_converter.py`):**
+  * High-precision conversions for networking data rates (Mbps to GB/h, MB/s), binary vs decimal compute storage (TiB to TB / GiB), temperature, pressure, speed, and energy.
+  * Computes estimated download and transfer durations for given file sizes and network speeds.
+  * *Voice prompts:* *"Convert 500 Mbps to GB per hour"*, *"How long to download 50GB at 100 Mbps?"*, *"Convert 2 TiB to GB"*.
+
 ### 🩹 Fixes
 
 * **Closing the window lost the conversation summary.** The thread holding the session was a daemon and died with the window, so the "last time we talked about…" line the next briefing opens with was only saved when you said *"shut down"* out loud. Closing now saves it (bounded to a few seconds, after the window is gone), stops the engines so a running task resumes next launch, runs the plugins' exit handlers, and ends the process even if a tool thread is still busy.
@@ -1053,7 +1082,12 @@ Mark LVII/
 │   ├── focus_flowstate_guardian.py # Deep work distraction shield & uninterrupted flow duration tracker
 │   ├── ai_meeting_summarizer.py # Meeting audio scribe extracting decisions & action items with deadlines
 │   ├── stealth_browser_recon.py # Ad-free headless article extractor stripping popups & cookie walls
-│   └── multilingual_live_translator.py # Multilingual live translator with phonetic guides & HUD subtitles
+│   ├── multilingual_live_translator.py # Multilingual live translator with phonetic guides & HUD subtitles
+│   ├── smart_desktop_cleaner.py # Downloads & workspace directory hygiene organizer and duplicate scanner
+│   ├── workspace_health_summary.py # Unified executive workstation readiness & agenda morning briefing
+│   ├── smart_reminder_snoozer.py # In-session countdown timers, notification alerts & snooze manager
+│   ├── weather_astronomy_briefing.py # Real-time weather, hourly rain radar & astronomical twilight schedule
+│   └── smart_unit_converter.py # Technical data rate, download duration & binary/decimal storage unit engine
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

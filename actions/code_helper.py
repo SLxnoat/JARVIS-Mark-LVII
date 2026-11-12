@@ -168,14 +168,15 @@ def _write(description: str, language: str, output_path: str, player=None) -> tu
     lang  = language or "python"
     model = _get_gemini()
 
-    prompt = f"""You are an expert {lang} developer.
-Write clean, working, well-commented {lang} code for the description below.
+    prompt = f"""You are a Principal {lang} Software Engineer.
+Write clean, robust, production-ready, and well-structured {lang} code for the description below.
 
-Rules:
-- Output ONLY the code. No explanation, no markdown, no backticks.
-- Add helpful inline comments.
-- Handle errors and edge cases properly.
-- Use modern best practices.
+Engineering Rules:
+- Output ONLY raw executable code. Absolutely no conversational filler, no markdown fences, no backticks.
+- Write COMPLETE, fully working implementations: zero 'TODO' stubs, zero 'pass' placeholders.
+- Include proper type annotations, clear docstrings, and helpful inline comments for non-trivial logic.
+- Include robust error handling and defensive boundary checks for all I/O, network, and system operations.
+- Adhere strictly to modern {lang} idioms and best practices.
 
 Description: {description}
 
@@ -190,14 +191,18 @@ Code:"""
 
 def _fix_code(code: str, error_output: str, description: str) -> str:
     model  = _get_gemini()
-    prompt = f"""You are an expert debugger.
-The code below failed with the following error. Fix it.
-Return ONLY the corrected code — no explanation, no markdown, no backticks.
+    prompt = f"""You are an expert systems debugger and software architect.
+Analyze the runtime traceback and error output below to diagnose the exact root cause, then fix it completely.
+
+Debugging Directives:
+- Fix the root structural cause, not just a superficial workaround.
+- Return ONLY the complete, corrected executable code. Absolutely no markdown fences, no triple backticks, no conversational commentary.
+- Ensure all variable names, imports, signatures, and logic flow are fully functional.
 
 Original goal: {description}
 
-Error:
-{error_output[:2000]}
+Error / Traceback:
+{error_output[:2500]}
 
 Broken code:
 {code}

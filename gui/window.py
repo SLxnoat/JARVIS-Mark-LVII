@@ -255,10 +255,8 @@ class MainWindow(QMainWindow):
             """)
             return b
 
-        # Muted is the default and the button says so, because a soundtrack
-        # talking over JARVIS is the one way this feature could make the
-        # assistant worse rather than better.
-        self._video_mute_btn = _vid_btn("🔇  SOUND OFF")
+        # Sound is on by default and the button indicates state.
+        self._video_mute_btn = _vid_btn("🔊  SOUND ON")
         self._video_mute_btn.clicked.connect(self._toggle_video_mute)
         _vid_hdr.addWidget(self._video_mute_btn)
 
@@ -305,7 +303,8 @@ class MainWindow(QMainWindow):
             self._video_scene.addItem(self._video_item)
 
             self._video_audio = QAudioOutput()
-            self._video_audio.setMuted(True)
+            self._video_audio.setVolume(1.0)
+            self._video_audio.setMuted(False)
             self._video_player = QMediaPlayer()
             self._video_player.setVideoOutput(self._video_item)
             # Keep the picture filling the view as the window is resized.
@@ -331,7 +330,8 @@ class MainWindow(QMainWindow):
             # alone: one stream, one player, nothing to synchronise.
             self._video_sound = QMediaPlayer()
             self._video_sound_out = QAudioOutput()
-            self._video_sound_out.setMuted(True)
+            self._video_sound_out.setVolume(1.0)
+            self._video_sound_out.setMuted(False)
             self._video_sound.setAudioOutput(self._video_sound_out)
 
             self._video_sync = QTimer(self)
@@ -676,8 +676,8 @@ class MainWindow(QMainWindow):
         muted, and pressing the mute key during a video hands the decision back
         to them for good.
         """
-        sound_on = bool(self._video_on and self._video_sound_out
-                        and not self._video_sound_out.isMuted())
+        out = self._video_sound_out if self._video_split else self._video_audio
+        sound_on = bool(self._video_on and out and not out.isMuted())
         if sound_on and not self._muted:
             self._video_auto_muted = True
             self._set_muted(True, "The video's sound is on — silence it, close "

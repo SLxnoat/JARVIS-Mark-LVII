@@ -144,8 +144,8 @@ def _show_local(player, path: Path) -> str:
         shower(str(path), path.name)
         return f"status=showing image={path.name} where=display"
     _begin_open()
-    player.show_video(str(path), path.name, muted=True)
-    return f"status=playing file={path.name} where=display sound=muted"
+    player.show_video(str(path), path.name, muted=False)
+    return f"status=playing file={path.name} where=display sound=on"
 
 
 def _resolve_youtube(url_or_query: str) -> tuple[str, str, str, str]:
@@ -359,8 +359,8 @@ def video_player(parameters: dict = None, response=None, player=None,
                 url=source)
         # A direct media URL can go straight to the player; a YouTube page cannot.
         _begin_open()
-        player.show_video(source, source.rsplit("/", 1)[-1][:44], muted=True)
-        return "status=playing where=display sound=muted"
+        player.show_video(source, source.rsplit("/", 1)[-1][:44], muted=False)
+        return "status=playing where=display sound=on"
 
     # ANSWER FIRST, OPEN SECOND.
     #
@@ -395,7 +395,7 @@ def _play_youtube(player, source: str, token: int) -> None:
 
     if url:
         try:
-            player.show_video(url, title or source, muted=True,
+            player.show_video(url, title or source, muted=False,
                               audio_source=audio_url)
             return
         except Exception as e:                              # noqa: BLE001
@@ -440,8 +440,8 @@ TOOL = {
         "Set 'source_type' from what the user MEANT: 'file' when it is "
         "something on their own computer, 'web' when they mean YouTube or "
         "something online, 'auto' when they did not say. "
-        "Video always starts MUTED - only call action='unmute' when the user "
-        "actually asks to hear it. action='stop' closes a picture as well. "
+        "Video always plays with sound ON by default. Call action='mute' if the user "
+        "asks to silence it, or action='unmute' to turn sound back on. action='stop' closes a picture as well. "
         "While a video is on the display: 'forward' / 'back' with seconds "
         "('skip 30 seconds' -> forward, seconds=30; no amount = 10), 'seek_to' "
         "with position ('go to 1:20' -> position='1:20'), 'pause', 'resume'. "

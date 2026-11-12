@@ -318,7 +318,7 @@ class JarvisUI:
         """Thread-safe: show a webcam frame in the small overlay (screen captures)."""
         self._win._camera_sig.emit(img_bytes)
 
-    def show_video(self, source: str, title: str = "", muted: bool = True,
+    def show_video(self, source: str, title: str = "", muted: bool = False,
                    audio_source: str = "") -> None:
         """Thread-safe: play a video where the avatar normally is.
 
@@ -327,10 +327,8 @@ class JarvisUI:
         combined format any more — and when it is given the two are played
         together and kept in step.
 
-        Muted by default, and that is a decision rather than a default: a
-        soundtrack talking over JARVIS is the one way this could make the
-        assistant worse. The user turns sound on from the header button or by
-        asking, and closes it the same two ways.
+        Plays with sound enabled by default (unmuted). The user can turn sound off
+        or on from the header button or by asking voice commands.
         """
         self._win._video_open_sig.emit(str(source or ""), str(title or ""),
                                        bool(muted), str(audio_source or ""))

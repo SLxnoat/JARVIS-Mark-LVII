@@ -18,6 +18,8 @@ config/whatsapp_web/          # a LINKED WhatsApp session — committing it hand
 # ── Personal data the assistant accumulates about you ─────────────────────────
 memory/long_term.json
 memory/*.db
+memory/chroma/
+memory/*.parquet
 memory/routines.json
 memory/tasks/
 reports/

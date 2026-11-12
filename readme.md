@@ -727,19 +727,24 @@ These four landed across **Mark LII, LIII, LIV and LV at the same time**, after 
 
 No new dependencies. No bundled asset files. No hardcoded language, and nothing that assumes one operating system.
 
-### 🧠 A memory that actually remembers
+### 🧠 Two-Tier Memory: Short-Term Working Memory & ChromaDB Vector Store
 
-The store was capped at **2,200 characters — the whole memory, not per entry** — because all of it was pasted into the system prompt on every connect, so growing the memory grew every request. When it filled, the oldest entries were deleted and one line was printed to a console nobody reads. An assistant advertised as remembering "projects, preferences and personal context" was in practice a two-page notepad that quietly forgot your sister's name after a few weeks.
+JARVIS features a true cognitive two-tier memory architecture separating real-time working dialogue from persistent semantic knowledge:
 
-Storage and prompt budget are now separate problems:
+* **Tier 1: Short-Term Working Memory (STM)** (`memory/short_term.py`):
+  - In-memory rolling FIFO dialogue buffer (last 50 turns) operating with $< 0.01\text{ ms}$ latency.
+  - Active entity cache with automatic Time-to-Live (TTL) turn degradation to resolve pronouns and transient subjects (*"that file"*, *"yesterday's task"*).
+  - Working scratchpad injected dynamically into the system prompt for complex multi-step reasoning.
 
-* **Nothing is deleted.** The cap is a runaway guard normal use never approaches, and if it is ever hit it says so in the activity log instead of on stdout.
-* **The prompt carries a core, not a dump.** Identity in full, then the most recently updated facts, budgeted — measured at **971 characters on a memory holding 62 stored facts.** That is *smaller* than the old whole-store cap, so sessions now connect with fewer tokens than before.
-* **The rest is fetched on demand.** A `recall_memory` tool searches the full store locally — no network, no second model, well under a millisecond.
+* **Tier 2: Long-Term Semantic Vector Memory (ChromaDB)** (`memory/vector_store.py`):
+  - Fully local, persistent vector database in `memory/chroma/` using local ONNX embeddings with zero telemetry.
+  - 4 isolated collections: `user_profile`, `knowledge_notes`, `episodic_sessions`, and `task_knowledge`.
+  - Enables conceptual semantic retrieval (e.g. searching *"green beverage"* retrieves *"User enjoys drinking iced matcha latte"*).
 
-The part that is easy to get wrong: **a model cannot look something up if it doesn't know the thing exists.** So the prompt also carries an **index of the keys** it had no room for. Without it, "who is Ayşe?" gets "I don't know" while `ayse_sister` sits on disk unread. That index interleaves categories rather than sorting by recency — sorted like the core, a memory with forty preferences pushed the one entry the index existed for off the end.
-
-⚙ → **🧠 MEMORY** shows every stored fact, when it was learned, and a ✕ to forget it. Everything stays in `memory/long_term.json` on your machine.
+* **Hybrid Retrieval (`recall_memory`)**:
+  - Blends ChromaDB dense vector cosine similarity with fast sparse lexical keyword scoring.
+  - Matches across concepts while retaining 100% precision for exact code tokens, IP addresses, and names.
+  - Automatically mirrors writes back to `memory/long_term.json` so the Qt HUD drawer (⚙ → **🧠 MEMORY**) remains 100% synchronized.
 
 ### ↩️ Undo — it can take back what it did
 

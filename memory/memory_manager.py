@@ -156,6 +156,21 @@ def _recursive_update(target: dict, updates: dict) -> bool:
     return changed
 
 
+def _sync_to_vector_store(updates: dict) -> None:
+    """Mirror factual updates asynchronously into ChromaDB vector collections."""
+    try:
+        from memory import vector_store
+        for cat, items in updates.items():
+            if isinstance(items, dict):
+                for key, val_obj in items.items():
+                    val = val_obj.get("value", "") if isinstance(val_obj, dict) else str(val_obj)
+                    upd = val_obj.get("updated") if isinstance(val_obj, dict) else None
+                    if val:
+                        vector_store.upsert_fact(cat, key, str(val), upd)
+    except Exception as e:
+        print(f"[Memory] ⚠️ VectorStore sync error: {e}")
+
+
 def update_memory(memory_update: dict) -> dict:
     if not isinstance(memory_update, dict) or not memory_update:
         return load_memory()
@@ -163,6 +178,7 @@ def update_memory(memory_update: dict) -> dict:
     if _recursive_update(memory, memory_update):
         save_memory(memory)
         print(f"[Memory] 💾 Saved: {list(memory_update.keys())}")
+        _sync_to_vector_store(memory_update)
     return memory
 
 def _entry_value(entry) -> str:
@@ -348,35 +364,70 @@ def _score(query_words: list[str], cat: str, key: str, value: str) -> int:
 
 
 def search_memory(query: str, limit: int = 8) -> str:
-    """Find stored facts matching `query`. Backs the recall_memory tool.
+    """Find stored facts matching `query` using hybrid semantic + lexical search.
 
-    An empty query is treated as "show me everything you know", capped - the
-    model asks that when the user says "what do you remember about me?"."""
+    Combines ChromaDB vector embeddings for deep semantic similarity with
+    fast lexical token scoring for exact keyword matches.
+    """
     memory = load_memory()
-    words  = [w for w in re.split(r"[^\w]+", (query or "").lower()) if len(w) > 1]
+    query_str = (query or "").strip()
+    words = [w for w in re.split(r"[^\w]+", query_str.lower()) if len(w) > 1]
 
-    rows: list[tuple[int, str, str, str]] = []
+    # 1. Lexical Scoring (Exact and Substring Matching)
+    scored_rows: dict[tuple[str, str], dict] = {}
     for cat, items in memory.items():
         if not isinstance(items, dict):
-            continue                     # skip 'sessions', which is a list
+            continue
         for key, entry in items.items():
             val = _entry_value(entry)
             if not val:
                 continue
             s = _score(words, cat, key, val) if words else 1
             if s > 0:
-                rows.append((s, cat, key, val))
+                scored_rows[(cat, key)] = {
+                    "cat": cat,
+                    "key": key,
+                    "val": val,
+                    "score": s * 2.0,
+                    "source": "exact",
+                }
 
-    if not rows:
+    # 2. Semantic Vector Search (ChromaDB)
+    if query_str:
+        try:
+            from memory import vector_store
+            sem_results = vector_store.semantic_search(query_str, n_results=limit)
+            for r in sem_results:
+                c = r.get("category", "notes")
+                k = r.get("key", "")
+                v = r.get("value", "")
+                dist = r.get("distance", 1.0)
+                sim_score = max(0.0, (1.0 - dist)) * 20.0
+                pair = (c, k)
+                if pair in scored_rows:
+                    scored_rows[pair]["score"] += sim_score + 10.0
+                    scored_rows[pair]["source"] = "hybrid"
+                else:
+                    scored_rows[pair] = {
+                        "cat": c,
+                        "key": k,
+                        "val": v,
+                        "score": sim_score,
+                        "source": "semantic",
+                    }
+        except Exception:
+            pass
+
+    if not scored_rows:
         return (f"Nothing stored about '{query}'." if query
                 else "I have not stored anything about this person yet.")
 
-    rows.sort(key=lambda r: (-r[0], r[2]))
-    lines = [f"{cat}/{_pretty(key)}: {val}" for _s, cat, key, val in rows[:max(1, limit)]]
-    head  = (f"Stored facts matching '{query}':" if query
-             else "Everything currently stored:")
-    more  = (f"\n(+{len(rows) - len(lines)} more — search with a narrower keyword)"
-             if len(rows) > len(lines) else "")
+    sorted_entries = sorted(scored_rows.values(), key=lambda x: (-x["score"], x["key"]))
+    lines = [f"{e['cat']}/{_pretty(e['key'])}: {e['val']}" for e in sorted_entries[:max(1, limit)]]
+    head = (f"Stored facts matching '{query}':" if query
+            else "Everything currently stored:")
+    more = (f"\n(+{len(sorted_entries) - len(lines)} more — search with a narrower keyword)"
+            if len(sorted_entries) > len(lines) else "")
     return head + "\n" + "\n".join(lines) + more
 
 
@@ -416,6 +467,11 @@ def forget(key: str, category: str = "notes") -> str:
         del cat[key]
         memory[category] = cat
         save_memory(memory)
+        try:
+            from memory import vector_store
+            vector_store.delete_fact(category, key)
+        except Exception:
+            pass
         return f"Forgotten: {category}/{key}"
     return f"Not found: {category}/{key}"
 
@@ -452,6 +508,11 @@ def save_session_summary(summary: str, language: str = "") -> None:
             encoding="utf-8",
         )
     print(f"[Memory] 📝 Session saved ({entry['date']}): {summary[:60]}…")
+    try:
+        from memory import vector_store
+        vector_store.upsert_session(entry["date"], summary, language)
+    except Exception as e:
+        print(f"[Memory] ⚠️ VectorStore session sync note: {e}")
 
 
 def pop_last_session() -> dict | None:

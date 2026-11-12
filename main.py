@@ -1518,6 +1518,13 @@ class JarvisLive:
         parts = [time_ctx, identity_ctx]
         if mem_str:
             parts.append(mem_str)
+        try:
+            from memory.short_term import stm
+            stm_ctx = stm.format_for_prompt()
+            if stm_ctx:
+                parts.append(stm_ctx)
+        except Exception:
+            pass
         parts.append(sys_prompt)
 
         cfg = dict(
@@ -2092,6 +2099,11 @@ class JarvisLive:
                                 self._last_out_logged = ""   # new exchange
                                 self.ui.write_log(f"You: {full_in}")
                                 self._session_log.append(f"User: {full_in}")
+                                try:
+                                    from memory.short_term import stm
+                                    stm.add_turn("user", full_in)
+                                except Exception:
+                                    pass
                                 if self._dashboard:
                                     asyncio.create_task(self._dashboard.broadcast({
                                         "type": "log", "speaker": "user",
@@ -2111,6 +2123,11 @@ class JarvisLive:
                                 self._last_out_logged = full_out
                                 self.ui.write_log(f"{self._asst_name}: {full_out}")
                                 self._session_log.append(f"{self._asst_name}: {full_out}")
+                                try:
+                                    from memory.short_term import stm
+                                    stm.add_turn("assistant", full_out)
+                                except Exception:
+                                    pass
                                 if self._dashboard:
                                     asyncio.create_task(self._dashboard.broadcast({
                                         "type": "log", "speaker": "jarvis",
@@ -2757,9 +2774,23 @@ class JarvisLive:
             self._engine = None
             await engine.close()
 
+    def _init_vector_memory(self) -> None:
+        try:
+            from memory import vector_store
+            stats = vector_store.get_stats()
+            if sum(stats.values()) == 0:
+                migrated = vector_store.migrate_from_json()
+                if migrated:
+                    print(f"[Memory] 🧠 ChromaDB initial vector migration completed ({migrated} items)")
+        except Exception as e:
+            print(f"[Memory] ⚠️ Vector memory init note: {e}")
+
     async def run(self):
         self._loop = asyncio.get_event_loop()
         self._reconnect_event = asyncio.Event()
+
+        # Initialize ChromaDB vector memory in the background off-thread
+        asyncio.create_task(asyncio.to_thread(self._init_vector_memory))
 
         # ── Wire the shared core services to the interface ───────────────────
         # The confirmation gate is useless without a way to ask, and a memory

@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-mark-lvii"
+version = "1.0.0"
+description = "The Ultimate Cross-Platform Personal AI Assistant & Autonomous Workstation"
+readme = "readme.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Mayura Bandara (SLxnoat)", email = "itbin-2211-0148@horizoncampus.edu.lk" }
+]
+keywords = [
+    "jarvis",
+    "ai-assistant",
+    "gemini-live",
+    "pyqt6",
+    "hud",
+    "voice-assistant",
+    "chromadb",
+    "autonomous-agents",
+    "cybersecurity",
+    "playwright"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "PyQt6>=6.6.0",
+    "numpy>=1.26.0",
+    "sounddevice>=0.4.6",
+    "pyaudio>=0.2.14",
+    "google-genai>=0.1.1",
+    "google-auth>=2.27.0",
+    "chromadb>=0.4.22",
+    "playwright>=1.40.0",
+    "requests>=2.31.0",
+    "httpx>=0.26.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "websockets>=12.0",
+    "python-dotenv>=1.0.0",
+    "psutil>=5.9.8",
+    "pillow>=10.2.0",
+]
+
+[project.optional-dependencies]
+local-voice = [
+    "piper-tts>=1.2.0",
+    "faster-whisper>=1.0.0",
+]
+telegram = [
+    "python-telegram-bot>=20.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/SLxnoat/JARVIS-Mark-LVII"
+Repository = "https://github.com/SLxnoat/JARVIS-Mark-LVII"
+Documentation = "https://github.com/SLxnoat/JARVIS-Mark-LVII#readme"
+"Bug Tracker" = "https://github.com/SLxnoat/JARVIS-Mark-LVII/issues"
+
+[project.scripts]
+jarvis = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "gui*", "actions*", "plugins*", "memory*", "system*"]
+exclude = ["tests*", "scratch*"]

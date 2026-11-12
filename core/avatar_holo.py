@@ -178,11 +178,8 @@ class HoloFx:
     def paint_back(self, p: QPainter, cx: float, cy: float, r: float,
                    half_w: float, primary: QColor, accent: QColor,
                    amp: float) -> None:
-        p.save()
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        self._paint_streams(p, cx, cy, r, half_w, primary, accent)
-        p.restore()
+        # Side streams and side particles removed per user request
+        pass
 
     # ── in front of the head ────────────────────────────────────────────────
     def paint_front(self, p: QPainter, cx: float, cy: float, r: float,
@@ -196,57 +193,7 @@ class HoloFx:
 
     # ── streams ─────────────────────────────────────────────────────────────
     def _paint_streams(self, p, cx, cy, r, half_w, primary, accent):
-        lvl = self._level
-        reach_max = max(r, half_w - 10.0)
-        pen = QPen()
-        pen.setCapStyle(Qt.PenCapStyle.FlatCap)
-
-        # A bright band across the eyes: the glow the reference spills sideways.
-        for sgn in (-1.0, 1.0):
-            x0 = cx + sgn * r * 0.55
-            x1 = cx + sgn * min(reach_max, r * 2.4)
-            g = QLinearGradient(x0, 0.0, x1, 0.0)
-            g.setColorAt(0.0, _c(accent, 55 + 70 * lvl))
-            g.setColorAt(0.55, _c(primary, 22 + 30 * lvl))
-            g.setColorAt(1.0, _c(primary, 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(g))
-            h = r * (0.020 + 0.012 * lvl)
-            p.drawRect(QRectF(min(x0, x1), cy - h, abs(x1 - x0), 2.0 * h))
-
-        dash: dict[int, list] = {}
-        for si, sgn in enumerate((-1.0, 1.0)):
-            for i, y in enumerate(self._sy):
-                yy = cy + y * r
-                x0 = cx + sgn * r * (0.78 + 0.05 * math.sin(i))
-                x1 = cx + sgn * min(reach_max, r * self._s_len[i] + r * 0.4)
-                weight = 1.0 - abs(y) / 0.55            # centre lines are brighter
-                g = QLinearGradient(x0, 0.0, x1, 0.0)
-                g.setColorAt(0.0, _c(primary, (26 + 52 * lvl) * (0.5 + weight)))
-                g.setColorAt(1.0, _c(primary, 0))
-                pen.setBrush(QBrush(g))
-                pen.setWidthF(1.0)
-                p.setPen(pen)
-                p.drawLine(QLineF(x0, yy, x1, yy))
-
-                span = x1 - x0
-                for k in range(3):                      # travelling dashes
-                    t = (self.phase * self._s_speed[i] + self._s_off[si, i, k]) % 1.0
-                    xa = x0 + span * t
-                    ln = abs(span) * 0.07
-                    a = (1.0 - t) ** 1.3 * (0.35 + 0.65 * weight) * (0.55 + 0.6 * lvl)
-                    b = min(3, int(a * 4.0))
-                    dash.setdefault(b, []).append(
-                        QLineF(xa, yy, xa + math.copysign(ln, span), yy))
-                if self._s_node[i]:
-                    dash.setdefault(2, []).append(QLineF(x1, yy, x1 + sgn * 1.2, yy))
-
-        pen.setBrush(QBrush(Qt.GlobalColor.white))
-        pen.setWidthF(1.6)
-        for b, lines in dash.items():
-            pen.setColor(_c(accent if b >= 2 else primary, 255.0 * (b + 1) / 4.0))
-            p.setPen(pen)
-            p.drawLines(lines)
+        pass
 
     # ── orbits ──────────────────────────────────────────────────────────────
     _ORBITS = (

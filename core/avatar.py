@@ -298,12 +298,13 @@ class HoloAvatar:
         # changes when JARVIS starts or stops talking jumps the phase by
         # t * rate * delta, which after a minute of uptime is several radians
         # and visibly teleports the head the instant a sentence ends.
-        speed = (1.0 if not muted else 0.55) * (1.25 if live else 1.0)
+        # Calm, poised, dignified head presence
+        speed = 0.28 if not muted else 0.15
         self._sway += dt * speed
         s = self._sway
-        self._yaw = 0.26 * math.sin(s * 0.31) + 0.09 * math.sin(s * 0.73 + 1.3)
-        self._pitch = (0.060 * math.sin(s * 0.23 + 0.7)
-                       + 0.024 * math.sin(s * 0.61))
+        self._yaw = 0.045 * math.sin(s * 0.40) + 0.015 * math.sin(s * 0.90 + 1.3)
+        self._pitch = (0.020 * math.sin(s * 0.30 + 0.7)
+                       + 0.008 * math.sin(s * 0.70))
 
         # Mouth. Which level is driving it matters more than any rate here.
         #
@@ -342,8 +343,8 @@ class HoloAvatar:
         # whole offset in a single frame and snapped the head at sentence end.
         self._emph += (self._mouth - self._emph) * _rate(
             dt, 0.055 if self._mouth > self._emph else 0.32)
-        self._pitch -= self._emph * 0.028
-        self._yaw += 0.018 * math.sin(t * 1.7) * self._emph
+        self._pitch -= self._emph * 0.010
+        self._yaw += 0.005 * math.sin(t * 1.5) * self._emph
 
         # Loudness envelope, deliberately lazier than the mouth: brows track the
         # shape of a phrase, not individual syllables.
@@ -391,32 +392,26 @@ class HoloAvatar:
         self._lids += (lid_tgt - self._lids) * 0.08
         self._brow_bias += (brow_bias - self._brow_bias) * 0.06
 
-        # Gaze: saccades are near-instant jumps between fixations, and they get
-        # more frequent when there is something to say. While thinking they slow
-        # right down — a darting eye reads as nervous, not thoughtful.
+        # Gaze: calm, steady, attentive gaze focused towards operator
         if t >= self._gaze_at:
-            reach = 0.9 if live else (0.35 if thinking else 0.55)
+            reach = 0.18 if live else (0.08 if thinking else 0.12)
             self._gaze_tgt = [random.uniform(-1.0, 1.0) * reach,
-                              random.uniform(-1.0, 1.0) * reach * 0.55]
-            if live:
-                self._gaze_at = t + 0.55 + 1.7 * random.random()
-            elif thinking:
-                self._gaze_at = t + 1.8 + 2.4 * random.random()
-            else:
-                self._gaze_at = t + 1.3 + 2.8 * random.random()
+                              random.uniform(-1.0, 1.0) * reach * 0.45]
+            gap = 3.6 if live else (4.8 if thinking else 4.2)
+            self._gaze_at = t + gap + 2.2 * random.random()
 
         # A deliberate glance (something appeared on screen) overrides the
         # wandering for a moment, then hands control back.
         if self._glance is not None:
             gx, gy, until = self._glance
             if t < until:
-                self._gaze_tgt = [gx, gy]
+                self._gaze_tgt = [gx * 0.4, gy * 0.4]
             else:
                 self._glance = None
 
         for i, b in enumerate(self._gaze_bias):
-            tgt = max(-1.0, min(1.0, self._gaze_tgt[i] + b))
-            self._gaze[i] += (tgt - self._gaze[i]) * 0.30
+            tgt = max(-0.35, min(0.35, self._gaze_tgt[i] + b * 0.25))
+            self._gaze[i] += (tgt - self._gaze[i]) * 0.06
 
         # Lips lead the jaw slightly in real speech, so they track a touch
         # faster; they also relax to neutral the moment the voice stops.
@@ -429,9 +424,8 @@ class HoloAvatar:
         self._fx.step(dt, amp, live, muted,
                       st in ("SLEEPING", "STANDBY", "OFFLINE"))
 
-        self._scan += dt * (0.55 + 1.5 * self._glow)
-        if self._scan > 1.35:
-            self._scan = -1.75
+        # Biometric scan sweep removed per user request
+        self._scan = -999.0
 
         if self._blink > 0.0:
             self._blink = max(0.0, self._blink - dt * 8.5)
@@ -750,35 +744,31 @@ class HoloAvatar:
         p.setPen(QPen(_c(primary, 110 * face), 1.1))
         p.drawPolygon(self._ring(xs, ys, lm["lips_out"]))
 
-    # ── professional jarvis face matrix ────────────────────────────────────
+    # ── hologram face (inspired by solid face) ─────────────────────────────
 
-    def _paint_face_matrix(self, p: QPainter, cx: float, cy: float, r: float,
-                           half_w: float, verts, norms, primary: QColor,
-                           accent: QColor, bg: QColor, amp: float) -> None:
-        """Professional J.A.R.V.I.S. Cybernetic Face Matrix.
+    def _paint_hologram(self, p: QPainter, cx: float, cy: float, r: float,
+                        half_w: float, verts, norms, primary: QColor,
+                        accent: QColor, bg: QColor, amp: float) -> None:
+        """Holographic Face (inspired directly by the solid face).
 
-        Replaces unstructured point-cloud dust and neck pedestal with a
-        cutting-edge holographic facial matrix:
-        - Volumetric semi-transparent 3D polygonal facets
-        - Razor-sharp vector wireframe lattice following anatomical topography
-        - Precision landmark contour highlights (Jawline, Nose bridge, Brows, Lips)
-        - Tactical ocular targeting reticles with live gaze coordinate tracking
-        - Vertical-sweep biometric laser scanner beam
-        - High-tech HUD telemetry readouts and coordinate framing
-        - Clean floating head termination at the chin/jawline (zero neck).
+        Combines the solid face's anatomical realism, lit 3D facial topography,
+        and human eyes/mouth with a luminous translucent holographic aesthetic:
+        - Luminous translucent surface facets (lit cheekbones, brow, nose, chin)
+        - Fine vector structural wireframe
+        - Real human eyes (soft socket, fine lid line, natural glowing iris and pupil)
+        - Real brows, lips, teeth strip, and audio viseme mouth articulation
+        - Sculpted floating jawline cleanly terminating at the chin (zero neck)
+        - Zero biometric scan line, zero side particles/streams, calm head motion.
         """
-        # Soft holographic background aura
-        ar = r * 1.55
+        # Soft cybernetic aura
+        ar = r * 1.60
         grad = QRadialGradient(cx, cy, ar)
-        grad.setColorAt(0.0, _c(primary, 22 + 40 * amp))
-        grad.setColorAt(0.45, _c(primary, 8 + 16 * amp))
-        grad.setColorAt(1.0, _c(primary, 0))
+        grad.setColorAt(0.00, _c(primary, 24 + 36 * amp))
+        grad.setColorAt(0.40, _c(primary, 10 + 16 * amp))
+        grad.setColorAt(1.00, _c(primary, 0))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(grad))
         p.drawEllipse(QRectF(cx - ar, cy - ar, ar * 2.0, ar * 2.0))
-
-        # Background tactical grid / streams
-        self._fx.paint_back(p, cx, cy, r, half_w, primary, accent, amp)
 
         # 3D to 2D perspective projection
         w = _CAM_D - verts[:, 2]
@@ -787,37 +777,18 @@ class HoloAvatar:
         xs = cx + verts[:, 0] * k
         ys = cy - verts[:, 1] * k
 
-        p.save()
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        # 1. Luminous Holographic Surface (Anatomical Facet Lighting)
+        self._paint_hologram_surface(p, xs, ys, norms, verts, primary, bg, amp)
 
-        # 1. Volumetric Holographic Facets
-        self._paint_matrix_facets(p, xs, ys, norms, verts, primary, accent, amp)
+        # 2. Fine Vector Wireframe Lattice
+        self._paint_hologram_wire(p, xs, ys, norms, verts, primary, amp)
 
-        # 2. Precision Cybernetic Wireframe Lattice
-        self._paint_matrix_wire(p, xs, ys, norms, verts, primary, amp)
+        # 3. Real Anatomical Features (Human Eyes, Brows, Lips, Teeth, Jawline)
+        self._paint_hologram_features(p, xs, ys, norms, r, primary, accent, bg, amp)
 
-        # 3. Sculpted Landmark Contours (Jawline, Nose, Brows, Lips)
-        self._paint_matrix_contours(p, xs, ys, r, primary, accent, amp)
-
-        # 4. Ocular Targeting Reticles (Gaze Tracking)
-        self._paint_matrix_reticles(p, xs, ys, r, primary, accent, amp)
-
-        # 5. Matrix Tracking Nodes
-        self._paint_matrix_nodes(p, xs, ys, r, primary, accent, amp)
-
-        # 6. Biometric Laser Scan Beam
-        self._paint_matrix_scanner(p, cx, cy, r, half_w, primary, accent, amp)
-
-        p.restore()
-
-        # 7. Front tactical brackets and telemetry overlays
-        self._fx.paint_front(p, cx, cy, r, half_w, primary, accent, amp)
-        self._paint_matrix_telemetry(p, cx, cy, r, primary, accent, amp)
-
-    def _paint_matrix_facets(self, p: QPainter, xs, ys, norms, verts,
-                             primary: QColor, accent: QColor, amp: float) -> None:
-        """Volumetric semi-transparent holographic facet panels giving 3D presence."""
+    def _paint_hologram_surface(self, p: QPainter, xs, ys, norms, verts,
+                                primary: QColor, bg: QColor, amp: float) -> None:
+        """Luminous translucent holographic facet panels, lit like the solid face."""
         a, b, c = self._fa, self._fb, self._fc
         fn = np.cross(verts[b] - verts[a], verts[c] - verts[a])
         fn /= np.maximum(np.linalg.norm(fn, axis=1, keepdims=True), 1e-9)
@@ -826,58 +797,47 @@ class HoloAvatar:
 
         nz = fn[:, 2]
         area = np.abs((xs[b] - xs[a]) * (ys[c] - ys[a]) - (xs[c] - xs[a]) * (ys[b] - ys[a]))
-        vis = np.flatnonzero((nz > 0.02) & (area > 2.0))
+        vis = np.flatnonzero((nz > 0.015) & (area > 2.5))
         if vis.size == 0:
             return
 
         nz_vis = nz[vis]
-        fres = np.clip(1.0 - nz_vis, 0.0, 1.0) ** 1.6
-        lam = np.clip(fn[vis, 0] * -0.42 + fn[vis, 1] * 0.45 + nz_vis * 0.62, 0.0, 1.0)
-        bright = 0.08 + 0.16 * fres + 0.32 * lam
+        fres = np.clip(1.0 - nz_vis, 0.0, 2.0) ** 1.7
+        lam = np.clip(fn[vis, 0] * -0.55 + fn[vis, 1] * 0.50 + nz_vis * 0.52, 0.0, 1.0)
+        bright = 0.22 + 0.28 * fres + 0.60 * (lam ** 1.05)
+        bright *= (0.88 + 0.25 * amp)
 
-        # Laser scan excitation
-        fz = (verts[a, 1][vis] + verts[b, 1][vis] + verts[c, 1][vis]) * (1.0 / 3.0)
-        scan_dist = np.abs(fz - self._scan)
-        scan_flare = 0.45 * np.exp(-((scan_dist / 0.12) ** 2))
-        bright += scan_flare
-        bright *= (0.85 + 0.35 * amp)
+        alpha = np.clip((bright * 48.0).astype(np.int32), 12, 68)
 
-        alpha = np.clip((bright * 34.0).astype(np.int32), 6, 44)
-
-        # Sort far-to-near for depth blending
-        depths = (verts[a, 2][vis] + verts[b, 2][vis] + verts[c, 2][vis]) * (1.0 / 3.0)
-        order = np.argsort(depths)
+        # Far facets first (depth sorting)
+        fz = (verts[a, 2][vis] + verts[b, 2][vis] + verts[c, 2][vis]) * (1.0 / 3.0)
+        order = np.argsort(fz, kind="stable")
 
         ax, ay = xs[a][vis][order], ys[a][vis][order]
         bx, by = xs[b][vis][order], ys[b][vis][order]
         cx_, cy_ = xs[c][vis][order], ys[c][vis][order]
         al = alpha[order]
 
-        # Bucket by alpha to minimize state changes and achieve blistering 60+ FPS
-        n_buckets = 4
-        b_idx = np.clip(((al - 6) / 10).astype(np.int32), 0, n_buckets - 1)
+        n_buckets = 5
+        b_idx = np.clip(((al - 12) / 12).astype(np.int32), 0, n_buckets - 1)
         p.setPen(Qt.PenStyle.NoPen)
         for b in range(n_buckets):
             sel = np.flatnonzero(b_idx == b)
             if sel.size == 0:
                 continue
-            alpha_val = int(8 + (b + 0.6) * 9.0)
+            alpha_val = int(14 + (b + 0.5) * 11.0)
             p.setBrush(QBrush(_c(primary, alpha_val)))
             for i in sel:
                 p.drawPolygon(QPolygonF([QPointF(ax[i], ay[i]), QPointF(bx[i], by[i]), QPointF(cx_[i], cy_[i])]))
 
-    def _paint_matrix_wire(self, p: QPainter, xs, ys, norms, verts,
-                           primary: QColor, amp: float) -> None:
-        """High-definition cybernetic vector wireframe lattice."""
+    def _paint_hologram_wire(self, p: QPainter, xs, ys, norms, verts,
+                             primary: QColor, amp: float) -> None:
+        """Fine holographic wireframe lattice tracing anatomical contours."""
         nz = norms[:, 2]
         fres = np.abs(1.0 - np.abs(nz)) ** 1.5
-        front = nz > -0.15
-        va = np.where(front, 0.22 + 0.58 * fres, 0.06)
-
-        # Excitation from scan line
-        scan_dist = np.abs(verts[:, 1] - self._scan)
-        va += 0.55 * np.exp(-((scan_dist / 0.12) ** 2))
-        va *= (0.85 + 0.40 * amp)
+        front = nz > -0.10
+        va = np.where(front, 0.20 + 0.55 * fres, 0.05)
+        va *= (0.85 + 0.35 * amp)
 
         ea = 0.5 * (va[self._e0] + va[self._e1])
         keep = np.flatnonzero(ea > 0.08)
@@ -907,66 +867,10 @@ class HoloAvatar:
             p.setPen(pen)
             p.drawLines(seg)
 
-    def _paint_matrix_contours(self, p: QPainter, xs, ys, r: float,
-                               primary: QColor, accent: QColor, amp: float) -> None:
-        """Sculpted cybernetic anatomical contours: Jawline, Nose, Brows, Lips."""
-        lm = self._lm
-        face = max(0.0, math.cos(self._yaw) * math.cos(self._pitch)) ** 2
-        pen = QPen()
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-
-        # 1. Sculpted Jawline (Clean Chin to Ears, Zero Neck)
-        if "jawline" in lm:
-            j_idx = lm["jawline"]
-            j_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in j_idx])
-            pen.setColor(_c(primary, (200 + 55 * amp) * face))
-            pen.setWidthF(1.8)
-            p.setPen(pen)
-            p.drawPolyline(j_poly)
-
-        # 2. Nasal Ridge Axis
-        if "nose" in lm:
-            n_idx = lm["nose"]
-            n_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in n_idx])
-            pen.setColor(_c(primary, 175 * face))
-            pen.setWidthF(1.4)
-            p.setPen(pen)
-            p.drawPolyline(n_poly)
-
-        # 3. Brow Matrix Arches
-        pen.setColor(_c(primary, 190 * face))
-        pen.setWidthF(1.5)
-        p.setPen(pen)
-        for key in ("brow_l", "brow_r"):
-            if key in lm:
-                b_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm[key]])
-                p.drawPolyline(b_poly)
-
-        # 4. Lip Matrix Contours & Audio Viseme Cavity
-        if "lips_in" in lm and "lips_out" in lm:
-            inner = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm["lips_in"]])
-            outer = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm["lips_out"]])
-
-            if self._mouth > 0.02:
-                p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(QBrush(_c(accent, (35 + 45 * self._mouth) * face)))
-                p.drawPolygon(inner)
-                p.setBrush(Qt.BrushStyle.NoBrush)
-
-            pen.setColor(_c(primary, (160 + 80 * self._mouth) * face))
-            pen.setWidthF(1.3)
-            p.setPen(pen)
-            p.drawPolygon(outer)
-
-            pen.setColor(_c(accent if self._mouth > 0.15 else primary, (180 + 75 * self._mouth) * face))
-            pen.setWidthF(1.5)
-            p.setPen(pen)
-            p.drawPolygon(inner)
-
-    def _paint_matrix_reticles(self, p: QPainter, xs, ys, r: float,
-                               primary: QColor, accent: QColor, amp: float) -> None:
-        """Tactical cybernetic ocular targeting reticles with live gaze tracking."""
+    def _paint_hologram_features(self, p: QPainter, xs, ys, norms, r: float,
+                                 primary: QColor, accent: QColor, bg: QColor,
+                                 amp: float) -> None:
+        """Real human eyes, brows, lips, teeth, and sculpted jawline (inspired by the solid face)."""
         face = max(0.0, math.cos(self._yaw) * math.cos(self._pitch)) ** 2
         if face < 0.02:
             return
@@ -974,160 +878,100 @@ class HoloAvatar:
         lm = self._lm
         vis = 1.0 - self._blink
         pen = QPen()
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
 
+        # ── 1. Sculpted Floating Jawline (No Neck) ──────────────────────────
+        if "jawline" in lm:
+            j_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm["jawline"]])
+            pen.setColor(_c(primary, (210 + 45 * amp) * face))
+            pen.setWidthF(1.7)
+            p.setPen(pen)
+            p.drawPolyline(j_poly)
+
+        # ── 2. Real Human Eyes (Natural Iris and Pupil from Solid Face) ──────
         for key in ("eye_l", "eye_r"):
             if key not in lm:
                 continue
             idx = lm[key]
             ex, ey = xs[idx], ys[idx]
-            ccx, ccy = float(ex.mean()), float(ey.mean())
-            bw = float(ex.max() - ex.min())
-            bh = float(ey.max() - ey.min())
-            rad = max(bw * 0.28, bh * 0.60)
+            mid_y = float(ey.mean())
+            if vis < 0.999:
+                ey = mid_y + (ey - mid_y) * max(0.04, vis)
+            poly = QPolygonF([QPointF(float(a), float(b)) for a, b in zip(ex, ey)])
 
-            # Eyelid boundary contour
-            eye_poly = QPolygonF([QPointF(float(a), float(b)) for a, b in zip(ex, ey)])
-            pen.setColor(_c(primary, 190 * face))
-            pen.setWidthF(1.2)
-            p.setPen(pen)
+            # Socket shadow behind the lid
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(_blend(bg, primary, 28)))
+            p.drawPolygon(poly)
+
+            # Fine upper & lower eyelid boundary
             p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawPolygon(eye_poly)
-
-            # Gaze targeting coordinate
-            gx = ccx + self._gaze[0] * bw * 0.18
-            gy = ccy + self._gaze[1] * max(bh, bw * 0.20) * 0.40
-            sq = max(0.08, vis)
-
-            # Outer segmented targeting ring
-            outer_rad = rad * 1.30
-            pen.setColor(_c(primary, (140 + 60 * amp) * face * vis))
-            pen.setWidthF(1.0)
-            p.setPen(pen)
-            p.drawEllipse(QPointF(gx, gy), outer_rad, outer_rad * sq)
-
-            # 4 cardinal crosshair ticks on outer reticle
-            tick_len = outer_rad * 0.35
-            ticks = [
-                QLineF(gx - outer_rad - tick_len, gy, gx - outer_rad + 2, gy),
-                QLineF(gx + outer_rad - 2, gy, gx + outer_rad + tick_len, gy),
-                QLineF(gx, gy - (outer_rad + tick_len) * sq, gx, gy - (outer_rad - 2) * sq),
-                QLineF(gx, gy + (outer_rad - 2) * sq, gx, gy + (outer_rad + tick_len) * sq),
-            ]
-            pen.setColor(_c(accent, 220 * face * vis))
-            pen.setWidthF(1.2)
-            p.setPen(pen)
-            p.drawLines(ticks)
-
-            # Inner iris targeting ring
-            iris_rad = rad * 0.70
-            pen.setColor(_c(accent, (160 + 80 * amp) * face * vis))
+            pen.setColor(_c(primary, 215 * face))
             pen.setWidthF(1.3)
             p.setPen(pen)
-            p.drawEllipse(QPointF(gx, gy), iris_rad, iris_rad * sq)
+            p.drawPolygon(poly)
 
-            # Center optical tracking pupil node
-            pupil_rad = rad * 0.32
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(_c(accent, 255 * face * vis)))
-            p.drawEllipse(QPointF(gx, gy), pupil_rad, pupil_rad * sq)
+            # Glowing realistic iris and pupil
+            if vis > 0.35:
+                br = poly.boundingRect()
+                gx = br.center().x() + self._gaze[0] * br.width() * 0.16
+                gy = br.center().y() + self._gaze[1] * br.height() * 0.20
+                cpt = QPointF(gx, gy)
+                rad = min(br.height() * 0.62, br.width() * 0.20)
 
-    def _paint_matrix_nodes(self, p: QPainter, xs, ys, r: float,
-                            primary: QColor, accent: QColor, amp: float) -> None:
-        """Glowing topological matrix vertex nodes at anatomical junctions."""
-        lm = self._lm
-        sample_indices = []
-        for k in ("eye_l", "eye_r", "brow_l", "brow_r", "jawline", "nose", "lips_out"):
-            if k in lm:
-                sample_indices.extend(lm[k][::2])
+                # Soft glowing iris in accent color
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QBrush(_c(accent, (80 + 70 * amp) * face * vis)))
+                p.drawEllipse(cpt, rad, rad * vis)
 
-        if not sample_indices:
-            return
+                # Central pupil in accent color
+                p.setBrush(QBrush(_c(accent, 255 * face * vis)))
+                p.drawEllipse(cpt, rad * 0.42, rad * 0.42 * vis)
 
-        sample_indices = np.array(list(set(sample_indices)), dtype=np.int32)
-        node_xs = xs[sample_indices]
-        node_ys = ys[sample_indices]
-
-        # Scanline excitation for nodes
-        scan_dist = np.abs(self._v[sample_indices, 1] - self._scan)
-        near_scan = scan_dist < 0.12
-
-        node_rad = max(1.2, r * 0.007)
-        p.setPen(Qt.PenStyle.NoPen)
-        for x, y, ns in zip(node_xs, node_ys, near_scan):
-            rad = node_rad * 1.6 if ns else node_rad
-            col = accent if ns else primary
-            p.setBrush(QBrush(_c(col, 255 if ns else (140 + 70 * amp))))
-            p.drawEllipse(QPointF(x, y), rad, rad)
-
-    def _paint_matrix_scanner(self, p: QPainter, cx: float, cy: float, r: float,
-                              half_w: float, primary: QColor, accent: QColor, amp: float) -> None:
-        """Horizontal biometric laser scanner beam sweeping across the face matrix."""
-        scan_y = cy - self._scan * r
-        scan_span = min(half_w * 0.70, r * 1.05)
-
-        # Luminous horizontal laser line
-        g = QLinearGradient(cx - scan_span, scan_y, cx + scan_span, scan_y)
-        g.setColorAt(0.0, _c(primary, 0))
-        g.setColorAt(0.2, _c(primary, 180 + 70 * amp))
-        g.setColorAt(0.5, _c(accent, 255))
-        g.setColorAt(0.8, _c(primary, 180 + 70 * amp))
-        g.setColorAt(1.0, _c(primary, 0))
-
-        pen = QPen(QBrush(g), 1.8)
+        # ── 3. Real Human Brows ─────────────────────────────────────────────
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        pen.setColor(_c(primary, 160 * face))
+        pen.setWidthF(1.6)
         p.setPen(pen)
-        p.drawLine(QLineF(cx - scan_span, scan_y, cx + scan_span, scan_y))
+        for key in ("brow_l", "brow_r"):
+            if key in lm:
+                p.drawPolyline(self._ring(xs, ys, lm[key]))
 
-        # Soft vertical beam flare
-        flare_h = r * 0.06
-        flare_g = QLinearGradient(cx, scan_y - flare_h, cx, scan_y + flare_h)
-        flare_g.setColorAt(0.0, _c(primary, 0))
-        flare_g.setColorAt(0.5, _c(primary, 35 + 25 * amp))
-        flare_g.setColorAt(1.0, _c(primary, 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(flare_g))
-        p.drawRect(QRectF(cx - scan_span, scan_y - flare_h, scan_span * 2.0, flare_h * 2.0))
+        # ── 4. Real Human Mouth, Teeth & Speech Articulation ────────────────
+        if "lips_in" in lm and "lips_out" in lm:
+            inner = self._ring(xs, ys, lm["lips_in"])
+            open_h = inner.boundingRect().height()
 
-    def _paint_matrix_telemetry(self, p: QPainter, cx: float, cy: float, r: float,
-                                primary: QColor, accent: QColor, amp: float) -> None:
-        """Sleek Stark-style HUD coordinate and status telemetry readouts."""
-        try:
-            from PyQt6.QtGui import QGuiApplication
-            if QGuiApplication.instance() is None:
-                return
-            from gui.style import mono_font
-            p.setFont(mono_font(8))
-        except Exception:
-            return
+            p.setPen(Qt.PenStyle.NoPen)
+            if self._mouth > 0.02:
+                # Oral cavity depth
+                p.setBrush(QBrush(_blend(bg, primary, 20 + 30 * self._mouth)))
+                p.drawPolygon(inner)
 
-        hw = 1.05 * r
-        top_y = cy - 1.10 * r
-        bot_y = cy + 1.08 * r
+                # Upper teeth strip (identical to solid face speech realism)
+                ux, uy = xs[self._lip_up], ys[self._lip_up]
+                th = open_h * 0.30
+                pts = [QPointF(float(x), float(y)) for x, y in zip(ux, uy)]
+                pts += [QPointF(float(x), float(y) + th)
+                        for x, y in zip(ux[::-1], uy[::-1])]
+                p.setBrush(QBrush(_blend(bg, primary, 160 + 60 * self._mouth)))
+                p.drawPolygon(QPolygonF(pts))
 
-        # Top Left: System Matrix ID
-        p.setPen(QPen(_c(primary, 180)))
-        p.drawText(QPointF(cx - hw, top_y - 6), "JARVIS // FACE.MATRIX v57.4")
+                # Warm pool in the throat when mouth opens
+                p.setBrush(QBrush(_c(accent, 45 * self._mouth * face)))
+                p.drawPolygon(inner)
 
-        # Top Right: Node telemetry
-        txt_nodes = "TRK.LOCK // 684 NODES"
-        fm = p.fontMetrics()
-        p.setPen(QPen(_c(accent, 200)))
-        p.drawText(QPointF(cx + hw - fm.horizontalAdvance(txt_nodes), top_y - 6), txt_nodes)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            pen.setColor(_c(primary, (155 + 70 * self._mouth) * face))
+            pen.setWidthF(1.3)
+            p.setPen(pen)
+            p.drawPolygon(inner)
 
-        # Bottom Left: Real-time 3D Vector Telemetry
-        yaw_deg = self._yaw * (180.0 / math.pi)
-        pitch_deg = self._pitch * (180.0 / math.pi)
-        txt_vect = f"VECT: [AZ {yaw_deg:+.1f}°  EL {pitch_deg:+.1f}°]"
-        p.setPen(QPen(_c(primary, 160)))
-        p.drawText(QPointF(cx - hw, bot_y + 14), txt_vect)
+            pen.setColor(_c(primary, 120 * face))
+            pen.setWidthF(1.1)
+            p.setPen(pen)
+            p.drawPolygon(self._ring(xs, ys, lm["lips_out"]))
 
-        # Bottom Right: Activity / Audio Status
-        if self._mouth > 0.05 or amp > 0.2:
-            status_txt = f"SYNAPSE: TX [RMS {int(min(1.0, amp) * 100)}%]"
-            p.setPen(QPen(_c(accent, 230)))
-        else:
-            status_txt = "SCAN // 60Hz NOMINAL"
-            p.setPen(QPen(_c(primary, 150)))
-        p.drawText(QPointF(cx + hw - fm.horizontalAdvance(status_txt), bot_y + 14), status_txt)
-
-    # Legacy alias
-    _paint_hologram = _paint_face_matrix
+    # Compatibility aliases
+    _paint_face_matrix = _paint_hologram

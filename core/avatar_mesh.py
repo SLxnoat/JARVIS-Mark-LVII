@@ -61,6 +61,8 @@ LANDMARKS: dict[str, list[int]] = {
                  269, 267, 0, 37, 39, 40, 185],
     "lips_in": [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310,
                 311, 312, 13, 82, 81, 80, 191],
+    "jawline": [234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454],
+    "nose": [168, 6, 197, 195, 5, 4, 1],
 }
 
 # Jaw rig, in normalised units. The pivot sits between the ears, which is where
@@ -261,14 +263,14 @@ def _check_landmarks(verts: np.ndarray) -> None:
 
 
 def build_head() -> dict:
-    """Assemble the full head. Called once; `get_head_mesh()` caches the result."""
+    """Assemble the full head (cranium and face, neck removed for cybernetic matrix). Called once; `get_head_mesh()` caches the result."""
     verts, faces = _load_obj(_OBJ)
     _check_landmarks(verts)
 
     n_face = len(verts)
     verts, faces = _add_cranium(verts, faces)
     n_head = len(verts)
-    verts, faces, fade = _add_neck(verts, faces)
+    fade = np.ones(n_head, dtype=np.float32)
 
     # ── normalise: crown → +1, chin → -1, eyes land on y ≈ 0 ────────────────
     head_y = verts[:n_head, 1]
@@ -277,21 +279,17 @@ def build_head() -> dict:
     centre = np.array([0.0, (crown + chin) * 0.5, 0.0])
     verts = (verts - centre) * scale
 
-    # Outward reference, per part: the head is star-shaped about its own centre,
-    # while the neck is a tube whose outward direction is radial in x/z only.
+    # Outward reference: star-shaped about head centre
     outward = verts - np.array([0.0, verts[:n_head, 1].mean(), 0.0])
-    outward[n_head:] = verts[n_head:] - np.array([0.0, 0.0, _NECK_Z * scale])
-    outward[n_head:, 1] = 0.0
     normals = _vertex_normals(verts, faces, outward)
 
     # ── jaw rig ─────────────────────────────────────────────────────────────
     # Everything below the mouth swings on the mandible, tapering to nothing at
-    # the ears and around the back so the nape and the neck stay put.
+    # the ears and around the back so the cranium stays put.
     mouth_y = verts[LANDMARKS["lips_out"], 1].mean()
     chin_y = verts[:n_head, 1].min()
     jaw = np.clip((mouth_y - verts[:, 1]) / (mouth_y - chin_y), 0.0, 1.0) ** 0.8
     jaw *= np.clip(0.30 + 0.85 * (verts[:, 2] / 0.55), 0.0, 1.0)
-    jaw[n_head:] = 0.0                                  # the neck never moves
     jaw[LANDMARKS["lips_in"][:10]] = 1.0                # lower inner lip leads
     jaw[LANDMARKS["lips_out"][:10]] = 0.95
 
@@ -302,7 +300,6 @@ def build_head() -> dict:
     brow = np.exp(-((verts[:, 1] - brow_y) / 0.115) ** 2)
     brow *= np.clip(verts[:, 2] / 0.35, 0.0, 1.0)       # front of the face only
     brow *= np.exp(-(verts[:, 0] / 0.42) ** 2)          # fades out past the temples
-    brow[n_head:] = 0.0
 
     # ── lip rig ─────────────────────────────────────────────────────────────
     # Vowels are not just "how far open" — /i/ spreads the lips wide, /u/ purses
@@ -313,17 +310,12 @@ def build_head() -> dict:
     lips = np.exp(-((verts[:, 1] - lip_c[1]) / 0.155) ** 2)
     lips *= np.exp(-(verts[:, 0] / 0.30) ** 2)
     lips *= np.clip(verts[:, 2] / 0.40, 0.0, 1.0)
-    lips[n_head:] = 0.0
 
-    edges = _unique_edges(faces)[::_WIRE_STRIDE]
-
-    # Neck and head interpenetrate, and a painter's-algorithm sort by triangle
-    # depth interleaves them into a torn edge. Grouping fixes it: the neck is
-    # always behind the head where they overlap, so draw every neck facet first.
-    face_group = (faces >= n_head).all(axis=1).astype(np.int32)   # 1 = neck
+    edges = _unique_edges(faces)
+    face_group = np.zeros(len(faces), dtype=np.int32)
 
     return {
-        "face_group": np.ascontiguousarray(1 - face_group, dtype=np.float32),
+        "face_group": np.ascontiguousarray(face_group, dtype=np.float32),
         "brow": np.ascontiguousarray(brow, dtype=np.float32),
         "lips": np.ascontiguousarray(lips, dtype=np.float32),
         "lip_centre": np.ascontiguousarray(lip_c, dtype=np.float32),
@@ -336,7 +328,7 @@ def build_head() -> dict:
         "landmarks": {k: np.array(v, dtype=np.int32) for k, v in LANDMARKS.items()},
         "n_face": n_face,
         "n_head": n_head,
-        "span": (1.0, float(verts[:, 1].min())),        # crown, bottom of the neck
+        "span": (1.0, float(verts[:, 1].min())),        # crown (+1.0), chin (-1.0)
     }
 
 
@@ -400,7 +392,7 @@ def build_point_cloud(n: int = POINT_COUNT, seed: int = 11) -> dict:
         "wb": np.ascontiguousarray(wb[:, None], dtype=np.float32),
         "wc": np.ascontiguousarray(wc[:, None], dtype=np.float32),
         "fade": np.ascontiguousarray(fade, dtype=np.float32),
-        "neck": np.ascontiguousarray(m["face_group"][tri] < 0.5),
+        "neck": np.zeros(n, dtype=bool),
         "seed": np.ascontiguousarray(rng.random(n), dtype=np.float32),
     }
 

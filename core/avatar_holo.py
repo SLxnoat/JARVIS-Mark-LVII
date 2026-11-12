@@ -18,9 +18,9 @@ import numpy as np
 from PyQt6.QtCore import QLineF, QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QLinearGradient, QBrush, QPainter, QPen, QPolygonF
 
-# How far the furniture reaches above the crown and below the neck, in `r`.
-TOP = 1.12
-BOT = 1.62
+# How far the furniture reaches above the crown and below the chin, in `r`.
+TOP = 1.15
+BOT = 1.15
 
 # Base projection ring: centre below the head centre, ellipse flattening.
 _RING_Y = 1.30
@@ -182,8 +182,6 @@ class HoloFx:
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         self._paint_streams(p, cx, cy, r, half_w, primary, accent)
-        self._paint_ring(p, cx, cy, r, primary, accent, "back")
-        self._paint_orbits(p, cx, cy, r, half_w, primary, accent, "back")
         p.restore()
 
     # ── in front of the head ────────────────────────────────────────────────
@@ -193,10 +191,7 @@ class HoloFx:
         p.save()
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        self._paint_ring(p, cx, cy, r, primary, accent, "front")
-        self._paint_orbits(p, cx, cy, r, half_w, primary, accent, "front")
         self._paint_brackets(p, cx, cy, r, primary)
-        self._paint_particles(p, cx, cy, r, half_w, primary, accent)
         p.restore()
 
     # ── streams ─────────────────────────────────────────────────────────────
@@ -290,9 +285,9 @@ class HoloFx:
 
     # ── calibration brackets ────────────────────────────────────────────────
     def _paint_brackets(self, p, cx, cy, r, primary):
-        hw, top, bot = 1.00 * r, 1.08 * r, 1.04 * r
-        ln = 0.17 * r
-        a = 150 + 70 * self._level
+        hw, top, bot = 1.05 * r, 1.10 * r, 1.08 * r
+        ln = 0.16 * r
+        a = 160 + 75 * self._level
         pen = QPen(_c(primary, a), 1.5)
         pen.setCapStyle(Qt.PenCapStyle.FlatCap)
         p.setPen(pen)
@@ -302,84 +297,23 @@ class HoloFx:
                 x = cx + sx * hw
                 lines.append(QLineF(x, yy, x, yy + sy * ln))
                 lines.append(QLineF(x, yy, x - sx * ln, yy))
-            # centre tick marks on the sides
-            lines.append(QLineF(cx + sx * hw, cy - 0.03 * r, cx + sx * (hw - 0.05 * r), cy - 0.03 * r))
-            lines.append(QLineF(cx + sx * hw, cy + 0.03 * r, cx + sx * (hw - 0.05 * r), cy + 0.03 * r))
+            # Elevation scale ladder ticks along the sides
+            for step in (-0.6, -0.3, 0.0, 0.3, 0.6):
+                tick_y = cy + step * r
+                tick_len = (0.05 if step == 0.0 else 0.03) * r
+                lines.append(QLineF(cx + sx * hw, tick_y, cx + sx * (hw - tick_len), tick_y))
         p.drawLines(lines)
         # crosshair ticks above and below the head
-        pen.setColor(_c(primary, a * 0.7))
+        pen.setColor(_c(primary, a * 0.75))
         p.setPen(pen)
-        p.drawLine(QLineF(cx, cy - top, cx, cy - top + 0.06 * r))
-        p.drawLine(QLineF(cx, cy + bot, cx, cy + bot - 0.06 * r))
+        p.drawLine(QLineF(cx, cy - top, cx, cy - top + 0.07 * r))
+        p.drawLine(QLineF(cx, cy + bot, cx, cy + bot - 0.07 * r))
 
-    # ── base projection ring ────────────────────────────────────────────────
+    # ── base projection ring (retained for backward compatibility) ──────────
     def _paint_ring(self, p, cx, cy, r, primary, accent, half):
-        rcy = cy + _RING_Y * r
-        rings = (
-            # radius, dots, size, spin
-            (0.58, 70, 1.2, 0.9),
-            (0.98, 110, 1.5, -0.55),
-            (1.34, 150, 1.1, 0.25),
-        )
-        for i, (rr, n, sz, spin) in enumerate(rings):
-            rx = rr * r
-            ry = rx * _RING_FLAT
-            x, y, a, depth = self._ellipse(cx, rcy, rx, ry, 0.0, n, 0.0, half)
-            arc = np.maximum(0.0, np.cos(a - self.phase * spin)) ** 5
-            alpha = (0.28 + 0.72 * arc) * (0.55 + 0.45 * depth) * (0.7 + 0.35 * self._level)
-            draw_dots(p, x, y, sz * (0.9 + 0.6 * arc), alpha,
-                      accent if i == 1 else primary, levels=4, size_bins=2, glow=0.4)
-
-        if half == "front":
-            # Thin solid rim and outer tick marks, so the ring reads as a stage.
-            rx = 1.34 * r
-            pen = QPen(_c(primary, 55 + 40 * self._level), 1.0)
-            p.setPen(pen)
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawEllipse(QPointF(cx, rcy), rx * 0.78, rx * 0.78 * _RING_FLAT)
-            ticks = []
-            for k in range(48):
-                ang = 2.0 * math.pi * k / 48 + self.phase * 0.08
-                if math.sin(ang) < 0:
-                    continue
-                ln = 0.045 * r * (2.0 if k % 6 == 0 else 1.0)
-                x0, y0 = cx + math.cos(ang) * rx, rcy + math.sin(ang) * rx * _RING_FLAT
-                x1 = cx + math.cos(ang) * (rx + ln)
-                y1 = rcy + math.sin(ang) * (rx + ln) * _RING_FLAT
-                ticks.append(QLineF(x0, y0, x1, y1))
-            pen.setColor(_c(primary, 120))
-            p.setPen(pen)
-            p.drawLines(ticks)
-            # Light cone: a soft glow where the projector meets the neck.
-            from PyQt6.QtGui import QRadialGradient
-            g = QRadialGradient(cx, rcy, rx * 0.8)
-            g.setColorAt(0.0, _c(primary, 36 + 40 * self._level))
-            g.setColorAt(1.0, _c(primary, 0))
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(g))
-            p.drawEllipse(QPointF(cx, rcy), rx * 0.8, rx * 0.8 * _RING_FLAT)
+        pass
 
     # ── particles ───────────────────────────────────────────────────────────
     def _paint_particles(self, p, cx, cy, r, half_w, primary, accent):
-        x = cx + self._px * r
-        y = cy + self._py * r
-        inside = np.abs(x - cx) < (half_w - 6.0)
-        life = np.clip(self._life, 0.0, 1.0)
-        env = np.sin(math.pi * np.minimum(1.0, life)) ** 0.8       # fade in and out
-        alpha = env * (0.45 + 0.5 * self._level)
-        alpha = np.where(inside, alpha, 0.0)
-        mix = self._psize > 1.9
-        draw_dots(p, x[~mix], y[~mix], self._psize[~mix] * 1.1, alpha[~mix], primary,
-                  levels=4, size_bins=2, glow=0.0)
-        draw_dots(p, x[mix], y[mix], self._psize[mix] * 1.3, alpha[mix], accent,
-                  levels=4, size_bins=2, glow=0.5)
-        # A few four-point sparkles, as in the reference.
-        pen = QPen(_c(accent, 190), 1.0)
-        p.setPen(pen)
-        sp = []
-        for k in np.flatnonzero(mix & inside & (alpha > 0.5))[:6]:
-            s = 3.0 + 2.5 * self._psize[k]
-            sp.append(QLineF(x[k] - s, y[k], x[k] + s, y[k]))
-            sp.append(QLineF(x[k], y[k] - s, x[k], y[k] + s))
-        if sp:
-            p.drawLines(sp)
+        # REMOVED: Fancy particles and sparkles eliminated for professional Jarvis face matrix.
+        pass

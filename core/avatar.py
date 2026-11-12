@@ -30,7 +30,7 @@ import random
 
 import numpy as np
 from PyQt6.QtCore import QLineF, QPointF, QRectF, Qt
-from PyQt6.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF, QRadialGradient
+from PyQt6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 
 from core import avatar_holo as _holo
 from core.avatar_holo import draw_dots
@@ -220,11 +220,11 @@ class HoloAvatar:
     # projection ring and the brackets; the solid head only needs its neck.
     @property
     def TOP(self) -> float:
-        return _holo.TOP if self.mode == "points" else 1.0
+        return _holo.TOP if self.mode in ("points", "matrix") else 1.15
 
     @property
     def BOT(self) -> float:
-        return _holo.BOT if self.mode == "points" else self._span_solid - 1.0
+        return _holo.BOT if self.mode in ("points", "matrix") else 1.15
 
     @property
     def SPAN(self) -> float:
@@ -520,9 +520,9 @@ class HoloAvatar:
         amp = self._glow
         verts, norms = self._pose()
 
-        if self.mode == "points":
-            self._paint_hologram(p, cx, cy, r, half_w if half_w else r * 2.6,
-                                 verts, norms, primary, accent, bg, amp)
+        if self.mode in ("points", "matrix"):
+            self._paint_face_matrix(p, cx, cy, r, half_w if half_w else r * 2.6,
+                                    verts, norms, primary, accent, bg, amp)
             return
 
         # ── aura ────────────────────────────────────────────────────────────
@@ -750,182 +750,384 @@ class HoloAvatar:
         p.setPen(QPen(_c(primary, 110 * face), 1.1))
         p.drawPolygon(self._ring(xs, ys, lm["lips_out"]))
 
-    # ── point-cloud hologram ────────────────────────────────────────────────
+    # ── professional jarvis face matrix ────────────────────────────────────
 
-    def _paint_hologram(self, p: QPainter, cx: float, cy: float, r: float,
-                        half_w: float, verts, norms, primary: QColor,
-                        accent: QColor, bg: QColor, amp: float) -> None:
-        """The dotted head: dots, thin data links and glow. No filled facets.
+    def _paint_face_matrix(self, p: QPainter, cx: float, cy: float, r: float,
+                           half_w: float, verts, norms, primary: QColor,
+                           accent: QColor, bg: QColor, amp: float) -> None:
+        """Professional J.A.R.V.I.S. Cybernetic Face Matrix.
 
-        Dot size follows 1/w like a vertex shader's gl_PointSize would, and every
-        dot is drawn additively at low alpha — so the head stays largely
-        see-through and the starfield and grid read through it.
+        Replaces unstructured point-cloud dust and neck pedestal with a
+        cutting-edge holographic facial matrix:
+        - Volumetric semi-transparent 3D polygonal facets
+        - Razor-sharp vector wireframe lattice following anatomical topography
+        - Precision landmark contour highlights (Jawline, Nose bridge, Brows, Lips)
+        - Tactical ocular targeting reticles with live gaze coordinate tracking
+        - Vertical-sweep biometric laser scanner beam
+        - High-tech HUD telemetry readouts and coordinate framing
+        - Clean floating head termination at the chin/jawline (zero neck).
         """
-        # soft aura only; the dots carry the form
-        ar = r * 1.8
+        # Soft holographic background aura
+        ar = r * 1.55
         grad = QRadialGradient(cx, cy, ar)
-        grad.setColorAt(0.0, _c(primary, 10 + 26 * amp))
-        grad.setColorAt(0.5, _c(primary, 5 + 12 * amp))
+        grad.setColorAt(0.0, _c(primary, 22 + 40 * amp))
+        grad.setColorAt(0.45, _c(primary, 8 + 16 * amp))
         grad.setColorAt(1.0, _c(primary, 0))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(grad))
-        p.drawEllipse(QRectF(cx - ar, cy - ar, ar * 2, ar * 2))
+        p.drawEllipse(QRectF(cx - ar, cy - ar, ar * 2.0, ar * 2.0))
 
+        # Background tactical grid / streams
         self._fx.paint_back(p, cx, cy, r, half_w, primary, accent, amp)
 
-        p.save()
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-
+        # 3D to 2D perspective projection
         w = _CAM_D - verts[:, 2]
         np.maximum(w, 0.35, out=w)
         k = (_CAM_D / w) * r
         xs = cx + verts[:, 0] * k
         ys = cy - verts[:, 1] * k
 
-        self._paint_links(p, xs, ys, norms, primary, amp)
-        self._paint_cloud(p, cx, cy, r, verts, norms, primary, amp)
-        self._paint_dot_features(p, xs, ys, r, primary, accent, amp)
+        p.save()
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        # 1. Volumetric Holographic Facets
+        self._paint_matrix_facets(p, xs, ys, norms, verts, primary, accent, amp)
+
+        # 2. Precision Cybernetic Wireframe Lattice
+        self._paint_matrix_wire(p, xs, ys, norms, verts, primary, amp)
+
+        # 3. Sculpted Landmark Contours (Jawline, Nose, Brows, Lips)
+        self._paint_matrix_contours(p, xs, ys, r, primary, accent, amp)
+
+        # 4. Ocular Targeting Reticles (Gaze Tracking)
+        self._paint_matrix_reticles(p, xs, ys, r, primary, accent, amp)
+
+        # 5. Matrix Tracking Nodes
+        self._paint_matrix_nodes(p, xs, ys, r, primary, accent, amp)
+
+        # 6. Biometric Laser Scan Beam
+        self._paint_matrix_scanner(p, cx, cy, r, half_w, primary, accent, amp)
+
         p.restore()
 
+        # 7. Front tactical brackets and telemetry overlays
         self._fx.paint_front(p, cx, cy, r, half_w, primary, accent, amp)
+        self._paint_matrix_telemetry(p, cx, cy, r, primary, accent, amp)
 
-    def _paint_cloud(self, p: QPainter, cx: float, cy: float, r: float,
-                     verts, norms, primary: QColor, amp: float) -> None:
-        pc = self._pc
-        ia, ib, ic = pc["ia"], pc["ib"], pc["ic"]
-        wa, wb, wc = pc["wa"], pc["wb"], pc["wc"]
-        pts = verts[ia] * wa + verts[ib] * wb + verts[ic] * wc
-        nrm = norms[ia] * wa + norms[ib] * wb + norms[ic] * wc
+    def _paint_matrix_facets(self, p: QPainter, xs, ys, norms, verts,
+                             primary: QColor, accent: QColor, amp: float) -> None:
+        """Volumetric semi-transparent holographic facet panels giving 3D presence."""
+        a, b, c = self._fa, self._fb, self._fc
+        fn = np.cross(verts[b] - verts[a], verts[c] - verts[a])
+        fn /= np.maximum(np.linalg.norm(fn, axis=1, keepdims=True), 1e-9)
+        ref = norms[a] + norms[b] + norms[c]
+        fn *= np.sign((fn * ref).sum(1))[:, None]
 
-        w = _CAM_D - pts[:, 2]
-        np.maximum(w, 0.35, out=w)
-        near = _CAM_D / w                       # > 1 towards the viewer
-        xs = cx + pts[:, 0] * near * r
-        ys = cy - pts[:, 1] * near * r
-
-        nl = np.sqrt((nrm * nrm).sum(1)) + 1e-9
-        nz = nrm[:, 2] / nl
-        front = np.clip(nz, 0.0, 1.0)
-        rim = (1.0 - front) ** 2.2
-
-        seed = pc["seed"]
-        twinkle = 0.88 + 0.12 * np.sin(self._t * 2.6 + seed * 40.0)
-
-        # Brightness: face-on dots crisp, the silhouette edge glows, dots on the
-        # far side are a faint ghost layer (only a third of them) for volume.
-        alpha = np.where(nz >= 0.0,
-                         0.17 + 0.34 * front ** 0.8 + 0.30 * rim,
-                         np.where(seed < 0.33, 0.085 * (1.0 + 2.0 * np.clip(-nz, 0, 1)), 0.0))
-        alpha *= pc["fade"] * twinkle * (0.92 + 0.30 * amp)
-        # energy sweep, and a faint fixed scanline texture
-        alpha += 0.42 * np.exp(-((pts[:, 1] - self._scan) / 0.10) ** 2) * (nz >= 0)
-        alpha *= 0.86 + 0.14 * np.cos(ys * (2.0 * math.pi / 4.0))
-        # Neck: rows, fading out downward with `fade`.
-        neck = pc["neck"]
-        band = 0.35 + 0.65 * (0.5 + 0.5 * np.cos(pts[:, 1] * 150.0))
-        alpha = np.where(neck, alpha * band, alpha)
-        # Depth: nearer dots denser and brighter.
-        alpha *= np.clip(0.55 + 0.9 * (near - 0.95) * 3.0, 0.45, 1.25)
-
-        size = np.maximum(0.9, r * 0.0062 * near ** 2.4 * (0.85 + 0.3 * seed))
-        draw_dots(p, xs, ys, size, np.clip(alpha, 0.0, 1.0), primary,
-                  levels=6, size_bins=3, glow=0.16)
-
-    def _paint_links(self, p: QPainter, xs, ys, norms, primary: QColor,
-                     amp: float) -> None:
-        """Fine data connectors: a sparse subset of mesh edges, front side only."""
-        nz = norms[:, 2]
-        va = np.clip(nz, 0.0, 1.0) ** 0.7 * self._fade
-        va += 0.35 * (np.clip(nz, 0, 1) > 0) * np.exp(-((self._v[:, 1] - self._scan) / 0.12) ** 2)
-        ea = 0.5 * (va[self._e0] + va[self._e1])
-        keep = np.flatnonzero(ea > 0.12)
-        if keep.size == 0:
+        nz = fn[:, 2]
+        area = np.abs((xs[b] - xs[a]) * (ys[c] - ys[a]) - (xs[c] - xs[a]) * (ys[b] - ys[a]))
+        vis = np.flatnonzero((nz > 0.02) & (area > 2.0))
+        if vis.size == 0:
             return
-        e0, e1 = self._e0[keep], self._e1[keep]
-        lvl = np.minimum((ea[keep] * 3.0).astype(np.int32), 2)
-        quad = np.stack([xs[e0], ys[e0], xs[e1], ys[e1]], axis=1)
-        pen = QPen()
-        pen.setWidthF(1.0)
-        for b in range(3):
-            sel = np.flatnonzero(lvl == b)
+
+        nz_vis = nz[vis]
+        fres = np.clip(1.0 - nz_vis, 0.0, 1.0) ** 1.6
+        lam = np.clip(fn[vis, 0] * -0.42 + fn[vis, 1] * 0.45 + nz_vis * 0.62, 0.0, 1.0)
+        bright = 0.08 + 0.16 * fres + 0.32 * lam
+
+        # Laser scan excitation
+        fz = (verts[a, 1][vis] + verts[b, 1][vis] + verts[c, 1][vis]) * (1.0 / 3.0)
+        scan_dist = np.abs(fz - self._scan)
+        scan_flare = 0.45 * np.exp(-((scan_dist / 0.12) ** 2))
+        bright += scan_flare
+        bright *= (0.85 + 0.35 * amp)
+
+        alpha = np.clip((bright * 34.0).astype(np.int32), 6, 44)
+
+        # Sort far-to-near for depth blending
+        depths = (verts[a, 2][vis] + verts[b, 2][vis] + verts[c, 2][vis]) * (1.0 / 3.0)
+        order = np.argsort(depths)
+
+        ax, ay = xs[a][vis][order], ys[a][vis][order]
+        bx, by = xs[b][vis][order], ys[b][vis][order]
+        cx_, cy_ = xs[c][vis][order], ys[c][vis][order]
+        al = alpha[order]
+
+        # Bucket by alpha to minimize state changes and achieve blistering 60+ FPS
+        n_buckets = 4
+        b_idx = np.clip(((al - 6) / 10).astype(np.int32), 0, n_buckets - 1)
+        p.setPen(Qt.PenStyle.NoPen)
+        for b in range(n_buckets):
+            sel = np.flatnonzero(b_idx == b)
             if sel.size == 0:
                 continue
-            pen.setColor(_c(primary, 22 + 20 * b + 22 * amp))
-            p.setPen(pen)
-            p.drawLines([QLineF(q[0], q[1], q[2], q[3]) for q in quad[sel].tolist()])
+            alpha_val = int(8 + (b + 0.6) * 9.0)
+            p.setBrush(QBrush(_c(primary, alpha_val)))
+            for i in sel:
+                p.drawPolygon(QPolygonF([QPointF(ax[i], ay[i]), QPointF(bx[i], by[i]), QPointF(cx_[i], cy_[i])]))
 
-    def _paint_dot_features(self, p: QPainter, xs, ys, r: float,
-                            primary: QColor, accent: QColor, amp: float) -> None:
-        """Eyes, brows and lips, made of dots only."""
+    def _paint_matrix_wire(self, p: QPainter, xs, ys, norms, verts,
+                           primary: QColor, amp: float) -> None:
+        """High-definition cybernetic vector wireframe lattice."""
+        nz = norms[:, 2]
+        fres = np.abs(1.0 - np.abs(nz)) ** 1.5
+        front = nz > -0.15
+        va = np.where(front, 0.22 + 0.58 * fres, 0.06)
+
+        # Excitation from scan line
+        scan_dist = np.abs(verts[:, 1] - self._scan)
+        va += 0.55 * np.exp(-((scan_dist / 0.12) ** 2))
+        va *= (0.85 + 0.40 * amp)
+
+        ea = 0.5 * (va[self._e0] + va[self._e1])
+        keep = np.flatnonzero(ea > 0.08)
+        if keep.size == 0:
+            return
+
+        buckets = 4
+        bucket = np.clip((ea[keep] * buckets).astype(np.int32), 0, buckets - 1)
+        order = np.argsort(bucket, kind="stable")
+        keep = keep[order]
+        bounds = np.searchsorted(bucket[order], np.arange(buckets + 1))
+
+        e0, e1 = self._e0[keep], self._e1[keep]
+        quad = np.stack([xs[e0], ys[e0], xs[e1], ys[e1]], axis=1).tolist()
+        lines = [QLineF(q[0], q[1], q[2], q[3]) for q in quad]
+
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        pen = QPen()
+        pen.setWidthF(1.0)
+        for b in range(buckets):
+            lo, hi = int(bounds[b]), int(bounds[b + 1])
+            if hi <= lo:
+                continue
+            seg = lines[lo:hi]
+            alpha = int(255.0 * min(1.0, (b + 0.8) / buckets * 0.70))
+            pen.setColor(_c(primary, alpha))
+            p.setPen(pen)
+            p.drawLines(seg)
+
+    def _paint_matrix_contours(self, p: QPainter, xs, ys, r: float,
+                               primary: QColor, accent: QColor, amp: float) -> None:
+        """Sculpted cybernetic anatomical contours: Jawline, Nose, Brows, Lips."""
+        lm = self._lm
+        face = max(0.0, math.cos(self._yaw) * math.cos(self._pitch)) ** 2
+        pen = QPen()
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+
+        # 1. Sculpted Jawline (Clean Chin to Ears, Zero Neck)
+        if "jawline" in lm:
+            j_idx = lm["jawline"]
+            j_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in j_idx])
+            pen.setColor(_c(primary, (200 + 55 * amp) * face))
+            pen.setWidthF(1.8)
+            p.setPen(pen)
+            p.drawPolyline(j_poly)
+
+        # 2. Nasal Ridge Axis
+        if "nose" in lm:
+            n_idx = lm["nose"]
+            n_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in n_idx])
+            pen.setColor(_c(primary, 175 * face))
+            pen.setWidthF(1.4)
+            p.setPen(pen)
+            p.drawPolyline(n_poly)
+
+        # 3. Brow Matrix Arches
+        pen.setColor(_c(primary, 190 * face))
+        pen.setWidthF(1.5)
+        p.setPen(pen)
+        for key in ("brow_l", "brow_r"):
+            if key in lm:
+                b_poly = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm[key]])
+                p.drawPolyline(b_poly)
+
+        # 4. Lip Matrix Contours & Audio Viseme Cavity
+        if "lips_in" in lm and "lips_out" in lm:
+            inner = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm["lips_in"]])
+            outer = QPolygonF([QPointF(float(xs[i]), float(ys[i])) for i in lm["lips_out"]])
+
+            if self._mouth > 0.02:
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QBrush(_c(accent, (35 + 45 * self._mouth) * face)))
+                p.drawPolygon(inner)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+
+            pen.setColor(_c(primary, (160 + 80 * self._mouth) * face))
+            pen.setWidthF(1.3)
+            p.setPen(pen)
+            p.drawPolygon(outer)
+
+            pen.setColor(_c(accent if self._mouth > 0.15 else primary, (180 + 75 * self._mouth) * face))
+            pen.setWidthF(1.5)
+            p.setPen(pen)
+            p.drawPolygon(inner)
+
+    def _paint_matrix_reticles(self, p: QPainter, xs, ys, r: float,
+                               primary: QColor, accent: QColor, amp: float) -> None:
+        """Tactical cybernetic ocular targeting reticles with live gaze tracking."""
         face = max(0.0, math.cos(self._yaw) * math.cos(self._pitch)) ** 2
         if face < 0.02:
             return
+
         lm = self._lm
         vis = 1.0 - self._blink
-        unit = max(1.0, r * 0.0075)
+        pen = QPen()
 
-        # ── eyes: dotted lid, then dual dotted iris / pupil apertures ───────
         for key in ("eye_l", "eye_r"):
+            if key not in lm:
+                continue
             idx = lm[key]
             ex, ey = xs[idx], ys[idx]
-            mid_y = float(ey.mean())
-            sq = max(0.05, vis * (0.55 + 0.45 * self._lids))
-            ey = mid_y + (ey - mid_y) * sq
-            lx, ly = _holo.resample(ex, ey, 30, closed=True)
-            _holo.draw_dots(p, lx, ly, unit * 1.25, face * 0.9, primary,
-                            levels=3, size_bins=1, glow=0.5)
-            if vis <= 0.30:
-                continue
-            ccx, ccy = float(ex.mean()), mid_y
+            ccx, ccy = float(ex.mean()), float(ey.mean())
             bw = float(ex.max() - ex.min())
             bh = float(ey.max() - ey.min())
-            rad = max(bw * 0.24, bh * 0.55)
-            gx = ccx + self._gaze[0] * bw * 0.15
-            gy = ccy + self._gaze[1] * max(bh, bw * 0.2) * 0.45
+            rad = max(bw * 0.28, bh * 0.60)
 
-            halo = QRadialGradient(gx, gy, rad * 3.2)
-            halo.setColorAt(0.0, _c(accent, (60 + 70 * amp) * face * vis))
-            halo.setColorAt(1.0, _c(accent, 0))
+            # Eyelid boundary contour
+            eye_poly = QPolygonF([QPointF(float(a), float(b)) for a, b in zip(ex, ey)])
+            pen.setColor(_c(primary, 190 * face))
+            pen.setWidthF(1.2)
+            p.setPen(pen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawPolygon(eye_poly)
+
+            # Gaze targeting coordinate
+            gx = ccx + self._gaze[0] * bw * 0.18
+            gy = ccy + self._gaze[1] * max(bh, bw * 0.20) * 0.40
+            sq = max(0.08, vis)
+
+            # Outer segmented targeting ring
+            outer_rad = rad * 1.30
+            pen.setColor(_c(primary, (140 + 60 * amp) * face * vis))
+            pen.setWidthF(1.0)
+            p.setPen(pen)
+            p.drawEllipse(QPointF(gx, gy), outer_rad, outer_rad * sq)
+
+            # 4 cardinal crosshair ticks on outer reticle
+            tick_len = outer_rad * 0.35
+            ticks = [
+                QLineF(gx - outer_rad - tick_len, gy, gx - outer_rad + 2, gy),
+                QLineF(gx + outer_rad - 2, gy, gx + outer_rad + tick_len, gy),
+                QLineF(gx, gy - (outer_rad + tick_len) * sq, gx, gy - (outer_rad - 2) * sq),
+                QLineF(gx, gy + (outer_rad - 2) * sq, gx, gy + (outer_rad + tick_len) * sq),
+            ]
+            pen.setColor(_c(accent, 220 * face * vis))
+            pen.setWidthF(1.2)
+            p.setPen(pen)
+            p.drawLines(ticks)
+
+            # Inner iris targeting ring
+            iris_rad = rad * 0.70
+            pen.setColor(_c(accent, (160 + 80 * amp) * face * vis))
+            pen.setWidthF(1.3)
+            p.setPen(pen)
+            p.drawEllipse(QPointF(gx, gy), iris_rad, iris_rad * sq)
+
+            # Center optical tracking pupil node
+            pupil_rad = rad * 0.32
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QBrush(halo))
-            p.drawEllipse(QPointF(gx, gy), rad * 3.2, rad * 3.2)
+            p.setBrush(QBrush(_c(accent, 255 * face * vis)))
+            p.drawEllipse(QPointF(gx, gy), pupil_rad, pupil_rad * sq)
 
-            rings = ((1.00, 24, 1.15), (0.68, 16, 1.0), (0.36, 8, 1.15))
-            ax_, ay_ = [], []
-            for rr, n, _s in rings:
-                a = np.linspace(0, 2 * math.pi, n, endpoint=False) + self._fx.phase * 0.4
-                ax_.append(gx + np.cos(a) * rad * rr)
-                ay_.append(gy + np.sin(a) * rad * rr * max(0.35, vis))
-            ax_, ay_ = np.concatenate(ax_), np.concatenate(ay_)
-            _holo.draw_dots(p, ax_, ay_, unit * 1.45, face * vis * 0.95, accent,
-                            levels=3, size_bins=1, glow=0.55)
-            _holo.draw_dots(p, [gx], [gy], unit * 2.6, face * vis, accent,
-                            levels=2, size_bins=1, glow=0.7)
+    def _paint_matrix_nodes(self, p: QPainter, xs, ys, r: float,
+                            primary: QColor, accent: QColor, amp: float) -> None:
+        """Glowing topological matrix vertex nodes at anatomical junctions."""
+        lm = self._lm
+        sample_indices = []
+        for k in ("eye_l", "eye_r", "brow_l", "brow_r", "jawline", "nose", "lips_out"):
+            if k in lm:
+                sample_indices.extend(lm[k][::2])
 
-        # ── brows ───────────────────────────────────────────────────────────
-        for key in ("brow_l", "brow_r"):
-            idx = lm[key]
-            bx, by = _holo.resample(xs[idx], ys[idx], 18)
-            _holo.draw_dots(p, bx, by, unit * 1.2, face * 0.80, primary,
-                            levels=3, size_bins=1, glow=0.3)
+        if not sample_indices:
+            return
 
-        # ── lips; an open mouth is a sparse dot field, never a filled hole ──
-        ox, oy = _holo.resample(xs[lm["lips_out"]], ys[lm["lips_out"]], 40, closed=True)
-        _holo.draw_dots(p, ox, oy, unit * 1.15, face * 0.70, primary,
-                        levels=3, size_bins=1, glow=0.3)
-        lips_in = lm["lips_in"]
-        ix, iy = _holo.resample(xs[lips_in], ys[lips_in], 32, closed=True)
-        _holo.draw_dots(p, ix, iy, unit * 1.3, face * (0.80 + 0.2 * self._mouth),
-                        accent if self._mouth > 0.2 else primary,
-                        levels=3, size_bins=1, glow=0.45)
-        if self._mouth > 0.05:
-            lo_x, lo_y = _holo.resample(xs[lips_in[:10]], ys[lips_in[:10]], 14)
-            up_x, up_y = _holo.resample(xs[self._lip_up[::-1]], ys[self._lip_up[::-1]], 14)
-            fx, fy = [], []
-            for f in (0.25, 0.5, 0.75):
-                fx.append(lo_x + (up_x - lo_x) * f)
-                fy.append(lo_y + (up_y - lo_y) * f)
-            _holo.draw_dots(p, np.concatenate(fx), np.concatenate(fy), unit * 1.0,
-                            face * min(1.0, self._mouth * 1.4) * 0.65, accent,
-                            levels=3, size_bins=1, glow=0.2)
+        sample_indices = np.array(list(set(sample_indices)), dtype=np.int32)
+        node_xs = xs[sample_indices]
+        node_ys = ys[sample_indices]
+
+        # Scanline excitation for nodes
+        scan_dist = np.abs(self._v[sample_indices, 1] - self._scan)
+        near_scan = scan_dist < 0.12
+
+        node_rad = max(1.2, r * 0.007)
+        p.setPen(Qt.PenStyle.NoPen)
+        for x, y, ns in zip(node_xs, node_ys, near_scan):
+            rad = node_rad * 1.6 if ns else node_rad
+            col = accent if ns else primary
+            p.setBrush(QBrush(_c(col, 255 if ns else (140 + 70 * amp))))
+            p.drawEllipse(QPointF(x, y), rad, rad)
+
+    def _paint_matrix_scanner(self, p: QPainter, cx: float, cy: float, r: float,
+                              half_w: float, primary: QColor, accent: QColor, amp: float) -> None:
+        """Horizontal biometric laser scanner beam sweeping across the face matrix."""
+        scan_y = cy - self._scan * r
+        scan_span = min(half_w * 0.70, r * 1.05)
+
+        # Luminous horizontal laser line
+        g = QLinearGradient(cx - scan_span, scan_y, cx + scan_span, scan_y)
+        g.setColorAt(0.0, _c(primary, 0))
+        g.setColorAt(0.2, _c(primary, 180 + 70 * amp))
+        g.setColorAt(0.5, _c(accent, 255))
+        g.setColorAt(0.8, _c(primary, 180 + 70 * amp))
+        g.setColorAt(1.0, _c(primary, 0))
+
+        pen = QPen(QBrush(g), 1.8)
+        p.setPen(pen)
+        p.drawLine(QLineF(cx - scan_span, scan_y, cx + scan_span, scan_y))
+
+        # Soft vertical beam flare
+        flare_h = r * 0.06
+        flare_g = QLinearGradient(cx, scan_y - flare_h, cx, scan_y + flare_h)
+        flare_g.setColorAt(0.0, _c(primary, 0))
+        flare_g.setColorAt(0.5, _c(primary, 35 + 25 * amp))
+        flare_g.setColorAt(1.0, _c(primary, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(flare_g))
+        p.drawRect(QRectF(cx - scan_span, scan_y - flare_h, scan_span * 2.0, flare_h * 2.0))
+
+    def _paint_matrix_telemetry(self, p: QPainter, cx: float, cy: float, r: float,
+                                primary: QColor, accent: QColor, amp: float) -> None:
+        """Sleek Stark-style HUD coordinate and status telemetry readouts."""
+        try:
+            from PyQt6.QtGui import QGuiApplication
+            if QGuiApplication.instance() is None:
+                return
+            from gui.style import mono_font
+            p.setFont(mono_font(8))
+        except Exception:
+            return
+
+        hw = 1.05 * r
+        top_y = cy - 1.10 * r
+        bot_y = cy + 1.08 * r
+
+        # Top Left: System Matrix ID
+        p.setPen(QPen(_c(primary, 180)))
+        p.drawText(QPointF(cx - hw, top_y - 6), "JARVIS // FACE.MATRIX v57.4")
+
+        # Top Right: Node telemetry
+        txt_nodes = "TRK.LOCK // 684 NODES"
+        fm = p.fontMetrics()
+        p.setPen(QPen(_c(accent, 200)))
+        p.drawText(QPointF(cx + hw - fm.horizontalAdvance(txt_nodes), top_y - 6), txt_nodes)
+
+        # Bottom Left: Real-time 3D Vector Telemetry
+        yaw_deg = self._yaw * (180.0 / math.pi)
+        pitch_deg = self._pitch * (180.0 / math.pi)
+        txt_vect = f"VECT: [AZ {yaw_deg:+.1f}°  EL {pitch_deg:+.1f}°]"
+        p.setPen(QPen(_c(primary, 160)))
+        p.drawText(QPointF(cx - hw, bot_y + 14), txt_vect)
+
+        # Bottom Right: Activity / Audio Status
+        if self._mouth > 0.05 or amp > 0.2:
+            status_txt = f"SYNAPSE: TX [RMS {int(min(1.0, amp) * 100)}%]"
+            p.setPen(QPen(_c(accent, 230)))
+        else:
+            status_txt = "SCAN // 60Hz NOMINAL"
+            p.setPen(QPen(_c(primary, 150)))
+        p.drawText(QPointF(cx + hw - fm.horizontalAdvance(status_txt), bot_y + 14), status_txt)
+
+    # Legacy alias
+    _paint_hologram = _paint_face_matrix

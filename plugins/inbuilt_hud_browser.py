@@ -54,9 +54,10 @@ PLUGIN = {
                     "'scroll' (scroll down, up, top, or bottom), "
                     "'read_content' (extract readable text and headings to content panel), "
                     "'screenshot' (refresh HUD viewport frame capture), "
+                    "'focus' (toggle or expand browser to full center stage), "
                     "'close' (close browser and restore cybernetic hologram avatar)."
                 ),
-                "enum": ["open", "click", "type", "scroll", "read_content", "screenshot", "close"],
+                "enum": ["open", "click", "type", "scroll", "read_content", "screenshot", "focus", "close"],
             },
             "url": {
                 "type": "STRING",
@@ -464,6 +465,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             spoken = res.get("spoken_summary", f"Extracted content from {title}.")
 
             if player:
+                if hasattr(player, "show_ar_reader") and markdown:
+                    player.show_ar_reader(title, markdown)
                 if hasattr(player, "show_content") and markdown:
                     player.show_content(f"HUD Browser: {title}", markdown)
                 if hasattr(player, "write_log"):
@@ -482,6 +485,14 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                     player.write_log("🌐 [HUD Browser] Refreshed HUD viewport frame")
 
             return "HUD browser frame refreshed, sir."
+
+        elif action in ("focus", "center_stage", "expand"):
+            focused = parameters.get("focused")
+            foc_bool = True if focused is None else bool(focused)
+            if player and hasattr(player, "toggle_ar_browser_focus"):
+                player.toggle_ar_browser_focus(foc_bool)
+            status_desc = "expanded to center stage" if foc_bool else "returned to companion orbit"
+            return f"AR browser holo-surface {status_desc}, sir."
 
         elif action == "close":
             manager.close()

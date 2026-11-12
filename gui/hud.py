@@ -144,6 +144,8 @@ class HudCanvas(QWidget):
         self._cursor_pos: Optional[QPointF] = None
         self._cursor_norm = (0.0, 0.0)
         self._active_holo_panes: dict = {}
+        self._avatar_dock: float = 0.0
+        self._avatar_tgt_dock: float = 0.0
 
         # Layer 0: Spatial floor grid & drifting 3D space dust particles
         self._grid_starts, self._grid_ends = generate_spatial_grid(
@@ -184,21 +186,49 @@ class HudCanvas(QWidget):
         yaw: float = -18.0,
         pitch: float = 6.0,
         pixmap: Optional[QPixmap] = None,
+        focused: bool = False,
     ) -> None:
         """Registers or updates a floating AR holographic surface in Layer 2."""
+        existing = self._active_holo_panes.get(pane_id, {})
+        cur_progress = existing.get("focus_progress", 1.0 if focused else 0.0)
         self._active_holo_panes[pane_id] = {
             "title": title,
             "center": center,
+            "default_center": center,
             "width": width,
+            "default_width": width,
             "height": height,
+            "default_height": height,
             "yaw": yaw,
+            "default_yaw": yaw,
             "pitch": pitch,
+            "default_pitch": pitch,
             "pixmap": pixmap,
+            "focused": focused,
+            "focus_progress": cur_progress,
+            "tgt_focus": 1.0 if focused else 0.0,
         }
+        if focused:
+            self.set_avatar_docked(True)
+
+    def set_holo_pane_focus(self, pane_id: str, focused: bool) -> None:
+        """Smoothly transitions an AR surface between companion mode and center stage."""
+        pane = self._active_holo_panes.get(pane_id)
+        if pane is not None:
+            pane["focused"] = focused
+            pane["tgt_focus"] = 1.0 if focused else 0.0
+        any_focused = any(p.get("tgt_focus", 0.0) > 0.5 for p in self._active_holo_panes.values())
+        self.set_avatar_docked(any_focused)
+
+    def set_avatar_docked(self, docked: bool) -> None:
+        """Docks avatar to upper-right orbital node to give center stage to AR workspace."""
+        self._avatar_tgt_dock = 1.0 if docked else 0.0
 
     def unregister_holo_pane(self, pane_id: str) -> None:
         """Removes an AR holographic surface from Layer 2."""
         self._active_holo_panes.pop(pane_id, None)
+        any_focused = any(p.get("tgt_focus", 0.0) > 0.5 for p in self._active_holo_panes.values())
+        self.set_avatar_docked(any_focused)
 
     def glance(self, dx: float, dy: float, hold: float = 1.1) -> None:
         """Ask the avatar to look somewhere for a moment (see HoloAvatar.glance)."""
@@ -463,6 +493,23 @@ class HudCanvas(QWidget):
                 self._dust_particles[reset_mask, 2] = np.random.uniform(420, 550, size=cnt)
                 self._dust_particles[reset_mask, 0] = np.random.uniform(-450, 450, size=cnt)
                 self._dust_particles[reset_mask, 1] = np.random.uniform(-250, 250, size=cnt)
+
+        # Step Avatar docking transition to orbital node
+        if hasattr(self, "_avatar_dock"):
+            if abs(self._avatar_dock - self._avatar_tgt_dock) > 1e-4:
+                self._avatar_dock += (self._avatar_tgt_dock - self._avatar_dock) * 0.16
+                if abs(self._avatar_dock - self._avatar_tgt_dock) < 0.005:
+                    self._avatar_dock = self._avatar_tgt_dock
+
+        # Step Layer 2 Holo Panes focus / center-stage transition
+        if hasattr(self, "_active_holo_panes"):
+            for pane in self._active_holo_panes.values():
+                tgt = float(pane.get("tgt_focus", 0.0))
+                cur = float(pane.get("focus_progress", 0.0))
+                if abs(cur - tgt) > 1e-4:
+                    pane["focus_progress"] = cur + (tgt - cur) * 0.16
+                    if abs(pane["focus_progress"] - tgt) < 0.005:
+                        pane["focus_progress"] = tgt
 
         self._blink_tick += 1
         if self._blink_tick >= 38:
@@ -736,8 +783,8 @@ class HudCanvas(QWidget):
         main = qcol(C.PRI)
         acc = qcol(C.ACC if self.speaking else C.ACC2)
 
-        # 2 rotating 3D orbital rings around central focal plane
-        center3d = (0.0, 15.0, 0.0)
+        dock = float(getattr(self, "_avatar_dock", 0.0))
+        center3d = (160.0 * dock, 15.0 - 90.0 * dock, -40.0 * dock)
         ring1 = generate_orbit_ring(
             radius=r * 1.36, segments=40, tilt_yaw=t * 18.0, tilt_pitch=22.0, center=center3d
         )
@@ -766,11 +813,29 @@ class HudCanvas(QWidget):
         main = qcol(C.PRI)
         acc = qcol(C.ACC)
         for pane_id, pane in list(self._active_holo_panes.items()):
-            center = pane.get("center", (180.0, 40.0, -40.0))
-            pw = pane.get("width", 260.0)
-            ph = pane.get("height", 160.0)
-            yaw = pane.get("yaw", -18.0)
-            pitch = pane.get("pitch", 6.0)
+            fp = float(pane.get("focus_progress", 0.0))
+            def_center = pane.get("default_center", pane.get("center", (180.0, 30.0, -40.0)))
+            def_w = float(pane.get("default_width", pane.get("width", 260.0)))
+            def_h = float(pane.get("default_height", pane.get("height", 160.0)))
+            def_yaw = float(pane.get("default_yaw", pane.get("yaw", -18.0)))
+            def_pitch = float(pane.get("default_pitch", pane.get("pitch", 6.0)))
+
+            # Center stage target position: full frontal, centered, expanded
+            foc_center = (0.0, 15.0, 50.0)
+            foc_w = min(W * 0.74, 460.0)
+            foc_h = min(H * 0.64, 290.0)
+            foc_yaw = 0.0
+            foc_pitch = 0.0
+
+            center = (
+                def_center[0] * (1.0 - fp) + foc_center[0] * fp,
+                def_center[1] * (1.0 - fp) + foc_center[1] * fp,
+                def_center[2] * (1.0 - fp) + foc_center[2] * fp,
+            )
+            pw = def_w * (1.0 - fp) + foc_w * fp
+            ph = def_h * (1.0 - fp) + foc_h * fp
+            yaw = def_yaw * (1.0 - fp) + foc_yaw * fp
+            pitch = def_pitch * (1.0 - fp) + foc_pitch * fp
             title = pane.get("title", "AR HOLO PANE")
             pixmap = pane.get("pixmap", None)
 
@@ -896,10 +961,17 @@ class HudCanvas(QWidget):
             r_head = min(fw * 0.355, band_h / (av.TOP + av.BOT + 0.08))
             head_cy = band_t + (band_h - (av.TOP + av.BOT) * r_head) / 2.0 + av.TOP * r_head
 
+            # Avatar orbital docking transformation when AR surface is in center stage
+            dock = float(getattr(self, "_avatar_dock", 0.0))
+            scale_mult = 1.0 - 0.58 * dock
+            cx_eff = cx + (W * 0.33) * dock
+            cy_eff = head_cy - (band_h * 0.28) * dock
+            r_head_eff = r_head * scale_mult
+
             # Ambient aura & telemetry framing behind avatar
-            self._ambient.paint_aura(p, cx, head_cy, r_head)
-            self._telemetry.paint_arcs(p, cx, head_cy, r_head * 1.32, self.state, self.speaking, amb_col)
-            self._paint_layer1_spatial_gimbals(p, cx, head_cy, r_head)
+            self._ambient.paint_aura(p, cx_eff, cy_eff, r_head_eff)
+            self._telemetry.paint_arcs(p, cx_eff, cy_eff, r_head_eff * 1.32, self.state, self.speaking, amb_col)
+            self._paint_layer1_spatial_gimbals(p, cx_eff, cy_eff, r_head_eff)
 
             if self.muted:
                 main = acc = qcol(C.MUTED_C)
@@ -919,20 +991,30 @@ class HudCanvas(QWidget):
                     acc = qcol(C.PRI)
             p.save()
             p.setClipRect(QRectF(0, 0, W, H))
-            av.paint(p, cx, head_cy, r_head, main, acc, qcol(C.BG), half_w=W / 2.0)
+            av.paint(p, cx_eff, cy_eff, r_head_eff, main, acc, qcol(C.BG), half_w=W / 2.0)
             p.restore()
         elif self._reactor is not None:
             ext = Reactor3D.TOP + Reactor3D.BOTTOM
             r = min(W * 0.25, band_h / ext)
             core_cy = band_t + (band_h - ext * r) / 2.0 + Reactor3D.TOP * r
-            self._ambient.paint_aura(p, cx, core_cy, r)
-            self._telemetry.paint_arcs(p, cx, core_cy, r * 1.45, self.state, self.speaking, amb_col)
-            self._paint_core(p, cx, core_cy, r, W, band_h)
+            dock = float(getattr(self, "_avatar_dock", 0.0))
+            scale_mult = 1.0 - 0.58 * dock
+            cx_eff = cx + (W * 0.33) * dock
+            cy_eff = core_cy - (band_h * 0.28) * dock
+            r_eff = r * scale_mult
+            self._ambient.paint_aura(p, cx_eff, cy_eff, r_eff)
+            self._telemetry.paint_arcs(p, cx_eff, cy_eff, r_eff * 1.45, self.state, self.speaking, amb_col)
+            self._paint_core(p, cx_eff, cy_eff, r_eff, W, band_h)
         else:
             r = min(W * 0.46, band_h / 2.0)
-            self._ambient.paint_aura(p, cx, band_t + band_h / 2.0, r)
-            self._telemetry.paint_arcs(p, cx, band_t + band_h / 2.0, r * 1.45, self.state, self.speaking, amb_col)
-            self._paint_core_classic(p, cx, band_t + band_h / 2.0, r, W, band_h)
+            dock = float(getattr(self, "_avatar_dock", 0.0))
+            scale_mult = 1.0 - 0.58 * dock
+            cx_eff = cx + (W * 0.33) * dock
+            cy_eff = (band_t + band_h / 2.0) - (band_h * 0.28) * dock
+            r_eff = r * scale_mult
+            self._ambient.paint_aura(p, cx_eff, cy_eff, r_eff)
+            self._telemetry.paint_arcs(p, cx_eff, cy_eff, r_eff * 1.45, self.state, self.speaking, amb_col)
+            self._paint_core_classic(p, cx_eff, cy_eff, r_eff, W, band_h)
 
         # ── Layer 2: Floating AR Holographic Panes Container ─────────────────
         self._paint_layer2_holo_panes(p, float(W), float(H))

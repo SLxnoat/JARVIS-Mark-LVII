@@ -75,7 +75,7 @@ def px_font(px: float, weight=QFont.Weight.Normal, mono: bool = False,
 
 
 _HEX_RGB_CACHE: dict[str, tuple[int, int, int]] = {}
-_BLEND_CACHE: dict[tuple[int, int, int, int, int, int, int], QColor] = {}
+_BLEND_CACHE: dict[tuple, QColor] = {}
 
 
 def _parse_rgb(c) -> tuple[int, int, int]:
@@ -110,13 +110,15 @@ def _parse_rgb(c) -> tuple[int, int, int]:
 def blend_fast(col, a: float, base=None) -> QColor:
     """High-performance pre-blended color LUT bypassing runtime QColor parsing."""
     k_int = int(round(max(0.0, min(1.0, float(a))) * 255.0))
-    r1, g1, b1 = _parse_rgb(col)
-    r0, g0, b0 = _parse_rgb(base if base is not None else C.BG)
-    key = (r1, g1, b1, r0, g0, b0, k_int)
+    col_k = col.rgba() if isinstance(col, QColor) else (col if isinstance(col, tuple) else str(col))
+    base_k = base.rgba() if isinstance(base, QColor) else (base if isinstance(base, tuple) else (str(base) if base is not None else None))
+    key = (col_k, base_k, k_int)
     cached = _BLEND_CACHE.get(key)
     if cached is not None:
         return cached
 
+    r1, g1, b1 = _parse_rgb(col)
+    r0, g0, b0 = _parse_rgb(base if base is not None else C.BG)
     inv_k = 255 - k_int
     r = (r0 * inv_k + r1 * k_int) // 255
     g = (g0 * inv_k + g1 * k_int) // 255

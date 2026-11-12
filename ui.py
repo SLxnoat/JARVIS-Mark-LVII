@@ -362,6 +362,24 @@ class JarvisUI:
         if hasattr(self._win, "_browser_beacon_sig"):
             self._win._browser_beacon_sig.emit(float(norm_x), float(norm_y))
 
+    def show_ar_reader(self, title: str, markdown: str) -> None:
+        """Thread-safe: open the slide-out reader panel with extracted article text."""
+        if hasattr(self._win, "_browser_reader_sig"):
+            self._win._browser_reader_sig.emit(str(title or "Article"), str(markdown or ""))
+
+    def toggle_ar_browser_focus(self, focused: Optional[bool] = None) -> None:
+        """Thread-safe: toggle or set AR browser focus between companion pane and center stage."""
+        if hasattr(self._win, "_browser_focus_sig"):
+            if focused is None:
+                cur = False
+                if self._win._browser_viewport is not None:
+                    cur = self._win._browser_viewport._is_focused
+                elif hasattr(self._win, "hud") and "browser" in self._win.hud._active_holo_panes:
+                    cur = self._win.hud._active_holo_panes["browser"].get("tgt_focus", 0.0) > 0.5
+                self._win._browser_focus_sig.emit(not cur)
+            else:
+                self._win._browser_focus_sig.emit(bool(focused))
+
     def stop_video(self) -> None:
         """Thread-safe: close the video and give the HUD back to the avatar."""
         self._win._video_close_sig.emit()

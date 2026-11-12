@@ -34,6 +34,7 @@ class BrowserViewport(QWidget):
     navigate_requested = pyqtSignal(str)          # Emits URL to navigate
     action_requested   = pyqtSignal(str, dict)    # Emits (action, params) e.g. ("click", {"selector": ...})
     closed             = pyqtSignal()             # Emits when browser is closed by operator
+    focus_toggled      = pyqtSignal(bool)         # Emits when center-stage focus is toggled
 
     # Default 3D spatial orientation for Layer 2 floating projection
     DEFAULT_YAW: float   = -18.0
@@ -53,6 +54,7 @@ class BrowserViewport(QWidget):
         self._viewport_pixmap: Optional[QPixmap] = None
         self._reader_text: str = ""
         self._reader_active: bool = False
+        self._is_focused: bool = False
 
         # Laser beacon highlight state for clicks/inputs
         self._beacon_pos: Optional[QPointF] = None
@@ -121,9 +123,11 @@ class BrowserViewport(QWidget):
         self._lbl_latency.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         nav_layout.addWidget(self._lbl_latency)
 
-        # Action Buttons (Reader Mode, Close)
+        # Action Buttons (Center Stage, Reader Mode, Close)
+        self._btn_expand = self._create_nav_btn("⛶", "Toggle Center Stage (Ctrl+B)", self._toggle_focus)
         self._btn_reader = self._create_nav_btn("📖", "Toggle Reader Mode", self._toggle_reader)
         self._btn_close  = self._create_nav_btn("✕", "Close Browser Surface", self._on_close)
+        nav_layout.addWidget(self._btn_expand)
         nav_layout.addWidget(self._btn_reader)
         nav_layout.addWidget(self._btn_close)
 
@@ -140,6 +144,73 @@ class BrowserViewport(QWidget):
         self._stack.addWidget(self._web_display)
 
         # Page 1: Reader Mode Slide-Out / Text Panel
+        self._reader_container = QWidget()
+        self._reader_container.setStyleSheet(f"background: {blend_fast(C.BG, 0.94).name()};")
+        reader_v = QVBoxLayout(self._reader_container)
+        reader_v.setContentsMargins(6, 6, 6, 6)
+        reader_v.setSpacing(6)
+
+        # Reader Sub-Header Bar
+        reader_hdr = QWidget()
+        reader_hdr.setFixedHeight(28)
+        reader_hdr.setStyleSheet(f"""
+            QWidget {{
+                background: {blend_fast(C.PANEL2, 0.90).name()};
+                border: 1px solid {blend_fast(C.PRI, 0.40).name()};
+            }}
+        """)
+        r_hdr_l = QHBoxLayout(reader_hdr)
+        r_hdr_l.setContentsMargins(8, 2, 8, 2)
+        r_hdr_l.setSpacing(8)
+
+        self._lbl_reader_title = QLabel("📖 READER MODE")
+        self._lbl_reader_title.setFont(hud_font(8.5, QFont.Weight.Bold))
+        self._lbl_reader_title.setStyleSheet(f"color: {C.PRI}; border: none; background: transparent;")
+        r_hdr_l.addWidget(self._lbl_reader_title, stretch=1)
+
+        self._lbl_reader_meta = QLabel("0 WORDS | ~1 MIN READ")
+        self._lbl_reader_meta.setFont(mono_font(7.5))
+        self._lbl_reader_meta.setStyleSheet(f"color: {C.TEXT_DIM}; border: none; background: transparent;")
+        r_hdr_l.addWidget(self._lbl_reader_meta)
+
+        btn_copy = QPushButton("📋 COPY")
+        btn_copy.setFont(hud_font(7.5, QFont.Weight.Bold))
+        btn_copy.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_copy.setStyleSheet(f"""
+            QPushButton {{
+                background: {blend_fast(C.PANEL, 0.85).name()};
+                color: {C.WHITE};
+                border: 1px solid {blend_fast(C.BORDER, 0.70).name()};
+                padding: 2px 6px;
+            }}
+            QPushButton:hover {{
+                border-color: {C.PRI};
+                color: {C.PRI};
+            }}
+        """)
+        btn_copy.clicked.connect(self._copy_reader_text)
+        r_hdr_l.addWidget(btn_copy)
+
+        btn_exit = QPushButton("✕ EXIT")
+        btn_exit.setFont(hud_font(7.5, QFont.Weight.Bold))
+        btn_exit.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_exit.setStyleSheet(f"""
+            QPushButton {{
+                background: {blend_fast(C.PANEL, 0.85).name()};
+                color: {C.ACC};
+                border: 1px solid {blend_fast(C.BORDER, 0.70).name()};
+                padding: 2px 6px;
+            }}
+            QPushButton:hover {{
+                border-color: {C.ACC};
+                background: {blend_fast(C.PRI_GHO, 0.90).name()};
+            }}
+        """)
+        btn_exit.clicked.connect(self._toggle_reader)
+        r_hdr_l.addWidget(btn_exit)
+
+        reader_v.addWidget(reader_hdr)
+
         self._txt_reader = QTextEdit()
         self._txt_reader.setReadOnly(True)
         self._txt_reader.setFont(hud_font(10))
@@ -147,12 +218,14 @@ class BrowserViewport(QWidget):
             QTextEdit {{
                 background: {blend_fast(C.BG, 0.92).name()};
                 color: {C.WHITE};
-                border: 1px solid {blend_fast(C.PRI, 0.40).name()};
+                border: 1px solid {blend_fast(C.PRI, 0.35).name()};
+                border-left: 3px solid {C.PRI};
                 padding: 12px;
                 line-height: 1.5;
             }}
         """)
-        self._stack.addWidget(self._txt_reader)
+        reader_v.addWidget(self._txt_reader, stretch=1)
+        self._stack.addWidget(self._reader_container)
 
         layout.addWidget(self._stack, stretch=1)
 
@@ -217,11 +290,21 @@ class BrowserViewport(QWidget):
         self._beacon_timer.start()
 
     def set_reader_content(self, title: str, markdown_content: str) -> None:
-        """Populates reader mode with extracted article text."""
+        """Populates reader mode with extracted article text and headings."""
         self._reader_text = markdown_content
+        words = len(markdown_content.split())
+        read_time = max(1, words // 200)
+        self._lbl_reader_title.setText(f"📖 {title[:35].upper()}")
+        self._lbl_reader_meta.setText(f"◈ {words:,} WORDS | ~{read_time} MIN READ")
         self._txt_reader.setMarkdown(f"# {title}\n\n{markdown_content}")
         self._stack.setCurrentIndex(1)
         self._reader_active = True
+
+    def _copy_reader_text(self) -> None:
+        """Copies reader markdown content to system clipboard."""
+        if self._reader_text:
+            from PyQt6.QtWidgets import QApplication
+            QApplication.clipboard().setText(self._reader_text)
 
     def _step_beacon(self) -> None:
         self._beacon_radius += 2.5
@@ -264,6 +347,15 @@ class BrowserViewport(QWidget):
 
     def _on_reload(self) -> None:
         self.action_requested.emit("reload", {})
+
+    def _toggle_focus(self) -> None:
+        self.set_focused(not self._is_focused)
+
+    def set_focused(self, focused: bool) -> None:
+        self._is_focused = bool(focused)
+        if hasattr(self, "_btn_expand"):
+            self._btn_expand.setText("🗗" if self._is_focused else "⛶")
+        self.focus_toggled.emit(self._is_focused)
 
     def _toggle_reader(self) -> None:
         if self._reader_active:
@@ -321,9 +413,32 @@ class BrowserViewport(QWidget):
         p.setPen(QPen(qcol(C.TEXT_DIM), 1))
         p.drawText(QRectF(width - 70, 5, 62, 20), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, f"{self._latency_ms}ms")
 
-        # 4. Viewport image content
+        # 4. Viewport image content or Reader Mode
         content_rect = QRect(6, 28, width - 12, height - 34)
-        if self._viewport_pixmap is not None and not self._viewport_pixmap.isNull():
+        if self._reader_active and self._reader_text:
+            p.save()
+            p.setClipRect(content_rect)
+            # Tinted background
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(blend_fast(C.BG, 0.95)))
+            p.drawRect(content_rect)
+
+            # Left cyan bar
+            p.setBrush(QBrush(qcol(C.PRI)))
+            p.drawRect(content_rect.left(), content_rect.top(), 3, content_rect.height())
+
+            p.setFont(hud_font(8, QFont.Weight.Bold))
+            p.setPen(QPen(qcol(C.WHITE), 1))
+            lines = [line.strip() for line in self._reader_text.splitlines() if line.strip()][:10]
+            y_cursor = content_rect.top() + 14
+            for l_txt in lines:
+                if y_cursor > content_rect.bottom() - 10:
+                    break
+                p.drawText(QRectF(content_rect.left() + 10, y_cursor, content_rect.width() - 20, 16),
+                           Qt.AlignmentFlag.AlignLeft, l_txt[:60])
+                y_cursor += 16
+            p.restore()
+        elif self._viewport_pixmap is not None and not self._viewport_pixmap.isNull():
             scaled = self._viewport_pixmap.scaled(
                 content_rect.size(),
                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,

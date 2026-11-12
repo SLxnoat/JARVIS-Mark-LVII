@@ -31,10 +31,12 @@ class TestARBrowserStream(unittest.TestCase):
         self.assertTrue(hasattr(self.win, "_browser_holo_sig"))
         self.assertTrue(hasattr(self.win, "_browser_close_sig"))
         self.assertTrue(hasattr(self.win, "_browser_beacon_sig"))
+        self.assertTrue(hasattr(self.win, "_browser_reader_sig"))
 
         self.assertTrue(hasattr(self.player, "show_ar_browser"))
         self.assertTrue(hasattr(self.player, "close_ar_browser"))
         self.assertTrue(hasattr(self.player, "highlight_ar_browser_beacon"))
+        self.assertTrue(hasattr(self.player, "show_ar_reader"))
 
     def test_show_ar_browser_projects_to_hud_layer2(self):
         # Create a small dummy png
@@ -73,6 +75,52 @@ class TestARBrowserStream(unittest.TestCase):
         self.player.close_ar_browser()
         QApplication.processEvents()
         self.assertNotIn("browser", self.win.hud._active_holo_panes)
+        self.assertEqual(self.win.hud._avatar_tgt_dock, 0.0)
+
+    def test_toggle_ar_browser_focus_docks_avatar(self):
+        # Register a browser pane first
+        self.player.show_ar_browser(
+            url="https://example.com",
+            image_bytes=b"dummy",
+            title="Example",
+        )
+        QApplication.processEvents()
+
+        # Toggle focus to True
+        self.player.toggle_ar_browser_focus(True)
+        QApplication.processEvents()
+
+        self.assertEqual(self.win.hud._avatar_tgt_dock, 1.0)
+        self.assertIn("browser", self.win.hud._active_holo_panes)
+        self.assertEqual(self.win.hud._active_holo_panes["browser"]["tgt_focus"], 1.0)
+
+        # Toggle focus back to False
+        self.player.toggle_ar_browser_focus(False)
+        QApplication.processEvents()
+
+        self.assertEqual(self.win.hud._avatar_tgt_dock, 0.0)
+        self.assertEqual(self.win.hud._active_holo_panes["browser"]["tgt_focus"], 0.0)
+
+    def test_playwright_uninstalled_fallback(self):
+        from unittest.mock import patch
+        import plugins.inbuilt_hud_browser as ib
+
+        with patch.object(ib, "PLAYWRIGHT_AVAILABLE", False):
+            msg = ib.run({"action": "open", "url": "https://example.com"})
+            self.assertIn("Playwright browser engine is not installed", msg)
+
+    def test_show_ar_reader_renders_reader_mode(self):
+        self.player.show_ar_reader(
+            title="Quantum Computing Article",
+            markdown="# Quantum Supremacy\n\nRecent advances show superconducting qubits achieve exponential speedup."
+        )
+        QApplication.processEvents()
+
+        self.assertIn("browser", self.win.hud._active_holo_panes)
+        pane = self.win.hud._active_holo_panes["browser"]
+        self.assertIn("Quantum Computing Article", pane["title"])
+        self.assertIsNotNone(pane["pixmap"])
+        self.assertFalse(pane["pixmap"].isNull())
 
     def test_dispatch_frame_to_player_helper(self):
         test_file = Path("screenshots") / "test_frame.png"

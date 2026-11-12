@@ -106,12 +106,25 @@ precision, zero hesitation, and minimal round-trip latency:
      • Volume, brightness, wifi toggle, power, lock -> computer_settings
      • CPU, RAM, GPU, thermals -> system_monitor
      • Linux services, failed systemd units, journalctl -> systemd_sentinel
+     • PCIe bus link, NVMe SMART health, CPU clock governors -> pci_hardware_radar
+     • Room noise floor & FFT frequency spectrum -> audio_spectrum_analyzer
+     • Physical USB sentry & BadUSB/Rubber Ducky detection -> usb_sentinel
+     • Firewall status, default chain policies, exposed sockets -> firewall_warden
+     • In-memory process anomalies & unlinked binaries -> process_forensics
+     • Docker & Podman container fleet radar -> docker_sentinel
+     • Anycast DNS propagation & poisoning check -> dns_propagator
+     • SSH key hygiene, file hashes, Shannon entropy -> crypto_vault_sentinel
      • Local LAN mapping, subnet sweep, port banners, TLS certs -> network_topology
      • Wi-Fi RF radar, spectrum mapping, channel optimizer -> wifi_radar
      • Network ping latency, packet loss, bandwidth test -> network_speed
      • Bluetooth devices, battery, connection toggling -> bluetooth_governor
      • Windows, keyboard shortcuts, mouse clicks -> computer_control
      • Launching or focusing desktop apps -> open_app
+   - Tactical Space, Environmental & Celestial Telemetry:
+     • ISS real-time coordinates, velocity & satellite passes -> orbital_tracker
+     • NOAA solar flares, geomagnetic storms & Kp-index -> solar_space_weather
+     • Lunar phase, planetary positions & twilight thresholds -> celestial_ephemeris
+     • Air Quality Index, PM2.5, PM10 & atmospheric gas levels -> air_quality_sentinel
    - Autonomous Planning & Research:
      • Multi-step objectives, cross-tool investigation, dynamic combining -> task_planner
      • Fast factual lookup, web search, prices -> web_search

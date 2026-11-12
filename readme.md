@@ -90,6 +90,18 @@ It's not just an assistant — it's an extension of your digital life.
 | 🛰️ Tactical Network Radar | Iron Man style LAN topology cartographer, ARP neighbor detection, and local service health checks |
 | 📡 Tactical Wi-Fi Radar | Active Wi-Fi link telemetry, ambient AP spectrum mapping, channel congestion optimization, and security hygiene |
 | 🎯 Autonomous Task Planner | Tool-agnostic cognitive meta-agent that inspects the live tool registry, formulates multi-step plans, dynamically combines actions & plugins, and pipelines intermediate context |
+| ⚙️ PCIe Hardware Radar | Tactical PCIe bus link speed inspection, NVMe SMART wear health, CPU scaling governors, and RAM layout |
+| 🎙️ Acoustic Spectrum Analyzer | Real-time 20 Hz - 20 kHz FFT frequency spectrum, ambient noise floor (dB SPL), and acoustic resonance detection |
+| 🛡️ Physical USB Sentry | Real-time USB peripheral enumeration, BadUSB / Rubber Ducky HID injection detection, and port security posture |
+| 🛡️ Tactical Firewall Warden | Workstation packet filtering audit (UFW/iptables/nftables), default drop/accept policies, and public listening socket mapping |
+| 🔍 Process Memory Forensics | In-memory anomaly detection, unlinked running binaries (`/proc/[pid]/exe (deleted)`), and /tmp execution scanning |
+| 🛰️ Orbital ISS Tracker | Real-time ISS coordinates, orbital velocity (~27,600 km/h), ground distance, and overhead satellite pass prediction |
+| ☀️ Space Weather Monitor | NOAA GOES solar flare classification (X-ray flux A/B/C/M/X), planetary K-index (Kp 0-9), and radio blackout alerts |
+| 🔭 Celestial Ephemeris | Offline mathematical lunar illumination & phase, naked-eye planetary coordinates (Venus/Mars/Jupiter/Saturn), and twilight boundaries |
+| 🍃 Air Quality Sentinel | Fine particulate density (PM2.5 / PM10), atmospheric gas levels (CO, NO2, O3, SO2), and European AQI health guidance |
+| 🐳 Container Fleet Radar | Local Docker & Podman container health inspection, port mappings, crash restart loops, and dangling image reclamation |
+| 🌐 Global Anycast DNS Cartographer | Multi-resolver propagation verification across Cloudflare, Google, Quad9, and OpenDNS; ISP poisoning & latency checks |
+| 🔐 Cryptographic Vault Sentinel | Local SSH key hygiene, multi-algorithm hashing (SHA-256, SHA-512, BLAKE2b), and Shannon entropy calculation |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -989,7 +1001,19 @@ Mark LVII/
 │   ├── network_speed.py      # Non-blocking bandwidth test, ICMP ping latency & packet loss
 │   ├── network_topology.py   # Tactical LAN radar, ARP neighbor mapping & local service verification
 │   ├── wifi_radar.py         # Wi-Fi link health, ambient AP spectrum mapping & channel congestion optimizer
-│   └── task_planner.py       # Autonomous multi-step goal planner & dynamic multi-tool combiner
+│   ├── task_planner.py       # Autonomous multi-step goal planner & dynamic multi-tool combiner
+│   ├── pci_hardware_radar.py # PCIe bus link speeds, NVMe SMART health, CPU governors & memory layout
+│   ├── audio_spectrum_analyzer.py # Real-time acoustic FFT spectrum, noise floor & coil whine detection
+│   ├── usb_sentinel.py       # Physical USB bus sentry & BadUSB / Rubber Ducky HID injection detection
+│   ├── firewall_warden.py    # UFW/iptables/nftables audit, default policies & public socket exposure
+│   ├── process_forensics.py  # In-memory process anomalies, unlinked binaries & temp execution scanner
+│   ├── orbital_tracker.py    # Satellite & ISS orbital coordinates, velocity & overhead pass schedule
+│   ├── solar_space_weather.py# NOAA solar flare class, planetary K-index (Kp 0-9) & radio blackout monitor
+│   ├── celestial_ephemeris.py# Mathematical lunar phase, naked-eye planet coordinates & twilight timings
+│   ├── air_quality_sentinel.py # Atmospheric PM2.5, PM10, atmospheric gas telemetry & European AQI
+│   ├── docker_sentinel.py    # Docker & Podman container health, port mappings & crash loop detection
+│   ├── dns_propagator.py     # Global anycast DNS propagation across Cloudflare/Google/Quad9/OpenDNS
+│   └── crypto_vault_sentinel.py # SSH key hygiene, SHA-256/BLAKE2b hashing & Shannon entropy analysis
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

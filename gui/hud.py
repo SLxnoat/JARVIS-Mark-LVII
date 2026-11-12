@@ -131,11 +131,13 @@ class HudCanvas(QWidget):
         self._visualizer = AIWaveformVisualizer()
         self._telemetry = CognitiveTelemetry()
 
-        # Tactical AR Vibe Reticle and Telemetry
+        # Tactical AR Vibe Reticle, Parallax & Telemetry
         self.setMouseTracking(True)
         self._cursor_pos: QPointF = QPointF(200.0, 200.0)
         self._cursor_target: QPointF = QPointF(200.0, 200.0)
         self._cursor_active: bool = False
+        self._parallax_target: QPointF = QPointF(0.0, 0.0)
+        self._parallax_offset: QPointF = QPointF(0.0, 0.0)
         self._scanline_y: float = 0.0
 
         self._tmr = QTimer(self)
@@ -151,12 +153,20 @@ class HudCanvas(QWidget):
             pass
 
     def mouseMoveEvent(self, e) -> None:
-        self._cursor_target = e.position()
+        pos = e.position()
+        self._cursor_target = pos
         self._cursor_active = True
+        W, H = max(1.0, float(self.width())), max(1.0, float(self.height()))
+        nx = max(-1.0, min(1.0, (pos.x() - W / 2.0) / (W / 2.0)))
+        ny = max(-1.0, min(1.0, (pos.y() - H / 2.0) / (H / 2.0)))
+        self._parallax_target = QPointF(nx, ny)
+        if self._avatar is not None:
+            self._avatar.glance(nx * 0.85, -ny * 0.85, hold=0.8)
         super().mouseMoveEvent(e)
 
     def leaveEvent(self, e) -> None:
         self._cursor_active = False
+        self._parallax_target = QPointF(0.0, 0.0)
         super().leaveEvent(e)
 
     def push_visemes(self, frames, hop: float, at: float) -> None:
@@ -405,9 +415,10 @@ class HudCanvas(QWidget):
         self._visualizer.step(dt, self.state, self.speaking, self.muted, amp)
         self._telemetry.step(dt, self.state, self.speaking)
 
-        # Step tactical reticle and scanline
+        # Step tactical reticle, scanline & smooth parallax displacement
         if self._cursor_active:
             self._cursor_pos += (self._cursor_target - self._cursor_pos) * 0.25
+        self._parallax_offset += (self._parallax_target - self._parallax_offset) * 0.16
         self._scanline_y = (self._scanline_y + 1.2) % max(1.0, float(self.height()))
 
         self._blink_tick += 1
@@ -638,13 +649,24 @@ class HudCanvas(QWidget):
         if self._grid_cache is None or self._grid_key != key:
             self._grid_cache = self._make_grid(W, H)
             self._grid_key = key
-        p.drawPixmap(0, 0, self._grid_cache)
 
-        # ── Dynamic Ambient Lighting: Floor Horizon Spill ─────────────────────
-        self._ambient.paint_horizon_glow(p, float(W), float(H), H * 0.70)
+        # ── Parallax Displacement Offsets ─────────────────────────────────────
+        px = self._parallax_offset.x()
+        py = self._parallax_offset.y()
+
+        # 1. Background grid displacement (subtle inverse shift)
+        grid_dx = int(-px * 8.0)
+        grid_dy = int(-py * 6.0)
+        p.drawPixmap(grid_dx, grid_dy, self._grid_cache)
+
+        # 2. Dynamic Ambient Lighting: Floor Horizon Spill
+        self._ambient.paint_horizon_glow(p, float(W), float(H), H * 0.70 + py * 10.0)
         amb_col = self._ambient.current_color
 
         cx, cy = W / 2, H / 2
+        # Center with parallax shift for avatar and telemetry
+        av_cx = cx + px * 14.0
+        av_shift_y = py * 10.0
         fw = min(W, H)
         # The state line and the waveform take the bottom of the canvas; the
         # centrepiece gets the band above them, at any window size.
@@ -667,9 +689,9 @@ class HudCanvas(QWidget):
             r_head = min(fw * 0.355, band_h / (av.TOP + av.BOT + 0.08))
             head_cy = band_t + (band_h - (av.TOP + av.BOT) * r_head) / 2.0 + av.TOP * r_head
 
-            # Ambient aura & telemetry framing behind avatar
-            self._ambient.paint_aura(p, cx, head_cy, r_head)
-            self._telemetry.paint_arcs(p, cx, head_cy, r_head * 1.32, self.state, self.speaking, amb_col)
+            # Ambient aura & telemetry framing behind avatar (with parallax)
+            self._ambient.paint_aura(p, av_cx, head_cy + av_shift_y, r_head)
+            self._telemetry.paint_arcs(p, av_cx + px * 6.0, head_cy + av_shift_y + py * 4.0, r_head * 1.32, self.state, self.speaking, amb_col)
 
             if self.muted:
                 main = acc = qcol(C.MUTED_C)
@@ -689,20 +711,20 @@ class HudCanvas(QWidget):
                     acc = qcol(C.PRI)
             p.save()
             p.setClipRect(QRectF(0, 0, W, H))
-            av.paint(p, cx, head_cy, r_head, main, acc, qcol(C.BG), half_w=W / 2.0)
+            av.paint(p, av_cx, head_cy + av_shift_y, r_head, main, acc, qcol(C.BG), half_w=W / 2.0)
             p.restore()
         elif self._reactor is not None:
             ext = Reactor3D.TOP + Reactor3D.BOTTOM
             r = min(W * 0.25, band_h / ext)
             core_cy = band_t + (band_h - ext * r) / 2.0 + Reactor3D.TOP * r
-            self._ambient.paint_aura(p, cx, core_cy, r)
-            self._telemetry.paint_arcs(p, cx, core_cy, r * 1.45, self.state, self.speaking, amb_col)
-            self._paint_core(p, cx, core_cy, r, W, band_h)
+            self._ambient.paint_aura(p, av_cx, core_cy + av_shift_y, r)
+            self._telemetry.paint_arcs(p, av_cx + px * 6.0, core_cy + av_shift_y + py * 4.0, r * 1.45, self.state, self.speaking, amb_col)
+            self._paint_core(p, av_cx, core_cy + av_shift_y, r, W, band_h)
         else:
             r = min(W * 0.46, band_h / 2.0)
-            self._ambient.paint_aura(p, cx, band_t + band_h / 2.0, r)
-            self._telemetry.paint_arcs(p, cx, band_t + band_h / 2.0, r * 1.45, self.state, self.speaking, amb_col)
-            self._paint_core_classic(p, cx, band_t + band_h / 2.0, r, W, band_h)
+            self._ambient.paint_aura(p, av_cx, band_t + band_h / 2.0 + av_shift_y, r)
+            self._telemetry.paint_arcs(p, av_cx + px * 6.0, band_t + band_h / 2.0 + av_shift_y + py * 4.0, r * 1.45, self.state, self.speaking, amb_col)
+            self._paint_core_classic(p, av_cx, band_t + band_h / 2.0 + av_shift_y, r, W, band_h)
 
         # ── Ambient Edge Lighting along Frame ────────────────────────────────
         self._ambient.paint_edge_illumination(p, float(W), float(H))
@@ -739,12 +761,12 @@ class HudCanvas(QWidget):
                                self.muted, amp, amb_col)
 
         # ── Audio Viseme Orbit Ring ──────────────────────────────────────────
-        orbit_cy = head_cy if (self._avatar is not None and self.hud_style in _FACE_STYLES) else (core_cy if self._reactor is not None else band_t + band_h / 2.0)
+        orbit_cy = (head_cy if (self._avatar is not None and self.hud_style in _FACE_STYLES) else (core_cy if self._reactor is not None else band_t + band_h / 2.0)) + av_shift_y
         orbit_r = r_head if (self._avatar is not None and self.hud_style in _FACE_STYLES) else r
-        self._paint_audio_viseme_orbit(p, cx, orbit_cy, orbit_r)
+        self._paint_audio_viseme_orbit(p, av_cx + px * 4.0, orbit_cy, orbit_r)
 
         # ── Tactical AR Vibe Overlays ────────────────────────────────────────
-        self._paint_tactical_vibe_hud(p, float(W), float(H), cx, orbit_cy, orbit_r)
+        self._paint_tactical_vibe_hud(p, float(W), float(H), av_cx, orbit_cy, orbit_r)
 
         p.end()   # end deterministically so the backing store never flushes an active painter
 
@@ -793,14 +815,17 @@ class HudCanvas(QWidget):
         p.save()
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        # 1. Outer Corner L-Brackets framing the HUD
-        draw_corner_brackets(p, QRectF(14, 14, W - 28, H - 28), size=12.0, color=blend_fast(C.PRI, 0.40), width=1.2)
+        px = self._parallax_offset.x()
+        py = self._parallax_offset.y()
+
+        # 1. Outer Corner L-Brackets framing the HUD (slight inverse parallax shift)
+        draw_corner_brackets(p, QRectF(14 - px * 3.0, 14 - py * 2.0, W - 28, H - 28), size=12.0, color=blend_fast(C.PRI, 0.40), width=1.2)
 
         # 2. Cybernetic Badges
-        draw_tech_badge(p, 24, 20, "◈ MK-LVII // TACTICAL HUD", C.PRI)
+        draw_tech_badge(p, 24 - px * 3.0, 20 - py * 2.0, "◈ MK-LVII // TACTICAL HUD", C.PRI)
         status_txt = "MUTED" if self.muted else ("TRANSMITTING" if self.speaking else "SYS // ARMED")
         status_col = C.MUTED_C if self.muted else (C.ACC if self.speaking else C.GREEN)
-        draw_tech_badge(p, W - 128, 20, status_txt, status_col)
+        draw_tech_badge(p, W - 128 - px * 3.0, 20 - py * 2.0, status_txt, status_col)
 
         # 3. Drifting Laser Scanline
         if H > 60:

@@ -84,6 +84,20 @@ class TestHudARVibeCanvas(unittest.TestCase):
         self.hud._paint_audio_viseme_orbit(p, 480.0, 300.0, 120.0)
         p.end()
 
+    def test_hud_parallax_mouse_interaction(self):
+        from PyQt6.QtGui import QMouseEvent
+        from PyQt6.QtCore import QEvent
+        me = QMouseEvent(QEvent.Type.MouseMove, QPointF(100.0, 100.0), Qt.MouseButton.NoButton, Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+        self.hud.mouseMoveEvent(me)
+        self.assertTrue(self.hud._cursor_active)
+        self.assertLess(self.hud._parallax_target.x(), 0.0)
+        self.assertLess(self.hud._parallax_target.y(), 0.0)
+
+        # Step smoothing
+        self.hud._step()
+        self.assertLess(self.hud._parallax_offset.x(), 0.0)
+        self.assertLess(self.hud._parallax_offset.y(), 0.0)
+
     def test_hud_frame_render_budget_60fps(self):
         pix = QPixmap(960, 600)
         p = QPainter(pix)
@@ -228,6 +242,24 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.assertNotEqual(getattr(self.win, "_right_collapsed", False), init_right)
         self.win.toggle_right_drawer()
         self.assertEqual(getattr(self.win, "_right_collapsed", False), init_right)
+
+    def test_side_column_drawer_persistence_on_resize(self):
+        self.win.resize(1200, 800)
+        self.win._fit_side_columns()
+        left_w_open = self.win._left_panel.width()
+        self.assertGreaterEqual(left_w_open, 180)
+
+        # Collapse left drawer
+        self.win.toggle_left_drawer()
+        self.assertTrue(self.win._left_collapsed)
+        self.assertEqual(self.win._left_panel.width(), 0)
+
+        # Trigger resize event
+        self.win.resize(1400, 900)
+        self.win._fit_side_columns()
+        # Left drawer should remain 0 width and hidden
+        self.assertEqual(self.win._left_panel.width(), 0)
+        self.assertFalse(self.win._left_panel.isVisible())
 
     def test_holodeck_fullscreen_toggle(self):
         self.assertFalse(getattr(self.win, "_is_holodeck", False))

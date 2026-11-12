@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
         body = QHBoxLayout()
         body.setContentsMargins(10, 10, 10, 10)
         body.setSpacing(10)
+        self._body_layout = body
 
         self._left_panel = self._build_left_panel()
         body.addWidget(self._left_panel, stretch=0)
@@ -1174,35 +1175,31 @@ class MainWindow(QMainWindow):
                 self._header.hide()
             if hasattr(self, "_footer"):
                 self._footer.hide()
-            if hasattr(self, "_left_panel"):
-                self._left_panel.hide()
-            if hasattr(self, "_right_panel"):
-                self._right_panel.hide()
+            if hasattr(self, "_body_layout"):
+                self._body_layout.setContentsMargins(0, 0, 0, 0)
+                self._body_layout.setSpacing(0)
+            self._fit_side_columns()
             self.showFullScreen()
         else:
             if hasattr(self, "_header"):
                 self._header.show()
             if hasattr(self, "_footer"):
                 self._footer.show()
-            if hasattr(self, "_left_panel"):
-                self._left_panel.show()
-            if hasattr(self, "_right_panel"):
-                self._right_panel.show()
+            if hasattr(self, "_body_layout"):
+                self._body_layout.setContentsMargins(10, 10, 10, 10)
+                self._body_layout.setSpacing(10)
+            self._fit_side_columns()
             self.showNormal()
 
     def toggle_left_drawer(self):
         """Collapses or expands the left telemetry drawer."""
         self._left_collapsed = not getattr(self, "_left_collapsed", False)
-        target_w = 0 if self._left_collapsed else _LEFT_W
-        self._left_panel.setVisible(not self._left_collapsed)
-        self._left_panel.setFixedWidth(target_w)
+        self._fit_side_columns()
 
     def toggle_right_drawer(self):
         """Collapses or expands the right activity drawer."""
         self._right_collapsed = not getattr(self, "_right_collapsed", False)
-        target_w = 0 if self._right_collapsed else _RIGHT_W
-        self._right_panel.setVisible(not self._right_collapsed)
-        self._right_panel.setFixedWidth(target_w)
+        self._fit_side_columns()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -1362,11 +1359,30 @@ class MainWindow(QMainWindow):
     def _fit_side_columns(self) -> None:
         """Side columns grow with the window, within limits, so the centre keeps
         the space a larger window was opened for."""
+        if getattr(self, "_is_holodeck", False):
+            if hasattr(self, "_left_panel"):
+                self._left_panel.hide()
+                self._left_panel.setFixedWidth(0)
+            if hasattr(self, "_right_panel"):
+                self._right_panel.hide()
+                self._right_panel.setFixedWidth(0)
+            return
+
         W = self.width()
         if hasattr(self, "_left_panel"):
-            self._left_panel.setFixedWidth(max(190, min(250, int(W * 0.19))))
+            if getattr(self, "_left_collapsed", False):
+                self._left_panel.hide()
+                self._left_panel.setFixedWidth(0)
+            else:
+                self._left_panel.show()
+                self._left_panel.setFixedWidth(max(180, min(240, int(W * 0.16))))
         if hasattr(self, "_right_panel"):
-            self._right_panel.setFixedWidth(max(290, min(400, int(W * 0.27))))
+            if getattr(self, "_right_collapsed", False):
+                self._right_panel.hide()
+                self._right_panel.setFixedWidth(0)
+            else:
+                self._right_panel.show()
+                self._right_panel.setFixedWidth(max(280, min(360, int(W * 0.22))))
         # The network graph is the first thing to give up its space: below this
         # height the gauges and the task list need it more, and the rate itself
         # is still in STATUS.
@@ -1401,7 +1417,7 @@ class MainWindow(QMainWindow):
     def _build_left_panel(self) -> QWidget:
         w = QWidget()
         w.setStyleSheet("background: transparent;")
-        w.setFixedWidth(200)
+        w.setFixedWidth(_LEFT_W)
         lay = QVBoxLayout(w)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
@@ -1656,7 +1672,7 @@ class MainWindow(QMainWindow):
     def _build_right_panel(self) -> QWidget:
         w = QWidget()
         w.setStyleSheet("background: transparent;")
-        w.setFixedWidth(300)
+        w.setFixedWidth(_RIGHT_W)
         lay = QVBoxLayout(w)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
@@ -1920,6 +1936,15 @@ class MainWindow(QMainWindow):
         content panel a height of 0 while leaving it "visible", so the next
         search result, review or finished task landed in a panel nobody could
         see."""
+        # Hide sibling sub-HUD panels so only the active panel expands
+        for p in (getattr(self, "_content_panel", None),
+                  getattr(self, "_quiz_panel", None),
+                  getattr(self, "_radar_panel", None),
+                  getattr(self, "_synaptic_panel", None),
+                  getattr(self, "_mission_panel", None)):
+            if p is not None and p is not panel:
+                p.hide()
+
         panel.show()
         split = self._center_split
         idx = split.indexOf(panel)

@@ -23,7 +23,7 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import (
     QBrush, QColor, QConicalGradient, QDragEnterEvent, QDropEvent, QFont,
-    QFontDatabase, QKeySequence, QLinearGradient, QPainter, QPainterPath,
+    QFontDatabase, QKeySequence, QLinearGradient, QMouseEvent, QPainter, QPainterPath,
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
 from PyQt6.QtWidgets import (
@@ -33,6 +33,8 @@ from PyQt6.QtWidgets import (
     QStackedWidget, QTextEdit, QVBoxLayout, QWidget, QProgressBar, QSlider,
 )
 
+import numpy as np
+
 from gui.theme import (
     C,
     HoloAvatar,
@@ -41,6 +43,13 @@ from gui.theme import (
 
 from gui.style import blend, chamfer, px_font, with_alpha
 from gui.ambient import AmbientLighting, AIWaveformVisualizer, CognitiveTelemetry
+from gui.ar_engine import (
+    Camera3D,
+    generate_orbit_ring,
+    generate_spatial_grid,
+    perspective_project,
+    project_holo_pane,
+)
 
 try:
     from gui.reactor import Reactor3D
@@ -129,9 +138,67 @@ class HudCanvas(QWidget):
         self._visualizer = AIWaveformVisualizer()
         self._telemetry = CognitiveTelemetry()
 
+        # ── 3D AR Holographic Spatial Engine & Depth Layers ──────────────────
+        self.setMouseTracking(True)
+        self._camera = Camera3D(fov=55.0, distance=650.0)
+        self._cursor_pos: Optional[QPointF] = None
+        self._cursor_norm = (0.0, 0.0)
+        self._active_holo_panes: dict = {}
+
+        # Layer 0: Spatial floor grid & drifting 3D space dust particles
+        self._grid_starts, self._grid_ends = generate_spatial_grid(
+            width=1400.0, depth=1400.0, spacing=90.0, y_floor=-240.0
+        )
+        self._dust_particles = np.random.uniform(
+            low=[-450, -250, 50], high=[450, 250, 550], size=(36, 3)
+        ).astype(np.float32)
+
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
         self._tmr.start(16)
+
+    def mouseMoveEvent(self, e: QMouseEvent) -> None:
+        self._cursor_pos = e.position()
+        w, h = max(1.0, float(self.width())), max(1.0, float(self.height()))
+        nx = (self._cursor_pos.x() / w) * 2.0 - 1.0
+        ny = (self._cursor_pos.y() / h) * 2.0 - 1.0
+        self._cursor_norm = (nx, ny)
+        self._camera.set_gaze(nx, ny, factor=12.0)
+        if self._avatar is not None:
+            try:
+                self._avatar.glance(nx * 0.45, ny * 0.35, hold=0.25)
+            except Exception:
+                pass
+
+    def leaveEvent(self, e) -> None:
+        self._cursor_pos = None
+        self._camera.set_gaze(0.0, 0.0, factor=0.0)
+
+    def register_holo_pane(
+        self,
+        pane_id: str,
+        title: str,
+        center: Tuple[float, float, float] = (180.0, 30.0, -40.0),
+        width: float = 240.0,
+        height: float = 150.0,
+        yaw: float = -18.0,
+        pitch: float = 6.0,
+        pixmap: Optional[QPixmap] = None,
+    ) -> None:
+        """Registers or updates a floating AR holographic surface in Layer 2."""
+        self._active_holo_panes[pane_id] = {
+            "title": title,
+            "center": center,
+            "width": width,
+            "height": height,
+            "yaw": yaw,
+            "pitch": pitch,
+            "pixmap": pixmap,
+        }
+
+    def unregister_holo_pane(self, pane_id: str) -> None:
+        """Removes an AR holographic surface from Layer 2."""
+        self._active_holo_panes.pop(pane_id, None)
 
     def glance(self, dx: float, dy: float, hold: float = 1.1) -> None:
         """Ask the avatar to look somewhere for a moment (see HoloAvatar.glance)."""
@@ -387,6 +454,16 @@ class HudCanvas(QWidget):
         self._visualizer.step(dt, self.state, self.speaking, self.muted, amp)
         self._telemetry.step(dt, self.state, self.speaking)
 
+        # Step 3D drifting space dust particles (Layer 0)
+        if hasattr(self, "_dust_particles") and self._dust_particles is not None:
+            self._dust_particles[:, 2] -= 0.65
+            reset_mask = self._dust_particles[:, 2] < 20.0
+            if np.any(reset_mask):
+                cnt = int(np.sum(reset_mask))
+                self._dust_particles[reset_mask, 2] = np.random.uniform(420, 550, size=cnt)
+                self._dust_particles[reset_mask, 0] = np.random.uniform(-450, 450, size=cnt)
+                self._dust_particles[reset_mask, 1] = np.random.uniform(-250, 250, size=cnt)
+
         self._blink_tick += 1
         if self._blink_tick >= 38:
             self._blink = not self._blink
@@ -602,6 +679,162 @@ class HudCanvas(QWidget):
             p.drawText(QRectF(cx - r, cy - fsz, r * 2, fsz * 2),
                        Qt.AlignmentFlag.AlignCenter, name)
 
+    # ── 3D AR Spatial Depth Layers ───────────────────────────────────────────
+
+    def _paint_layer0_deep_horizon(self, p: QPainter, W: float, H: float) -> None:
+        """Layer 0: Deep Horizon Grid & Drifting Space Dust (Z = -600 to -300)."""
+        main = qcol(C.PRI)
+
+        # 1. Perspective grid lines
+        if hasattr(self, "_grid_starts") and self._grid_starts is not None:
+            p_starts, _, s_mask = perspective_project(self._grid_starts, W, H, self._camera)
+            p_ends, _, e_mask = perspective_project(self._grid_ends, W, H, self._camera)
+            valid = s_mask & e_mask
+            if np.any(valid):
+                q_lines = [
+                    QLineF(float(p_starts[i, 0]), float(p_starts[i, 1]),
+                           float(p_ends[i, 0]), float(p_ends[i, 1]))
+                    for i in np.where(valid)[0]
+                ]
+                grid_pen = QPen(blend(main, 0.09), 1.0)
+                p.setPen(grid_pen)
+                p.drawLines(q_lines)
+
+        # 2. Drifting 3D space dust particles
+        if hasattr(self, "_dust_particles") and self._dust_particles is not None:
+            d_pts, d_depths, d_mask = perspective_project(self._dust_particles, W, H, self._camera)
+            if np.any(d_mask):
+                valid_idx = np.where(d_mask)[0]
+                for i in valid_idx:
+                    depth = float(d_depths[i])
+                    alpha = max(0.08, min(0.65, 1.0 - (depth / 600.0)))
+                    sz = 1.0 if depth > 350.0 else 1.8
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QBrush(blend(main, alpha)))
+                    p.drawEllipse(QPointF(float(d_pts[i, 0]), float(d_pts[i, 1])), sz, sz)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+
+    def _paint_layer1_spatial_gimbals(self, p: QPainter, cx: float, cy: float, r: float) -> None:
+        """Layer 1: Central Avatar Matrix & Telemetry Gimbals (Z = -150 to +50)."""
+        t = self._core_phase
+        main = qcol(C.PRI)
+        acc = qcol(C.ACC if self.speaking else C.ACC2)
+
+        # 2 rotating 3D orbital rings around central focal plane
+        center3d = (0.0, 15.0, 0.0)
+        ring1 = generate_orbit_ring(
+            radius=r * 1.36, segments=40, tilt_yaw=t * 18.0, tilt_pitch=22.0, center=center3d
+        )
+        ring2 = generate_orbit_ring(
+            radius=r * 1.52, segments=44, tilt_yaw=-t * 14.0, tilt_pitch=-18.0, center=center3d
+        )
+
+        w, h = float(self.width()), float(self.height())
+        for ring_pts, col, alpha, width_px in ((ring1, main, 0.32, 1.3), (ring2, acc, 0.22, 1.0)):
+            pts2d, depths, mask = perspective_project(ring_pts, w, h, self._camera)
+            if np.all(mask):
+                path = QPainterPath()
+                path.moveTo(float(pts2d[0, 0]), float(pts2d[0, 1]))
+                for k in range(1, len(pts2d)):
+                    path.lineTo(float(pts2d[k, 0]), float(pts2d[k, 1]))
+                path.closeSubpath()
+                p.setPen(QPen(blend(col, alpha), width_px))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawPath(path)
+
+    def _paint_layer2_holo_panes(self, p: QPainter, W: float, H: float) -> None:
+        """Layer 2: Floating AR Projection Plane Container (Z = +100 to +300)."""
+        if not hasattr(self, "_active_holo_panes") or not self._active_holo_panes:
+            return
+
+        main = qcol(C.PRI)
+        acc = qcol(C.ACC)
+        for pane_id, pane in list(self._active_holo_panes.items()):
+            center = pane.get("center", (180.0, 40.0, -40.0))
+            pw = pane.get("width", 260.0)
+            ph = pane.get("height", 160.0)
+            yaw = pane.get("yaw", -18.0)
+            pitch = pane.get("pitch", 6.0)
+            title = pane.get("title", "AR HOLO PANE")
+            pixmap = pane.get("pixmap", None)
+
+            pts2d, visible = project_holo_pane(center, pw, ph, yaw, pitch, W, H, self._camera)
+            if not visible or len(pts2d) < 4:
+                continue
+
+            # Draw translucent glassmorphic quad
+            poly = QPainterPath()
+            poly.moveTo(float(pts2d[0, 0]), float(pts2d[0, 1]))
+            poly.lineTo(float(pts2d[1, 0]), float(pts2d[1, 1]))
+            poly.lineTo(float(pts2d[2, 0]), float(pts2d[2, 1]))
+            poly.lineTo(float(pts2d[3, 0]), float(pts2d[3, 1]))
+            poly.closeSubpath()
+
+            # Fill with subtle tinted glass
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(blend(qcol(C.BG), 0.78)))
+            p.drawPath(poly)
+
+            # Draw projected pixmap if available
+            if pixmap is not None and not pixmap.isNull():
+                p.save()
+                p.setClipPath(poly)
+                min_x = min(pts2d[:, 0])
+                min_y = min(pts2d[:, 1])
+                max_x = max(pts2d[:, 0])
+                max_y = max(pts2d[:, 1])
+                target_rect = QRectF(float(min_x), float(min_y), float(max_x - min_x), float(max_y - min_y))
+                p.drawPixmap(target_rect.toRect(), pixmap)
+                p.restore()
+
+            # Neon boundary pen
+            p.setPen(QPen(blend(acc, 0.65), 1.4))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawPath(poly)
+
+            # Header title
+            p.setFont(px_font(9, QFont.Weight.Bold, spacing=1))
+            p.setPen(QPen(blend(main, 0.90), 1))
+            p.drawText(QPointF(float(pts2d[0, 0]) + 4, float(pts2d[0, 1]) - 6), f"◈ {title.upper()}")
+
+    def _paint_layer3_tactical_reticle(self, p: QPainter, W: float, H: float) -> None:
+        """Layer 3: Foreground Tactical Reticle & Targeting Telemetry (Z = +400)."""
+        if not hasattr(self, "_cursor_pos") or self._cursor_pos is None:
+            return
+
+        cx, cy = float(self._cursor_pos.x()), float(self._cursor_pos.y())
+        if cx < 0 or cx > W or cy < 0 or cy > H:
+            return
+
+        nx, ny = self._cursor_norm
+        telemetry = f"TGT [X: {nx:+05.2f} | Y: {ny:+05.2f} | Z: 1.00]"
+        main = qcol(C.PRI)
+        acc = qcol(C.ACC)
+
+        p.save()
+        # 1. Subtle reticle crosshair
+        p.setPen(QPen(blend(main, 0.45), 1.0))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        r = 14.0
+        p.drawEllipse(QPointF(cx, cy), r, r)
+
+        # 4 crosshair ticks
+        p.drawLine(QLineF(cx - r - 5, cy, cx - r + 3, cy))
+        p.drawLine(QLineF(cx + r - 3, cy, cx + r + 5, cy))
+        p.drawLine(QLineF(cx, cy - r - 5, cx, cy - r + 3))
+        p.drawLine(QLineF(cx, cy + r - 3, cx, cy + r + 5))
+
+        # Center dot
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(blend(acc, 0.75)))
+        p.drawEllipse(QPointF(cx, cy), 1.8, 1.8)
+
+        # 2. Telemetry badge beside cursor
+        p.setFont(px_font(8, QFont.Weight.Medium, spacing=1))
+        p.setPen(QPen(blend(main, 0.85), 1))
+        p.drawText(QPointF(cx + 18, cy + 12), telemetry)
+        p.restore()
+
     def paintEvent(self, _):
         p = QPainter(self)
         if not p.isActive():      # device not ready (e.g. 0-size during layout) — skip cleanly
@@ -620,6 +853,9 @@ class HudCanvas(QWidget):
         # ── Dynamic Ambient Lighting: Floor Horizon Spill ─────────────────────
         self._ambient.paint_horizon_glow(p, float(W), float(H), H * 0.70)
         amb_col = self._ambient.current_color
+
+        # ── Layer 0: Deep Horizon Perspective Grid & Space Dust ─────────────
+        self._paint_layer0_deep_horizon(p, float(W), float(H))
 
         cx, cy = W / 2, H / 2
         fw = min(W, H)
@@ -647,6 +883,7 @@ class HudCanvas(QWidget):
             # Ambient aura & telemetry framing behind avatar
             self._ambient.paint_aura(p, cx, head_cy, r_head)
             self._telemetry.paint_arcs(p, cx, head_cy, r_head * 1.32, self.state, self.speaking, amb_col)
+            self._paint_layer1_spatial_gimbals(p, cx, head_cy, r_head)
 
             if self.muted:
                 main = acc = qcol(C.MUTED_C)
@@ -681,6 +918,9 @@ class HudCanvas(QWidget):
             self._telemetry.paint_arcs(p, cx, band_t + band_h / 2.0, r * 1.45, self.state, self.speaking, amb_col)
             self._paint_core_classic(p, cx, band_t + band_h / 2.0, r, W, band_h)
 
+        # ── Layer 2: Floating AR Holographic Panes Container ─────────────────
+        self._paint_layer2_holo_panes(p, float(W), float(H))
+
         # ── Ambient Edge Lighting along Frame ────────────────────────────────
         self._ambient.paint_edge_illumination(p, float(W), float(H))
 
@@ -714,5 +954,8 @@ class HudCanvas(QWidget):
         amp = self._amp_disp
         self._visualizer.paint(p, cx, wy, W * 0.60, self.state, self.speaking,
                                self.muted, amp, amb_col)
+
+        # ── Layer 3: Foreground Tactical Reticle & Coordinates ───────────────
+        self._paint_layer3_tactical_reticle(p, float(W), float(H))
 
         p.end()   # end deterministically so the backing store never flushes an active painter

@@ -117,7 +117,13 @@ def _worker(url: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        url = str(parameters.get("url") or "").strip()
+        url = str(
+            parameters.get("url")
+            or parameters.get("link")
+            or parameters.get("target_url")
+            or parameters.get("page_url")
+            or ""
+        ).strip()
         if not url:
             return "Please provide a valid web URL for intelligence extraction, sir."
 

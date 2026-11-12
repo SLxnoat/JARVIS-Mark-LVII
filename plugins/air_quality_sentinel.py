@@ -52,7 +52,7 @@ PLUGIN = {
                 "description": "Observer longitude in degrees (default 79.8612).",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -161,8 +161,14 @@ def _worker(action: str, lat: float, lon: float, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "full_audit").strip().lower()
-        if action not in ("aqi_overview", "particulates", "gas_levels", "full_audit"):
+        raw_act = str(parameters.get("action") or parameters.get("mode") or "full_audit").strip().lower()
+        if "aqi" in raw_act or "overview" in raw_act or "current" in raw_act or "rate" in raw_act:
+            action = "aqi_overview"
+        elif "part" in raw_act or "pm" in raw_act:
+            action = "particulates"
+        elif "gas" in raw_act or "co" in raw_act or "ozone" in raw_act:
+            action = "gas_levels"
+        else:
             action = "full_audit"
 
         lat = float(parameters.get("latitude", _DEFAULT_LAT))

@@ -445,7 +445,13 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
     - Supports synchronous execution when explicitly requested (sync=True).
     """
     try:
-        goal = str(parameters.get("goal") or "").strip()
+        goal = str(
+            parameters.get("goal")
+            or parameters.get("task")
+            or parameters.get("objective")
+            or parameters.get("query")
+            or ""
+        ).strip()
         if not goal:
             return "Please provide a specific goal or objective for me to plan and execute, sir."
 

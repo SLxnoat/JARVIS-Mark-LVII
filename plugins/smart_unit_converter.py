@@ -211,8 +211,8 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
 
         # 2. General Unit Conversion
         val = float(params.get("value", 1.0))
-        from_u = str(params.get("from_unit", "")).strip().lower()
-        to_u = str(params.get("to_unit", "")).strip().lower()
+        from_u = str(params.get("from_unit") or params.get("from") or "").strip().lower()
+        to_u = str(params.get("to_unit") or params.get("to") or "").strip().lower()
 
         if not from_u or not to_u:
             return "Please provide both source and destination units for conversion, sir."

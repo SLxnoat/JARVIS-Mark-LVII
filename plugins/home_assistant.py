@@ -33,7 +33,7 @@ PLUGIN = {
                 "description": "Optional domain filter for listing entities (e.g. 'light', 'switch', 'climate').",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
     "PLUGIN_SETTINGS": {
         "fields": [
@@ -52,8 +52,15 @@ def _get_connection():
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    action = parameters.get("action", "list_entities").strip().lower()
-    entity_id = str(parameters.get("entity_id") or "").strip()
+    raw_action = str(parameters.get("action") or parameters.get("mode") or "list_entities").strip().lower()
+    if raw_action in ("list", "list_entities", "entities"):
+        action = "list_entities"
+    elif raw_action in ("state", "get_state", "status", "query"):
+        action = "get_state"
+    else:
+        action = raw_action
+
+    entity_id = str(parameters.get("entity_id") or parameters.get("entity") or "").strip()
     domain = str(parameters.get("domain") or "").strip().lower()
 
     base_url, token = _get_connection()

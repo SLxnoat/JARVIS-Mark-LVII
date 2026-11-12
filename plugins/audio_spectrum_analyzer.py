@@ -48,7 +48,7 @@ PLUGIN = {
                 "description": "Duration to sample ambient audio in seconds (default 1.0, max 3.0).",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -192,11 +192,12 @@ def _worker(action: str, duration: float, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "full_analysis").strip().lower()
+        action = str(parameters.get("action") or parameters.get("mode") or "full_analysis").strip().lower()
         if action not in ("sample_spectrum", "noise_floor", "frequency_peaks", "full_analysis"):
             action = "full_analysis"
 
-        dur = float(parameters.get("duration_seconds", 1.0))
+        raw_dur = parameters.get("duration_seconds") or parameters.get("duration_sec") or parameters.get("duration") or 1.0
+        dur = float(raw_dur)
         dur = max(0.3, min(3.0, dur))
 
         threading.Thread(target=_worker, args=(action, dur, player), daemon=True).start()

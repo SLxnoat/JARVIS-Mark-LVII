@@ -132,7 +132,18 @@ def _worker(mode: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        mode = str(parameters.get("mode") or "tactical_overview").strip().lower()
+        raw_m = str(
+            parameters.get("mode")
+            or parameters.get("action")
+            or parameters.get("status")
+            or "tactical_overview"
+        ).strip().lower()
+        if "sec" in raw_m or "shield" in raw_m:
+            mode = "security_shield"
+        elif "core" in raw_m or "cpu" in raw_m or "compute" in raw_m:
+            mode = "compute_core"
+        else:
+            mode = "tactical_overview"
         threading.Thread(target=_worker, args=(mode, player), daemon=True).start()
         return "Projecting master tactical command matrix to your HUD, sir. Telemetry active."
     except Exception as e:

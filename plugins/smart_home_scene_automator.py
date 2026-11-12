@@ -45,7 +45,7 @@ PLUGIN = {
                 "enum": ["nightfall", "workstation", "stealth", "focus"],
             },
         },
-        "required": ["protocol"],
+        "required": [],
     },
 }
 
@@ -120,8 +120,21 @@ def _worker(protocol: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        protocol = str(parameters.get("protocol") or "workstation").strip().lower()
-        if protocol not in ("nightfall", "workstation", "stealth", "focus"):
+        raw_p = str(
+            parameters.get("protocol")
+            or parameters.get("scene_name")
+            or parameters.get("scene")
+            or parameters.get("action")
+            or "workstation"
+        ).strip().lower()
+
+        if "night" in raw_p:
+            protocol = "nightfall"
+        elif "stealth" in raw_p:
+            protocol = "stealth"
+        elif "focus" in raw_p or "study" in raw_p:
+            protocol = "focus"
+        else:
             protocol = "workstation"
 
         threading.Thread(target=_worker, args=(protocol, player), daemon=True).start()

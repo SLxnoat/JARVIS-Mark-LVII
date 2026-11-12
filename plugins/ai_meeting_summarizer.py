@@ -94,11 +94,18 @@ def _worker(text: str, title: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        notes = str(parameters.get("transcript_or_notes") or "").strip()
+        notes = str(
+            parameters.get("transcript_or_notes")
+            or parameters.get("transcript")
+            or parameters.get("notes")
+            or parameters.get("meeting_notes")
+            or parameters.get("text")
+            or ""
+        ).strip()
         if not notes:
             return "Please provide meeting notes or a transcript for me to extract action items, sir."
 
-        title = str(parameters.get("meeting_title") or "Executive Discussion").strip()
+        title = str(parameters.get("meeting_title") or parameters.get("title") or "Executive Discussion").strip()
         threading.Thread(target=_worker, args=(notes, title, player), daemon=True).start()
 
         return f"Synthesizing executive briefing and action items for '{title}', sir. Summary is on the HUD."

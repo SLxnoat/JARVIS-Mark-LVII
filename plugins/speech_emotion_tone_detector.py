@@ -44,7 +44,7 @@ PLUGIN = {
                 "enum": ["analyze_tone", "stress_check", "energy_level"],
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -155,8 +155,12 @@ def _worker(action: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "analyze_tone").strip().lower()
-        if action not in ("analyze_tone", "stress_check", "energy_level"):
+        raw_act = str(parameters.get("action") or parameters.get("mode") or "analyze_tone").strip().lower()
+        if "stress" in raw_act:
+            action = "stress_check"
+        elif "energy" in raw_act or "tempo" in raw_act:
+            action = "energy_level"
+        else:
             action = "analyze_tone"
 
         threading.Thread(target=_worker, args=(action, player), daemon=True).start()

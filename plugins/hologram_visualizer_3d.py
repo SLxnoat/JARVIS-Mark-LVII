@@ -49,7 +49,7 @@ PLUGIN = {
                 "description": "Vertical pitch rotation angle in degrees (default 20.0).",
             },
         },
-        "required": ["model"],
+        "required": [],
     },
 }
 
@@ -272,8 +272,12 @@ def _worker(model: str, yaw: float, pitch: float, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        model = str(parameters.get("model") or "helmet").strip().lower()
-        if model not in ("helmet", "tesseract", "sphere"):
+        raw_m = str(parameters.get("model") or parameters.get("model_name") or "helmet").strip().lower()
+        if "tesseract" in raw_m or "cube" in raw_m:
+            model = "tesseract"
+        elif "sphere" in raw_m or "globe" in raw_m:
+            model = "sphere"
+        else:
             model = "helmet"
 
         yaw = float(parameters.get("yaw_degrees", 35.0))

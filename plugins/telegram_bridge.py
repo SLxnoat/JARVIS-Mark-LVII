@@ -1367,7 +1367,13 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
     if player is not None:
         _bridge.attach_player(player)
 
-    msg = str(parameters.get("message") or "").strip()
+    msg = str(
+        parameters.get("message")
+        or parameters.get("text")
+        or parameters.get("msg")
+        or parameters.get("action")
+        or ""
+    ).strip()
     if not msg:
         return "No message specified."
     return _bridge.send_from_tool(msg)

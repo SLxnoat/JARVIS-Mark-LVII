@@ -120,12 +120,24 @@ def _worker(query: str, qtype: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        query = str(parameters.get("query") or "").strip()
+        query = str(
+            parameters.get("query")
+            or parameters.get("target")
+            or parameters.get("email")
+            or parameters.get("password")
+            or ""
+        ).strip()
         if not query:
             return "Please provide a password or email address to audit for breach exposure, sir."
 
-        qtype = str(parameters.get("query_type") or "password").strip().lower()
-        if qtype not in ("password", "email"):
+        qtype = str(
+            parameters.get("query_type")
+            or parameters.get("search_type")
+            or ("email" if "@" in query else "password")
+        ).strip().lower()
+        if "email" in qtype:
+            qtype = "email"
+        else:
             qtype = "password"
 
         threading.Thread(target=_worker, args=(query, qtype, player), daemon=True).start()

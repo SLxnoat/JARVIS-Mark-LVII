@@ -96,8 +96,20 @@ def _write_csv(path: Path, headers: list, rows: list, append: bool = False):
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    action = parameters.get("action", "create").strip().lower()
-    raw_path = str(parameters.get("file_path") or "").strip()
+    raw_action = str(parameters.get("action") or parameters.get("mode") or "create").strip().lower()
+    if raw_action in ("write", "create_sheet", "make", "new"):
+        action = "create"
+    elif raw_action in ("append", "add", "add_row"):
+        action = "append_row"
+    else:
+        action = raw_action
+
+    raw_path = str(
+        parameters.get("file_path")
+        or parameters.get("path")
+        or parameters.get("file")
+        or ""
+    ).strip()
     sheet = str(parameters.get("sheet_name") or "Sheet1").strip()
     headers = parameters.get("headers") or []
     rows = parameters.get("rows") or []

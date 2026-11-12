@@ -52,7 +52,7 @@ PLUGIN = {
                 "description": "Optional observer longitude (defaults to auto-detected or 79.8612).",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -149,8 +149,13 @@ def _worker(action: str, lat: float, lon: float, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "full_radar").strip().lower()
-        if action not in ("iss_location", "orbital_passes", "full_radar"):
+        raw_act = str(parameters.get("action") or parameters.get("mode") or "").strip().lower()
+        target = str(parameters.get("target") or "").strip().lower()
+        if "location" in raw_act or "coord" in raw_act or target == "iss":
+            action = "iss_location"
+        elif "pass" in raw_act or "overhead" in raw_act:
+            action = "orbital_passes"
+        else:
             action = "full_radar"
 
         lat = float(parameters.get("latitude", _DEFAULT_LAT))

@@ -123,15 +123,40 @@ DOCUMENT EXCERPT:
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    path_str = str(parameters.get("path") or "").strip()
-    focus = str(parameters.get("focus") or "general").strip()
+    path_str = str(
+        parameters.get("path")
+        or parameters.get("file_path")
+        or parameters.get("file")
+        or parameters.get("document_path")
+        or ""
+    ).strip()
+    focus = str(parameters.get("focus") or parameters.get("depth") or "general").strip()
 
     if not path_str:
         return "Please specify the file path of the document you would like me to review."
 
     path = Path(path_str).expanduser()
     if not path.is_file():
-        return f"Document not found at path '{path_str}'."
+        # Try case-insensitive or relative to base project directory
+        base_dir = Path(__file__).resolve().parent.parent
+        found = False
+        for cand in (Path.cwd() / path_str, base_dir / path_str):
+            if cand.is_file():
+                path = cand
+                found = True
+                break
+            parent = cand.parent
+            if parent.is_dir():
+                target_name = cand.name.lower()
+                for sibling in parent.iterdir():
+                    if sibling.is_file() and sibling.name.lower() == target_name:
+                        path = sibling
+                        found = True
+                        break
+            if found:
+                break
+        if not found:
+            return f"Document not found at path '{path_str}'."
 
     threading.Thread(
         target=_review_worker,

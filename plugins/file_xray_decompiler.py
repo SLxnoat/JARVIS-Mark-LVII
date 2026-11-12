@@ -181,11 +181,23 @@ def _worker(target_str: str, action: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        target = str(parameters.get("target_path") or "").strip()
+        target = str(
+            parameters.get("target_path")
+            or parameters.get("file_path")
+            or parameters.get("path")
+            or parameters.get("file")
+            or ""
+        ).strip()
         if not target:
             return "Please provide a file path for the binary X-ray inspection, sir."
 
-        action = str(parameters.get("action") or "xray_file").strip().lower()
+        action = str(parameters.get("action") or parameters.get("mode") or "xray_file").strip().lower()
+        if "string" in action:
+            action = "extract_strings"
+        elif "pack" in action:
+            action = "detect_packer"
+        else:
+            action = "xray_file"
         threading.Thread(target=_worker, args=(target, action, player), daemon=True).start()
 
         return f"Executing deep non-destructive X-ray inspection on '{Path(target).name}', sir. Forensics will display on the HUD."

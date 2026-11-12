@@ -42,7 +42,7 @@ PLUGIN = {
                 "enum": ["private", "unlisted", "public"],
             },
         },
-        "required": ["file_path", "title"],
+        "required": ["file_path"],
     },
 }
 
@@ -110,8 +110,15 @@ def _upload_worker(video_path: Path, title: str, description: str, tags: list, p
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    file_path_str = str(parameters.get("file_path") or "").strip()
+    file_path_str = str(
+        parameters.get("file_path")
+        or parameters.get("video_path")
+        or parameters.get("path")
+        or ""
+    ).strip()
     title = str(parameters.get("title") or "").strip()
+    if not title and file_path_str:
+        title = Path(file_path_str).stem.replace("_", " ").title() or "Workstation Video"
     description = str(parameters.get("description") or "Uploaded by JARVIS Mark LVII").strip()
     tags = parameters.get("tags") or []
     privacy = str(parameters.get("privacy") or "unlisted").strip().lower()

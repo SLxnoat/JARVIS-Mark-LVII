@@ -43,7 +43,7 @@ PLUGIN = {
                 "enum": ["solar_flares", "geomagnetic_storms", "full_weather"],
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -180,8 +180,12 @@ def _worker(action: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "full_weather").strip().lower()
-        if action not in ("solar_flares", "geomagnetic_storms", "full_weather"):
+        raw_act = str(parameters.get("action") or parameters.get("mode") or "full_weather").strip().lower()
+        if "flare" in raw_act:
+            action = "solar_flares"
+        elif "geo" in raw_act or "storm" in raw_act:
+            action = "geomagnetic_storms"
+        else:
             action = "full_weather"
 
         threading.Thread(target=_worker, args=(action, player), daemon=True).start()

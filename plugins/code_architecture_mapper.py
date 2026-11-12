@@ -160,7 +160,13 @@ def _worker(dir_str: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        target_dir = str(parameters.get("target_dir") or "plugins").strip()
+        target_dir = str(
+            parameters.get("target_dir")
+            or parameters.get("source_path")
+            or parameters.get("path")
+            or parameters.get("dir")
+            or "plugins"
+        ).strip()
         threading.Thread(target=_worker, args=(target_dir, player), daemon=True).start()
 
         return f"Parsing Abstract Syntax Trees and mapping architecture for '{target_dir}', sir. Visual graph is on the HUD."

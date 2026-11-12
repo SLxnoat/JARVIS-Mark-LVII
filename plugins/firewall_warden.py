@@ -46,7 +46,7 @@ PLUGIN = {
                 "enum": ["posture_check", "listening_sockets", "audit_rules", "full_audit"],
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -203,8 +203,14 @@ def _worker(action: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        action = str(parameters.get("action") or "full_audit").strip().lower()
-        if action not in ("posture_check", "listening_sockets", "audit_rules", "full_audit"):
+        raw_act = str(parameters.get("action") or parameters.get("mode") or "full_audit").strip().lower()
+        if "socket" in raw_act or "port" in raw_act:
+            action = "listening_sockets"
+        elif "rule" in raw_act or "chain" in raw_act:
+            action = "audit_rules"
+        elif "posture" in raw_act or "status" in raw_act:
+            action = "posture_check"
+        else:
             action = "full_audit"
 
         threading.Thread(target=_worker, args=(action, player), daemon=True).start()

@@ -156,9 +156,19 @@ Analyze the food items and return ONLY a JSON object with:
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    image_path = parameters.get("image_path")
+    image_path = (
+        parameters.get("image_path")
+        or parameters.get("photo_path")
+        or parameters.get("file_path")
+        or parameters.get("path")
+    )
     meal_type = str(parameters.get("meal_type") or "lunch").strip().lower()
-    notes = str(parameters.get("description") or "").strip()
+    notes = str(
+        parameters.get("description")
+        or parameters.get("notes")
+        or parameters.get("food")
+        or ""
+    ).strip()
 
     threading.Thread(
         target=_calorie_worker,

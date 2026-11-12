@@ -33,7 +33,7 @@ PLUGIN = {
                 "description": "Optional API Key for OctoPrint.",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
     "PLUGIN_SETTINGS": {
         "fields": [
@@ -54,7 +54,7 @@ def _get_config(custom_url=None, custom_key=None):
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    action = parameters.get("action", "status").strip().lower()
+    action = str(parameters.get("action") or parameters.get("mode") or "status").strip().lower()
     custom_url = parameters.get("api_url")
     custom_key = parameters.get("api_key")
 

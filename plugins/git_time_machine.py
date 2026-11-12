@@ -139,7 +139,12 @@ def _worker(limit: int, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        limit = int(parameters.get("limit", 50))
+        limit = int(
+            parameters.get("limit")
+            or parameters.get("days")
+            or parameters.get("count")
+            or 50
+        )
         limit = min(200, max(10, limit))
 
         threading.Thread(target=_worker, args=(limit, player), daemon=True).start()

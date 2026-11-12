@@ -179,7 +179,13 @@ def _worker(code: str, max_repairs: int, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        code = str(parameters.get("code") or "").strip()
+        code = str(
+            parameters.get("code")
+            or parameters.get("snippet")
+            or parameters.get("code_snippet")
+            or parameters.get("script")
+            or ""
+        ).strip()
         if not code:
             return "Please provide Python code to execute and debug in the sandbox, sir."
 

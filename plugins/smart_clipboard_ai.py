@@ -163,7 +163,12 @@ def _worker(text_arg: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        text_arg = str(parameters.get("text") or "").strip()
+        text_arg = str(
+            parameters.get("text")
+            or parameters.get("content")
+            or parameters.get("data")
+            or ""
+        ).strip()
         threading.Thread(target=_worker, args=(text_arg, player), daemon=True).start()
         return "Analyzing clipboard contents and pre-computing intelligent transformations, sir. Card is on the HUD."
     except Exception as e:

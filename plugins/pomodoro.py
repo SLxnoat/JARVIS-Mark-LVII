@@ -28,7 +28,7 @@ PLUGIN = {
                 "description": "Optional custom duration in minutes (defaults to 25 for focus, 5 for break).",
             },
         },
-        "required": ["action"],
+        "required": [],
     },
 }
 
@@ -70,8 +70,8 @@ def _timer_worker(target_end: float, mode_name: str, player):
 def run(parameters: dict, player=None, session_memory=None) -> str:
     global _state, _mode, _end_time, _remaining, _completed_sessions, _timer_thread, _stop_event
 
-    action = parameters.get("action", "status").strip().lower()
-    custom_minutes = parameters.get("duration_minutes")
+    action = str(parameters.get("action") or parameters.get("mode") or "status").strip().lower()
+    custom_minutes = parameters.get("duration_minutes") or parameters.get("duration") or parameters.get("minutes")
 
     try:
         with _lock:

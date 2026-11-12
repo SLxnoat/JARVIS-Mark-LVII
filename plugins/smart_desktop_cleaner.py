@@ -108,8 +108,8 @@ def _find_duplicates(directory: Path) -> List[Dict[str, Any]]:
 def run(parameters: dict | None = None, player=None, session_memory=None) -> str:
     try:
         params = parameters or {}
-        target_name = params.get("target_dir", "downloads")
-        action = params.get("action", "scan")
+        target_name = params.get("target_dir") or params.get("path") or params.get("dir") or "downloads"
+        action = params.get("action") or params.get("mode") or "scan"
         dry_run = params.get("dry_run", True)
 
         dir_path = _resolve_dir(target_name)

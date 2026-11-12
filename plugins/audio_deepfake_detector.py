@@ -152,7 +152,13 @@ def _worker(audio_path: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        audio_path = str(parameters.get("audio_path") or "").strip()
+        audio_path = str(
+            parameters.get("audio_path")
+            or parameters.get("audio_file_path")
+            or parameters.get("file_path")
+            or parameters.get("path")
+            or ""
+        ).strip()
         threading.Thread(target=_worker, args=(audio_path, player), daemon=True).start()
 
         target = f"file '{Path(audio_path).name}'" if audio_path else "live audio stream"

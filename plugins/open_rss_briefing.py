@@ -50,7 +50,15 @@ def _strip_tags(text: str) -> str:
 
 
 def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str:
-    cat = str(parameters.get("category", "tech")).strip().lower()
+    raw_cat = str(parameters.get("category") or parameters.get("topic") or parameters.get("feed") or parameters.get("action") or "tech").strip().lower()
+    if "ai" in raw_cat or "arxiv" in raw_cat:
+        cat = "ai"
+    elif "sec" in raw_cat or "hack" in raw_cat:
+        cat = "security"
+    elif "linux" in raw_cat or "kernel" in raw_cat:
+        cat = "linux"
+    else:
+        cat = "tech"
     limit = min(6, max(1, int(parameters.get("limit", 3))))
     url = FEEDS.get(cat, FEEDS["tech"])
 

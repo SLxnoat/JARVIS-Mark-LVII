@@ -121,7 +121,14 @@ def _worker(intent: str, player):
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     try:
-        intent = str(parameters.get("intent") or "").strip()
+        intent = str(
+            parameters.get("intent")
+            or parameters.get("user_goal")
+            or parameters.get("goal")
+            or parameters.get("query")
+            or parameters.get("command")
+            or ""
+        ).strip()
         if not intent:
             return "Please provide an intent for me to synthesize a shell command, sir."
 

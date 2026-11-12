@@ -86,7 +86,10 @@ def _generate_worker(prompt: str, aspect_ratio: str, player):
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    prompt = str(parameters.get("prompt") or "").strip()
+    prompt = str(parameters.get("prompt") or parameters.get("description") or "").strip()
+    style = str(parameters.get("style") or "").strip()
+    if style and style not in prompt:
+        prompt = f"{prompt}, in {style} style"
     aspect_ratio = str(parameters.get("aspect_ratio") or "1:1").strip()
 
     if not prompt:

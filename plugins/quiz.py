@@ -79,7 +79,8 @@ Return ONLY a JSON array of objects with the following schema:
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     topic = str(parameters.get("topic") or "General Knowledge").strip()
-    num_q = max(1, min(int(parameters.get("num_questions") or 3), 5))
+    raw_num = parameters.get("num_questions") or parameters.get("questions_count") or parameters.get("count") or 3
+    num_q = max(1, min(int(raw_num), 5))
     difficulty = str(parameters.get("difficulty") or "medium").strip()
 
     if not player:

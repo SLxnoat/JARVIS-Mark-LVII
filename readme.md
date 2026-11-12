@@ -87,6 +87,7 @@ It's not just an assistant — it's an extension of your digital life.
 | 📡 Open RSS Briefing | Zero-cost, subscription-free RSS/Atom news aggregator for Hacker News, AI papers, and tech feeds |
 | 🎧 Bluetooth Governor | Manage paired Bluetooth peripherals, inspect battery levels, and toggle device connections |
 | ⚡ Network Speed & Diagnostics | Instant ICMP ping latency, packet loss analysis, and non-blocking bandwidth speed tests |
+| 🛰️ Tactical Network Radar | Iron Man style LAN topology cartographer, ARP neighbor detection, and local service health checks |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -983,7 +984,8 @@ Mark LVII/
 │   ├── git_workspace.py      # Git status, branch inspection, workspace repo scanner & diffs
 │   ├── open_rss_briefing.py  # Zero-cost RSS/Atom news aggregator (Hacker News, ArXiv AI, Linux)
 │   ├── bluetooth_governor.py # Bluetooth device manager, battery checker & connection switch
-│   └── network_speed.py      # Non-blocking bandwidth test, ICMP ping latency & packet loss
+│   ├── network_speed.py      # Non-blocking bandwidth test, ICMP ping latency & packet loss
+│   └── network_topology.py   # Tactical LAN radar, ARP neighbor mapping & local service verification
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

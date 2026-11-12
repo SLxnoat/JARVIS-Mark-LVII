@@ -106,11 +106,14 @@ precision, zero hesitation, and minimal round-trip latency:
      • Volume, brightness, wifi toggle, power, lock -> computer_settings
      • CPU, RAM, GPU, thermals -> system_monitor
      • Linux services, failed systemd units, journalctl -> systemd_sentinel
+     • Local LAN mapping, subnet sweep, port banners, TLS certs -> network_topology
+     • Wi-Fi RF radar, spectrum mapping, channel optimizer -> wifi_radar
      • Network ping latency, packet loss, bandwidth test -> network_speed
      • Bluetooth devices, battery, connection toggling -> bluetooth_governor
      • Windows, keyboard shortcuts, mouse clicks -> computer_control
      • Launching or focusing desktop apps -> open_app
-   - Information, Research & News:
+   - Autonomous Planning & Research:
+     • Multi-step objectives, cross-tool investigation, dynamic combining -> task_planner
      • Fast factual lookup, web search, prices -> web_search
      • Tech, AI, Hacker News, Linux headlines -> open_rss_briefing
      • Autonomous multi-source cited research reports (long work) -> background_tasks

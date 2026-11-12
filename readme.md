@@ -89,6 +89,7 @@ It's not just an assistant — it's an extension of your digital life.
 | ⚡ Network Speed & Diagnostics | Instant ICMP ping latency, packet loss analysis, and non-blocking bandwidth speed tests |
 | 🛰️ Tactical Network Radar | Iron Man style LAN topology cartographer, ARP neighbor detection, and local service health checks |
 | 📡 Tactical Wi-Fi Radar | Active Wi-Fi link telemetry, ambient AP spectrum mapping, channel congestion optimization, and security hygiene |
+| 🎯 Autonomous Task Planner | Tool-agnostic cognitive meta-agent that inspects the live tool registry, formulates multi-step plans, dynamically combines actions & plugins, and pipelines intermediate context |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -987,7 +988,8 @@ Mark LVII/
 │   ├── bluetooth_governor.py # Bluetooth device manager, battery checker & connection switch
 │   ├── network_speed.py      # Non-blocking bandwidth test, ICMP ping latency & packet loss
 │   ├── network_topology.py   # Tactical LAN radar, ARP neighbor mapping & local service verification
-│   └── wifi_radar.py         # Wi-Fi link health, ambient AP spectrum mapping & channel congestion optimizer
+│   ├── wifi_radar.py         # Wi-Fi link health, ambient AP spectrum mapping & channel congestion optimizer
+│   └── task_planner.py       # Autonomous multi-step goal planner & dynamic multi-tool combiner
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

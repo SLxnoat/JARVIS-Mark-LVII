@@ -63,6 +63,8 @@ _FACE_STYLES = ("face", "face_solid", "face_holo", "face_hologram", "face_matrix
 
 
 class HudCanvas(QWidget):
+    radial_requested = pyqtSignal(QPoint)
+
     def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
@@ -177,6 +179,11 @@ class HudCanvas(QWidget):
     def leaveEvent(self, e) -> None:
         self._cursor_pos = None
         self._camera.set_gaze(0.0, 0.0, factor=0.0)
+
+    def mousePressEvent(self, e: QMouseEvent) -> None:
+        if e.button() == Qt.MouseButton.RightButton:
+            self.radial_requested.emit(e.globalPosition().toPoint())
+        super().mousePressEvent(e)
 
     def register_holo_pane(
         self,

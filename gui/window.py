@@ -22,7 +22,7 @@ from PyQt6.QtCore import (
     QUrl, pyqtSignal,
 )
 from PyQt6.QtGui import (
-    QBrush, QColor, QConicalGradient, QDragEnterEvent, QDropEvent, QFont,
+    QBrush, QColor, QConicalGradient, QCursor, QDragEnterEvent, QDropEvent, QFont,
     QFontDatabase, QKeySequence, QLinearGradient, QPainter, QPainterPath,
     QPen, QPixmap, QRadialGradient, QShortcut,
 )
@@ -465,10 +465,37 @@ class MainWindow(QMainWindow):
         if not self._ready:
             self._show_setup()
 
+        # Radial Command Wheel (Tab hold / Right-click)
+        from gui.radial_menu import RadialCommandWheel
+        self._radial_wheel = RadialCommandWheel(self.centralWidget())
+        self._radial_wheel.node_activated.connect(self._on_radial_node_activated)
+        if hasattr(self, "hud"):
+            self.hud.radial_requested.connect(self._radial_wheel.show_at)
+
+        # Tab key shortcut to trigger radial wheel
+        sc_tab = QShortcut(QKeySequence(Qt.Key.Key_Tab), self)
+        sc_tab.activated.connect(lambda: self._radial_wheel.show_at(QCursor.pos()))
+
+        # Universal Command Spotlight (Ctrl+K)
+        from gui.command_palette import CommandPalette
+        self._command_palette = CommandPalette(self)
+        self._command_palette.command_executed.connect(self._on_command_palette_executed)
+        sc_palette = QShortcut(QKeySequence("Ctrl+K"), self)
+        sc_palette.activated.connect(self._command_palette.show_centered)
+
+        # Drawer collapse shortcuts (Ctrl+[ and Ctrl+]) & holodeck state
+        self._left_collapsed: bool = False
+        self._right_collapsed: bool = False
+        self._is_holodeck: bool = False
+        sc_col_l = QShortcut(QKeySequence("Ctrl+["), self)
+        sc_col_l.activated.connect(self.toggle_left_drawer)
+        sc_col_r = QShortcut(QKeySequence("Ctrl+]"), self)
+        sc_col_r.activated.connect(self.toggle_right_drawer)
+
         sc_mute = QShortcut(QKeySequence("F4"), self)
         sc_mute.activated.connect(self._toggle_mute)
         sc_full = QShortcut(QKeySequence("F11"), self)
-        sc_full.activated.connect(self._toggle_fullscreen)
+        sc_full.activated.connect(self.toggle_holodeck_mode)
         sc_intr = QShortcut(QKeySequence("Escape"), self)
         sc_intr.activated.connect(self._do_interrupt)
 
@@ -891,6 +918,48 @@ class MainWindow(QMainWindow):
     def _on_mission_report(self, title: str, markdown: str) -> None:
         """Displays agent markdown report in content panel."""
         self._show_content(title, markdown)
+
+    def _on_radial_node_activated(self, node_id: str) -> None:
+        """Dispatches workspace or AR tool activation from the radial wheel."""
+        if node_id == "browser":
+            self._on_browser_holo(b"", "https://www.google.com", "AR Web Surface")
+        elif node_id == "defense":
+            self._on_defense_show()
+        elif node_id == "neuro":
+            self._on_neuro_show()
+        elif node_id == "code":
+            self._show_content("Autonomous Dev Sandbox", "Terminal & Dev Agent ready.")
+        elif node_id == "celestial":
+            self._on_celestial_show()
+        elif node_id == "tasks":
+            self._on_mission_control_show()
+
+    def _on_command_palette_executed(self, cmd_id: str, title: str) -> None:
+        """Dispatches commands selected from the Universal Command Spotlight."""
+        if hasattr(self, "write_log"):
+            self.write_log(f"CMD SPOTLIGHT // {title} [{cmd_id}]")
+        if cmd_id in ("ar_browser", "browser"):
+            self._on_browser_holo(b"", "https://www.google.com", "AR Web Surface")
+        elif cmd_id in ("defense_radar", "defense"):
+            self._on_defense_show()
+        elif cmd_id in ("neuro_cortex", "neuro"):
+            self._on_neuro_show()
+        elif cmd_id in ("celestial_orbit", "celestial"):
+            self._on_celestial_show()
+        elif cmd_id in ("mission_control", "tasks"):
+            self._on_mission_control_show()
+        elif cmd_id == "holodeck_mode":
+            self.toggle_holodeck_mode()
+        elif cmd_id == "reader_mode":
+            if hasattr(self, "_browser_surface") and self._browser_surface:
+                self._browser_surface.toggle_reader_mode()
+        elif cmd_id == "toggle_focus":
+            if hasattr(self, "hud"):
+                self.hud.toggle_browser_focus()
+        elif cmd_id.startswith("plugin_"):
+            plugin_name = cmd_id[len("plugin_"):]
+            if hasattr(self, "write_log"):
+                self.write_log(f"Triggering plugin: {plugin_name}")
 
     def _fit_video(self, *_a) -> None:
         """Size whatever is on the surface to the panel, keeping its shape."""
@@ -1420,10 +1489,61 @@ class MainWindow(QMainWindow):
             self._log.append_log(f"ERR: Shortcut failed — {e}")
 
     def _toggle_fullscreen(self):
-        if self.isFullScreen():
-            self.showNormal()
-        else:
+        self.toggle_holodeck_mode()
+
+    def toggle_holodeck_mode(self):
+        """Fullscreen Holodeck Mode (F11): Hides desktop bezels and expands AR canvas to 100%."""
+        self._is_holodeck = not getattr(self, "_is_holodeck", False)
+        if self._is_holodeck:
+            if hasattr(self, "_header"):
+                self._header.hide()
+            if hasattr(self, "_footer"):
+                self._footer.hide()
+            if hasattr(self, "_left_panel"):
+                self._left_panel.hide()
+            if hasattr(self, "_right_panel"):
+                self._right_panel.hide()
             self.showFullScreen()
+        else:
+            if hasattr(self, "_header"):
+                self._header.show()
+            if hasattr(self, "_footer"):
+                self._footer.show()
+            if hasattr(self, "_left_panel") and not getattr(self, "_left_collapsed", False):
+                self._left_panel.show()
+                self._left_panel.setMaximumWidth(200)
+            if hasattr(self, "_right_panel") and not getattr(self, "_right_collapsed", False):
+                self._right_panel.show()
+                self._right_panel.setMaximumWidth(300)
+            self.showNormal()
+        if hasattr(self, "hud"):
+            self.hud.update()
+
+    def toggle_left_drawer(self) -> None:
+        """Smoothly collapses or expands the left tactical systems panel (Ctrl+[)."""
+        self._left_collapsed = not getattr(self, "_left_collapsed", False)
+        anim = QPropertyAnimation(self._left_panel, b"maximumWidth", self)
+        anim.setDuration(220)
+        anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        start_w = self._left_panel.width()
+        end_w = 0 if self._left_collapsed else 200
+        anim.setStartValue(start_w)
+        anim.setEndValue(end_w)
+        anim.start()
+        self._anim_left = anim
+
+    def toggle_right_drawer(self) -> None:
+        """Smoothly collapses or expands the right tactical activity log panel (Ctrl+])."""
+        self._right_collapsed = not getattr(self, "_right_collapsed", False)
+        anim = QPropertyAnimation(self._right_panel, b"maximumWidth", self)
+        anim.setDuration(220)
+        anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        start_w = self._right_panel.width()
+        end_w = 0 if self._right_collapsed else 300
+        anim.setStartValue(start_w)
+        anim.setEndValue(end_w)
+        anim.start()
+        self._anim_right = anim
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -3167,6 +3287,15 @@ class MainWindow(QMainWindow):
     # ────────────────────────────────────────────────────────────────────────────
 
     def _do_interrupt(self):
+        if getattr(self, "_is_holodeck", False):
+            self.toggle_holodeck_mode()
+            return
+        if hasattr(self, "_command_palette") and self._command_palette.isVisible():
+            self._command_palette.hide()
+            return
+        if hasattr(self, "_radial_wheel") and self._radial_wheel.isVisible():
+            self._radial_wheel.hide()
+            return
         if self.on_interrupt:
             self.on_interrupt()
 

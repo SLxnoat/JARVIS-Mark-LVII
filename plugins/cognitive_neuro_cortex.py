@@ -240,6 +240,8 @@ def _handle_learn_rule(params: dict, player=None) -> str:
 
     if player:
         player.write_log(f"Cortex: {res_msg}")
+        if hasattr(player, "spark_neuro_learning"):
+            player.spark_neuro_learning(r_id, trigger or behavior, 0.95)
         _render_cortex_hud(player)
 
     return res_msg
@@ -349,6 +351,8 @@ def _handle_mine_habits(params: dict, player=None) -> str:
 
     if player:
         player.write_log(f"Cortex: {res}")
+        if hasattr(player, "spark_neuro_learning"):
+            player.spark_neuro_learning("HABIT", habit_name or "Workflow Routine", 0.90)
         _render_cortex_hud(player)
 
     return res
@@ -430,6 +434,9 @@ def _render_cortex_hud(player=None):
     if not player:
         return
     try:
+        if hasattr(player, "show_ar_neuro_cortex"):
+            player.show_ar_neuro_cortex()
+
         rules = [r for r in load_learned_rules() if r.get("active", True)]
         habits = load_habits()
         graph = load_concept_graph()

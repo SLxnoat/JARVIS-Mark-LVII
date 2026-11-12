@@ -122,6 +122,8 @@ class MainWindow(QMainWindow):
     _browser_beacon_sig = pyqtSignal(float, float)     # (norm_x, norm_y) — trigger laser beacon reticle
     _browser_reader_sig = pyqtSignal(str, str)         # (title, markdown_content) — slide-out reader panel
     _browser_focus_sig  = pyqtSignal(bool)             # (focused) — toggle center stage focus
+    _neuro_learn_sig    = pyqtSignal(str, str, float)  # (rule_id, trigger, confidence) — dopaminergic spark
+    _neuro_show_sig     = pyqtSignal()                 # render/toggle AR neuro-cortex constellation
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -428,6 +430,10 @@ class MainWindow(QMainWindow):
         self._browser_reader_sig.connect(self._on_browser_reader)
         self._browser_focus_sig.connect(self._on_browser_focus)
 
+        self._neuro_panel = None
+        self._neuro_learn_sig.connect(self._on_neuro_learn)
+        self._neuro_show_sig.connect(self._on_neuro_show)
+
         # AR Browser Focus Shortcut (Ctrl+B)
         from PyQt6.QtGui import QKeySequence, QShortcut
         self._shortcut_browser = QShortcut(QKeySequence("Ctrl+B"), self)
@@ -710,6 +716,54 @@ class MainWindow(QMainWindow):
                 pixmap=ar_pix,
                 focused=vp._is_focused,
             )
+            self.hud.update()
+
+    def _ensure_neuro_panel(self):
+        if self._neuro_panel is None:
+            from gui.neuro_panel import NeuroCortexPanel
+            self._neuro_panel = NeuroCortexPanel(self)
+            self._neuro_panel.closed.connect(self._on_neuro_close)
+        return self._neuro_panel
+
+    def _on_neuro_learn(self, rule_id: str, trigger: str, confidence: float) -> None:
+        """Triggers a golden dopaminergic feedback arc across the neuro constellation."""
+        panel = self._ensure_neuro_panel()
+        panel.trigger_spark(rule_id, trigger, confidence)
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="neuro",
+                title="Cognitive Neuro-Cortex",
+                center=(-170.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_neuro_show(self) -> None:
+        """Projects the 3D Neuro-Cortex Synaptic Constellation onto HUD Layer 2."""
+        panel = self._ensure_neuro_panel()
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="neuro",
+                title="Cognitive Neuro-Cortex",
+                center=(-170.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_neuro_close(self) -> None:
+        """Closes the AR Neuro-Cortex holo surface."""
+        if hasattr(self, "hud"):
+            self.hud.unregister_holo_pane("neuro")
             self.hud.update()
 
     def _fit_video(self, *_a) -> None:

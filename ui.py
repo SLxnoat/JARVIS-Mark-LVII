@@ -380,6 +380,16 @@ class JarvisUI:
             else:
                 self._win._browser_focus_sig.emit(bool(focused))
 
+    def spark_neuro_learning(self, rule_id: str, trigger: str, confidence: float = 1.0) -> None:
+        """Thread-safe: ignite golden dopaminergic feedback arc across the neuro constellation."""
+        if hasattr(self._win, "_neuro_learn_sig"):
+            self._win._neuro_learn_sig.emit(str(rule_id or "RULE"), str(trigger or ""), float(confidence))
+
+    def show_ar_neuro_cortex(self) -> None:
+        """Thread-safe: project 3D Neuro-Cortex Constellation onto HUD Layer 2."""
+        if hasattr(self._win, "_neuro_show_sig"):
+            self._win._neuro_show_sig.emit()
+
     def stop_video(self) -> None:
         """Thread-safe: close the video and give the HUD back to the avatar."""
         self._win._video_close_sig.emit()

@@ -102,6 +102,26 @@ It's not just an assistant — it's an extension of your digital life.
 | 🐳 Container Fleet Radar | Local Docker & Podman container health inspection, port mappings, crash restart loops, and dangling image reclamation |
 | 🌐 Global Anycast DNS Cartographer | Multi-resolver propagation verification across Cloudflare, Google, Quad9, and OpenDNS; ISP poisoning & latency checks |
 | 🔐 Cryptographic Vault Sentinel | Local SSH key hygiene, multi-algorithm hashing (SHA-256, SHA-512, BLAKE2b), and Shannon entropy calculation |
+| 💠 3D Holographic Visualizer | Mathematical 3D wireframe projection engine (Mark Helmet, Tesseract, Sphere) rendered directly on the HUD |
+| 🎙️ Voice Biometrics Sentinel | Acoustic voiceprint speaker verification ($F_0$ pitch, formants, spectral centroid) with biometric match probability |
+| 🧠 Vocal Emotion & Tone Detector | Speech prosody, pitch spread, and cadence analyzer detecting operator stress, fatigue, and cognitive urgency |
+| 👁️ Posture & Eye Fatigue Sentry | Computer vision ergonomic sentry monitoring forward head tilt, slouching, and blink rate strain |
+| ⚡ Tactical Command Matrix | Full-screen sci-fi Iron Man command matrix compiling CPU cores, memory gauges, and security shields |
+| 🚨 Cyber Threat Intel Radar | Real-time malware reputation scanner checking suspicious IPs, domains, and hashes against C2 threat feeds |
+| 🎙️ Audio Deepfake Detector | Neural vocoder spectral forensics detecting synthetic AI voice clones and manipulated audio notes |
+| 🛡️ Digital Footprint Sentinel | Zero-knowledge k-Anonymity dark web credential leak scanner auditing compromised passwords and emails |
+| 🔬 Binary File X-Ray Decompiler | Non-execution forensic X-ray of ELF/PE binaries, extracting linked libraries, compiler tags, and strings |
+| ⚡ Autonomous Code Sandbox | Isolated in-memory Python runner with autonomous self-healing traceback error recovery via Gemini |
+| 📐 Code Architecture Mapper | AST-based codebase cartography generating interactive Mermaid class and import dependency flowcharts |
+| 💻 Terminal AI Copilot | Natural language to optimal Linux shell one-liner synthesizer with safety risk assessments and flag breakdowns |
+| ⏳ Git Time Machine | Codebase evolution timeline tracking code churn (add/delete ratios), author velocity, and refactoring hotspots |
+| ⚡ Prompt Engineering Forge | Production-grade LLM prompt architect applying Chain-of-Thought scaffolding and few-shot framing |
+| 📋 Smart Clipboard Copilot | Autonomous clipboard analyzer pre-computing instant transformations (curl to requests, JWT decode, JSON format) |
+| 🛡️ Scene Protocol Automator | Single-command Iron Man protocols ("Protocol Nightfall", "Protocol Workstation", "Protocol Stealth") |
+| 🧠 Flow-State Guardian | Deep work distraction shield suppressing interruptions and tracking uninterrupted flow-state duration |
+| 📋 AI Meeting Scribe | Desktop audio scribe extracting structured Key Decisions, Topic Summaries, and Action Items with deadlines |
+| 🌐 Stealth Web Recon | Ad-free headless article extractor stripping popups and cookie walls into clean Markdown summaries |
+| 🌐 Multilingual Live Interpreter | Conversational translator across 50+ languages with phonetic pronunciation guides and dual-language HUD subtitles |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -1013,7 +1033,27 @@ Mark LVII/
 │   ├── air_quality_sentinel.py # Atmospheric PM2.5, PM10, atmospheric gas telemetry & European AQI
 │   ├── docker_sentinel.py    # Docker & Podman container health, port mappings & crash loop detection
 │   ├── dns_propagator.py     # Global anycast DNS propagation across Cloudflare/Google/Quad9/OpenDNS
-│   └── crypto_vault_sentinel.py # SSH key hygiene, SHA-256/BLAKE2b hashing & Shannon entropy analysis
+│   ├── crypto_vault_sentinel.py # SSH key hygiene, SHA-256/BLAKE2b hashing & Shannon entropy analysis
+│   ├── hologram_visualizer_3d.py # 3D wireframe models (Mark Helmet, Tesseract) perspective projection
+│   ├── voice_biometrics_sentinel.py # Acoustic voiceprint speaker verification & pitch F0 matching
+│   ├── speech_emotion_tone_detector.py # Vocal stress, cadence & emotional affect prosody analyzer
+│   ├── webcam_posture_fatigue_sentinel.py # Vision ergonomic sentry monitoring head tilt & eye blink strain
+│   ├── system_matrix_hud.py  # Full-screen sci-fi command matrix compiling cores, RAM & shields
+│   ├── threat_intel_radar.py # Real-time malware reputation radar for IPs, domains, and hashes
+│   ├── audio_deepfake_detector.py # Neural vocoder spectral forensics detecting synthetic AI voice clones
+│   ├── digital_footprint_scanner.py # Zero-knowledge k-Anonymity dark web breach scanner
+│   ├── file_xray_decompiler.py # Non-execution forensic X-ray of ELF/PE binaries & extracted strings
+│   ├── code_debugger_sandbox.py # In-memory Python runner with autonomous self-healing traceback loop
+│   ├── code_architecture_mapper.py # AST-based codebase cartography generating Mermaid class flowcharts
+│   ├── ai_terminal_copilot.py # Natural language to safe Linux shell one-liner synthesizer
+│   ├── git_time_machine.py   # Code churn timeline, author velocity & refactoring hotspot radar
+│   ├── prompt_engineering_forge.py # Production-grade LLM prompt architect applying CoT scaffolding
+│   ├── smart_clipboard_ai.py # Contextual clipboard transformer (curl to requests, JWT, JSON format)
+│   ├── smart_home_scene_automator.py # Multi-device protocols ("Protocol Nightfall", "Protocol Workstation")
+│   ├── focus_flowstate_guardian.py # Deep work distraction shield & uninterrupted flow duration tracker
+│   ├── ai_meeting_summarizer.py # Meeting audio scribe extracting decisions & action items with deadlines
+│   ├── stealth_browser_recon.py # Ad-free headless article extractor stripping popups & cookie walls
+│   └── multilingual_live_translator.py # Multilingual live translator with phonetic guides & HUD subtitles
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

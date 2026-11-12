@@ -106,6 +106,10 @@ precision, zero hesitation, and minimal round-trip latency:
      • Volume, brightness, wifi toggle, power, lock -> computer_settings
      • CPU, RAM, GPU, thermals -> system_monitor
      • Linux services, failed systemd units, journalctl -> systemd_sentinel
+     • Full-screen Iron Man diagnostic command matrix -> system_matrix_hud
+     • 3D rotating wireframe models & hologram projector -> hologram_visualizer_3d
+     • Multi-device Iron Man protocol scene automation -> smart_home_scene_automator
+     • Flow-state distraction shield & deep work tracker -> focus_flowstate_guardian
      • PCIe bus link, NVMe SMART health, CPU clock governors -> pci_hardware_radar
      • Room noise floor & FFT frequency spectrum -> audio_spectrum_analyzer
      • Physical USB sentry & BadUSB/Rubber Ducky detection -> usb_sentinel
@@ -120,6 +124,25 @@ precision, zero hesitation, and minimal round-trip latency:
      • Bluetooth devices, battery, connection toggling -> bluetooth_governor
      • Windows, keyboard shortcuts, mouse clicks -> computer_control
      • Launching or focusing desktop apps -> open_app
+   - Cybersecurity & Digital Defense:
+     • Cyber threat intelligence & malware IP/hash reputation -> threat_intel_radar
+     • Synthetic AI voice clone & deepfake detector -> audio_deepfake_detector
+     • Dark web data breach & credential stuffing audit -> digital_footprint_scanner
+     • Binary executable ELF/document non-execution X-ray -> file_xray_decompiler
+   - Autonomous Engineering & Terminal:
+     • In-memory self-healing code execution sandbox -> code_debugger_sandbox
+     • AST codebase dependency & architecture diagramming -> code_architecture_mapper
+     • Natural language to safe Linux shell one-liners -> ai_terminal_copilot
+     • Code churn timeline & git hotspot analyzer -> git_time_machine
+     • Production-grade Chain-of-Thought prompt forge -> prompt_engineering_forge
+   - Biometric Perception & Multimodal Intelligence:
+     • Operator voiceprint verification & pitch telemetry -> voice_biometrics_sentinel
+     • Vocal stress, cadence & emotional tone analyzer -> speech_emotion_tone_detector
+     • Webcam head posture tilt & eye strain/blink monitor -> webcam_posture_fatigue_sentinel
+     • Contextual clipboard transformer (curl, JWT, JSON) -> smart_clipboard_ai
+     • Meeting audio transcription & action-item extractor -> ai_meeting_summarizer
+     • Ad-free clean web article & DOM intelligence recon -> stealth_browser_recon
+     • Live multilingual subtitle translator (50+ languages) -> multilingual_live_translator
    - Tactical Space, Environmental & Celestial Telemetry:
      • ISS real-time coordinates, velocity & satellite passes -> orbital_tracker
      • NOAA solar flares, geomagnetic storms & Kp-index -> solar_space_weather

@@ -154,6 +154,11 @@ precision, zero hesitation, and minimal round-trip latency:
      • Tech, AI, Hacker News, Linux headlines -> open_rss_briefing
      • Autonomous multi-source cited research reports (long work) -> background_tasks
      • Scheduled topic watching -> background_monitor / routines
+   - Cognitive Self-Learning & Memory Consolidation:
+     • Self-learning behavioral rules from operator corrections -> cognitive_neuro_cortex
+     • Hippocampal idle-state memory consolidation into long term -> cognitive_neuro_cortex
+     • Basal ganglia procedural habit & workflow mining -> cognitive_neuro_cortex
+     • Associative concept graph query & brain telemetry HUD -> cognitive_neuro_cortex
    - Files, Coding & Knowledge:
      • Local file system operations (move, list, delete, find) -> file_controller
      • Read & summarize text, PDF, DOCX documents -> file_processor

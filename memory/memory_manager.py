@@ -337,6 +337,20 @@ def format_memory_for_prompt(memory: dict | None) -> str:
                        + (f" (+{len(indexed) - len(names)} more)"
                           if len(indexed) > len(names) else ""))
 
+    # 4. Learned Operator Rules from Cognitive Neuro-Cortex
+    rules_file = BASE_DIR / "memory" / "learned_rules.json"
+    if rules_file.exists():
+        try:
+            rules_data = json.loads(rules_file.read_text(encoding="utf-8"))
+            active_rules = [r for r in rules_data if r.get("active", True) and r.get("confidence", 0) >= 0.8]
+            if active_rules:
+                out.append("")
+                out.append("[LEARNED OPERATOR RULES — strict self-learned behaviors from feedback]")
+                for r in active_rules[:6]:
+                    out.append(f"- When {r.get('trigger')}: {r.get('rule')}")
+        except Exception:
+            pass
+
     return "\n".join(out) + "\n"
 
 

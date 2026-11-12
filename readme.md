@@ -392,6 +392,17 @@ Built for daily engineering, software development, and personal workstation effi
   * Computes estimated download and transfer durations for given file sizes and network speeds.
   * *Voice prompts:* *"Convert 500 Mbps to GB per hour"*, *"How long to download 50GB at 100 Mbps?"*, *"Convert 2 TiB to GB"*.
 
+### 🧠 Human-Brain Cognitive Self-Learning Engine (`plugins/cognitive_neuro_cortex.py`)
+
+Models the neurobiological mechanisms of human learning to allow JARVIS to continuously improve, adapt, and evolve from real-world usage:
+* **Dopaminergic Error Plasticity (`learn_rule`):** Automatically ingests operator corrections (*"No, that's wrong"*, *"Always use 2 spaces"*, *"Don't do that"*) into permanent high-priority behavioral rules in `memory/learned_rules.json`.
+* **Hippocampal Memory Consolidation (`consolidate`):** Replays short-term turns from `memory/short_term.py` during idle periods to synthesize durable facts into ChromaDB vector embeddings and long-term memory while pruning conversational noise.
+* **Basal Ganglia Habit Mining (`mine_habits`):** Detects recurring tool sequences and compiles them into automatic procedural routines in `memory/habits.json`.
+* **Associative Semantic Knowledge Mesh (`query_associative`):** Traverses an associative concept network in `memory/concept_graph.json`, priming related nodes via spreading activation.
+* **Synaptic Decay & Pruning (`forget`):** Automatically decays stale facts according to the human forgetting curve while reinforcing repeated rules.
+* **Interactive Brain Telemetry HUD (`show_cortex_hud`):** Live dashboard tracking synaptic weights, active rule overrides, procedural habits, and semantic mesh nodes.
+* *Voice prompts:* *"Remember to always use dark mode"*, *"Consolidate my recent sessions"*, *"Show brain learning telemetry"*, *"What concepts are linked to Python?"*.
+
 ### 🩹 Fixes
 
 * **Closing the window lost the conversation summary.** The thread holding the session was a daemon and died with the window, so the "last time we talked about…" line the next briefing opens with was only saved when you said *"shut down"* out loud. Closing now saves it (bounded to a few seconds, after the window is gone), stops the engines so a running task resumes next launch, runs the plugins' exit handlers, and ends the process even if a tool thread is still busy.
@@ -1087,7 +1098,8 @@ Mark LVII/
 │   ├── workspace_health_summary.py # Unified executive workstation readiness & agenda morning briefing
 │   ├── smart_reminder_snoozer.py # In-session countdown timers, notification alerts & snooze manager
 │   ├── weather_astronomy_briefing.py # Real-time weather, hourly rain radar & astronomical twilight schedule
-│   └── smart_unit_converter.py # Technical data rate, download duration & binary/decimal storage unit engine
+│   ├── smart_unit_converter.py # Technical data rate, download duration & binary/decimal storage unit engine
+│   └── cognitive_neuro_cortex.py # Human-brain self-learning engine (error plasticity, consolidation, habits & mesh)
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

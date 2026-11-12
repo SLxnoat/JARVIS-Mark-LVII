@@ -79,6 +79,8 @@ It's not just an assistant — it's an extension of your digital life.
 | 🌙 Quiet Hours | A window in which nothing unprompted speaks. What you set for an exact time still does |
 | 🛰️ Command-Center HUD | Glass panels, ring gauges, network sparkline, a transcript-style log and one TASKS / ROUTINES panel |
 | ⚛️ 3-D Reactor Core | A depth-cued sphere with gyro rings, drawn in software at ~5 ms a frame — the classic face is still one setting away |
+| 🧑‍💻 8K Cybernetic Hologram Face | High-tech 8,000 particle point-cloud humanoid hologram rendered in software (QPainter + NumPy) with depth-scaled particles, dual glowing digital eyes, telemetry orbits, matrix circuit traces, and dynamic live UI theme color synchronization |
+| 🤖 Telegram Bot Remote Center | Full remote control from your phone via Telegram — direct main-session injection with all 19 OS tools, auto-wake, live execution replies, screen/camera capture, voice notes, multimodal photo vision, and autonomous task steering |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -252,6 +254,41 @@ to new users"** — and they led the ladder, so every launch paid for both befor
 reaching a model that answers. The ladder was re-timed against a live key and the
 2.5 models moved to the bottom, where keys created before their retirement still
 reach them.
+
+### 🧑‍💻 8K Cybernetic Point-Cloud Hologram Avatar
+
+Mark LVII replaces the traditional solid mesh head with an **8,000 particle glowing cybernetic hologram face**:
+* **Software Rendered (QPainter + NumPy):** Renders smoothly across all desktop platforms (Wayland, X11, macOS, Windows) with **zero GPU or external OpenGL dependencies**.
+* **Depth-Scaled Holographic Particles:** Foreground facial nodes are rendered dense and crisp (`gl_PointSize`-style scaling), fading naturally across the neck and cranium.
+* **Cybernetic Telemetry & Matrix Streams:** Overlaying horizontal telemetry data lines, scanning traces, and rotating orbital telemetry calibration rings directly beneath the chin.
+* **Alert Digital Irises & Real-Time Visemes:** Precision glowing dual circular apertures that track fixations and mouth consonants directly synchronized with speech.
+* **Live Theme Sync:** Seamlessly retints in real-time with the HUD theme color wheel (`gui/theme.py`).
+* **3-Way Centerpiece Toggle:** Click the HUD centerpiece button to cycle between **Hologram Face** (`face`) → **Solid Face** (`face_solid`) → **3D Reactor Core** (`core`).
+
+### 📱 Advanced Telegram Remote Command Center (`plugins/telegram_bridge.py`)
+
+A clean, standalone plugin transforming Telegram into a powerful remote companion for JARVIS:
+* **Zero New Dependencies:** Uses only `httpx` and `qrcode` from `requirements.txt`.
+* **Hermes-Style QR Pairing & Security Lock:** Generates a secure one-time pairing token (`/start <token>`), displays an ASCII QR code in the terminal and a clean PNG on the HUD dynamic content panel, and strictly drops/ignores unauthorized chats. Use `/unpair` anytime to revoke and regenerate.
+* **Direct Main-Session Tool Execution:** Inbound Telegram commands are injected directly into JARVIS's active live session pipeline with full access to all **19 local actions and tools** (`video_player`, `browser_control`, `computer_settings`, etc.) — no isolated hallucinating model.
+* **Auto-Wake Support:** Automatically wakes JARVIS from sleep when a remote command arrives.
+* **Live Execution Responses:** Captures the assistant's real execution confirmation and spoken output, forwarding it back to your phone.
+* **Multimodal Intelligence:**
+  * **Photos:** Send any picture for immediate Gemini Vision analysis.
+  * **Voice Notes:** Hold the mic in Telegram to speak; JARVIS transcribes and executes your command on your host machine.
+  * **Documents:** Upload code, data, or text files directly into `downloads/` with automatic AI summaries.
+* **Remote Vision & Telemetry:**
+  * `/screen` — Capture live desktop screenshot.
+  * `/camera` — Capture webcam snapshot.
+  * `/status` — Live CPU, RAM, battery, uptime, and active task telemetry.
+  * `/mute`, `/unmute`, `/volume <0-100>`, media controls.
+* **Autonomous Task Management:**
+  * `/tasks` — View running and queued deep research tasks.
+  * `/task <goal>` — Start autonomous background tasks remotely.
+  * `/steer <id> <note>` & `/cancel <id>` — Steer or cancel tasks mid-flight.
+  * `/reports` & `/report <id>` — Browse and download full research reports as files.
+* **Executive Briefing & Keypad:** `/brief` for on-demand morning briefings and `/menu` for an interactive 1-tap quick button grid.
+* **Safety Confirmation Gate:** Destructive actions (shutdown, restart, WiFi toggle) trigger inline `[✅ Approve]` / `[❌ Deny]` keyboard confirmation before execution.
 
 ### 🩹 Fixes
 

@@ -47,6 +47,10 @@ except Exception:      # pragma: no cover — the classic core still draws
     Reactor3D = None
 
 
+# Which hud_style values draw the avatar (as opposed to the reactor core).
+_FACE_STYLES = ("face", "face_solid")
+
+
 class HudCanvas(QWidget):
     def __init__(self, face_path: str, assistant_name: str = "J.A.R.V.I.S", parent=None):
         super().__init__(parent)
@@ -336,7 +340,7 @@ class HudCanvas(QWidget):
         # starts talking. Same lesson the head's sway taught.
         self._core_phase += min(0.10, max(0.0, dt))
 
-        if self._avatar is not None and self.hud_style == "face":
+        if self._avatar is not None and self.hud_style in _FACE_STYLES:
             self._avatar.step(dt, amp, speaking=self.speaking,
                               muted=self.muted, state=self.state,
                               v_open=v_open, v_wide=v_wide or 0.0,
@@ -610,22 +614,34 @@ class HudCanvas(QWidget):
         band_t = 30.0
         band_h = max(60.0, sy - 14.0 - band_t)
 
-        if self._avatar is not None and self.hud_style == "face":
-            r_head = min(fw * 0.355, band_h / (self._avatar.SPAN + 0.08))
-            head_cy = band_t + (band_h - self._avatar.SPAN * r_head) / 2.0 + r_head
+        if self._avatar is not None and self.hud_style in _FACE_STYLES:
+            # "face" is the dotted hologram, "face_solid" the lit solid head.
+            self._avatar.mode = "solid" if self.hud_style == "face_solid" else "points"
+            av = self._avatar
+            # The head and everything that hangs off it (projection ring,
+            # brackets) must fit the band: size from TOP + BOT, not just the head.
+            r_head = min(fw * 0.355, band_h / (av.TOP + av.BOT + 0.08))
+            head_cy = band_t + (band_h - (av.TOP + av.BOT) * r_head) / 2.0 + av.TOP * r_head
             if self.muted:
                 main = acc = qcol(C.MUTED_C)
             else:
+                # Read from the live palette on every paint, so the colour wheel
+                # retints the whole hologram the moment it changes.
                 main = qcol(C.PRI)
                 if self.speaking:
                     acc = qcol(C.ACC)
+                elif self.state in ("ERROR", "FAILED"):
+                    acc = qcol(C.RED)
                 elif self.state in ("THINKING", "PROCESSING"):
                     acc = qcol(C.ACC2)
                 elif self.state == "LISTENING":
                     acc = qcol(C.GREEN)
                 else:
                     acc = qcol(C.PRI)
-            self._avatar.paint(p, cx, head_cy, r_head, main, acc, qcol(C.BG))
+            p.save()
+            p.setClipRect(QRectF(0, 0, W, H))
+            av.paint(p, cx, head_cy, r_head, main, acc, qcol(C.BG), half_w=W / 2.0)
+            p.restore()
         elif self._reactor is not None:
             ext = Reactor3D.TOP + Reactor3D.BOTTOM
             r = min(W * 0.25, band_h / ext)

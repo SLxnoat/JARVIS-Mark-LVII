@@ -116,7 +116,7 @@ PROMPT_PATH     = BASE_DIR / "core" / "prompt.txt"
 #
 # It is reassigned on every connect, so a model that runs out of quota is
 # stepped over and the assistant keeps talking instead of failing to start.
-LIVE_MODEL          = "models/gemini-3.1-flash-live-preview"
+LIVE_MODEL          = "models/gemini-2.0-flash"
 CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000 
 RECEIVE_SAMPLE_RATE = 24000
@@ -647,6 +647,10 @@ class JarvisLive:
         self.ui.on_push_to_talk   = self.set_push_to_talk
         self.ui.ptt_hold          = self._on_ptt
         self.ui.on_text_command   = self._on_text_command
+        self.ui.dispatch_remote_command = self.dispatch_remote_command
+        self._remote_cb_lock      = threading.Lock()
+        self._remote_cbs: list[Callable[[str], None]] = []
+        self._last_tool_executed  = ""
         self.ui.on_remote_clicked = self._make_remote_key
         self.ui.on_interrupt      = self.interrupt
         self.ui.on_voice_change   = self._on_voice_change     # voice picker → rebuild session
@@ -1236,6 +1240,55 @@ class JarvisLive:
             self._loop
         )
 
+    def dispatch_remote_command(self, text: str, origin: str = "Telegram",
+                                on_reply: Optional[Callable[[str], None]] = None) -> bool:
+        """Inject an authorized command from a remote interface (Telegram, dashboard)
+        directly into the active Gemini Live session with auto-wake and response tracking."""
+        loop = getattr(self, "_loop", None)
+        if not loop:
+            return False
+
+        # 1. Auto-wake if sleeping so remote commands execute immediately
+        if self._wake_enabled and not self._awake:
+            self.wake(reason=f"{origin} command")
+
+        # 2. Wait up to 6s for session to be ready if currently establishing/reconnecting
+        for _ in range(60):
+            if self.session:
+                break
+            time.sleep(0.1)
+
+        if not self.session:
+            print(f"[{origin}] Dropped command (session not available): {text}")
+            return False
+
+        # 3. Register callback for assistant response
+        if on_reply is not None:
+            with self._remote_cb_lock:
+                self._remote_cbs.append(on_reply)
+
+        # 4. Inject client turn
+        async def _inject():
+            try:
+                await self.session.send_client_content(
+                    turns={"role": "user", "parts": [{"text": text}]},
+                    turn_complete=True,
+                )
+            except Exception as e:
+                print(f"[{origin}] Error injecting client content: {e}")
+                if on_reply is not None:
+                    with self._remote_cb_lock:
+                        if on_reply in self._remote_cbs:
+                            self._remote_cbs.remove(on_reply)
+                    try:
+                        on_reply(f"Error injecting command: {e}")
+                    except Exception:
+                        pass
+
+        asyncio.run_coroutine_threadsafe(_inject(), loop)
+        self.ui.write_log(f"[{origin}]: {text}")
+        return True
+
     def _tail_active(self) -> bool:
         """True while the speakers may still be finishing our last sentence."""
         return time.monotonic() < self._tail_until
@@ -1578,6 +1631,7 @@ class JarvisLive:
         print(f"[JARVIS] 🔧 {name}  {args}")
         _t_tool = time.monotonic()
         self.ui.set_state("THINKING")
+        self._last_tool_executed = f"Executed {name}"
 
 
         if name == "save_memory":
@@ -2063,6 +2117,16 @@ class JarvisLive:
                                         "text": full_out,
                                         "ts": datetime.now().isoformat(),
                                     }))
+
+                            # Forward response to pending remote turn (e.g. Telegram)
+                            with self._remote_cb_lock:
+                                if self._remote_cbs:
+                                    cb = self._remote_cbs.pop(0)
+                                    reply_val = full_out or getattr(self, "_last_tool_executed", "") or "Done."
+                                    try:
+                                        cb(reply_val)
+                                    except Exception as e:
+                                        print(f"[RemoteCallback] Callback error: {e}")
                             out_buf = []
 
                             if self._vision_close_pending:

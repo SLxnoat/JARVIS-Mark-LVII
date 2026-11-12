@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
         )
 
         self.on_text_command   = None
+        self.dispatch_remote_command = None
         self.on_remote_clicked = None   # callable: () -> (url, key) | None
         self.on_interrupt      = None   # callable: () -> None — stop JARVIS mid-speech
         self.on_voice_change   = None   # callable: () -> None — rebuild session with new voice
@@ -2500,24 +2501,29 @@ class MainWindow(QMainWindow):
 
     def _refresh_hud_btn(self):
         from memory.config_manager import get_hud_style
-        face = get_hud_style() == "face"
-        # Neither state is "off", so both read as active — this is a choice
-        # between two things, not a switch with a disabled side.
-        self._hud_btn.setText("🧑  HUD: ANIMATED FACE" if face
-                              else "◉  HUD: REACTOR CORE")
+        style = get_hud_style()
+        # No state is "off": this is a choice between three looks.
+        text, tip = {
+            "face": ("🧑  HUD: HOLOGRAM FACE",
+                     "A dotted point-cloud hologram head that speaks your words and "
+                     "shows what JARVIS is doing. Tap for the solid head."),
+            "face_solid": ("🗿  HUD: SOLID FACE",
+                           "The lit solid head. Tap to switch to the reactor core."),
+            "core": ("◉  HUD: REACTOR CORE",
+                     "A 3-D reactor core that turns with the state and moves with "
+                     "your voice. Tap to switch to the hologram face."),
+        }.get(style, ("🧑  HUD: HOLOGRAM FACE", ""))
+        self._hud_btn.setText(text)
         self._hud_btn.setStyleSheet(btn_css("choice"))
-        self._hud_btn.setToolTip(
-            "An animated head that speaks your words and shows what JARVIS is "
-            "doing. Tap to switch to the reactor core."
-            if face else
-            "A 3-D reactor core that turns with the state and moves with your "
-            "voice. Tap to switch to the animated head.")
+        self._hud_btn.setToolTip(tip)
 
     def _toggle_hud_style(self):
-        """Swap the centrepiece. Both objects stay in memory, so the change is
-        instant and switching back costs nothing."""
+        """Cycle hologram → solid head → reactor core. All objects stay in
+        memory, so the change is instant and switching back costs nothing."""
         from memory.config_manager import get_hud_style, save_hud_style
-        want = "core" if get_hud_style() == "face" else "face"
+        order = ("face", "face_solid", "core")
+        cur = get_hud_style()
+        want = order[(order.index(cur) + 1) % len(order)] if cur in order else "face"
         save_hud_style(want)
         try:
             self.hud.hud_style = want
@@ -2525,9 +2531,11 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         self._refresh_hud_btn()
-        self._log.append_log(
-            "SYS: HUD switched to the animated face." if want == "face"
-            else "SYS: HUD switched to the reactor core.")
+        self._log.append_log({
+            "face": "SYS: HUD switched to the hologram face.",
+            "face_solid": "SYS: HUD switched to the solid face.",
+            "core": "SYS: HUD switched to the reactor core.",
+        }[want])
 
     def _toggle_ptt(self):
         from memory.config_manager import (get_push_to_talk_enabled,

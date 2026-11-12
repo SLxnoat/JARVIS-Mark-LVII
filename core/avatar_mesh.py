@@ -349,3 +349,65 @@ def get_head_mesh() -> dict:
     if _CACHE is None:
         _CACHE = build_head()
     return _CACHE
+
+
+# ── point cloud ──────────────────────────────────────────────────────────────
+# The hologram look is a cloud of dots, not a surface. The dots are scattered
+# over the same triangles the solid head uses, ONCE, as barycentric coordinates
+# on a triangle — so posing the cloud is just re-interpolating the posed
+# vertices, and every bit of animation (jaw, brows, lips, sway) carries over to
+# the dots with no extra rig.
+POINT_COUNT = 8200
+
+_PC_CACHE: dict | None = None
+
+
+def build_point_cloud(n: int = POINT_COUNT, seed: int = 11) -> dict:
+    """Scatter `n` dots over the head. Denser around the eyes, brows, nose and
+    lips (where the reference glows brightest), sparse over the back of the
+    skull the camera hardly ever sees."""
+    m = get_head_mesh()
+    v, f = m["verts"], m["faces"]
+    a, b, c = v[f[:, 0]], v[f[:, 1]], v[f[:, 2]]
+    area = 0.5 * np.linalg.norm(np.cross(b - a, c - a), axis=1)
+
+    lm = m["landmarks"]
+    feat_pts = v[np.concatenate([lm[k] for k in lm])]
+    d = np.sqrt(((v[:, None, :] - feat_pts[None, :, :]) ** 2).sum(2)).min(1)
+    feat = np.exp(-(d / 0.075) ** 2)
+    tri_feat = feat[f].mean(1)
+
+    centroid = (a + b + c) / 3.0
+    w = area * (1.0 + 2.4 * tri_feat)
+    w *= np.where(centroid[:, 2] > -0.05, 1.0, 0.16)       # spend dots on the front
+    # Nose ridge and chin read as the 3-D cue in the reference: lift them a little.
+    w *= 1.0 + 0.8 * np.exp(-(centroid[:, 0] / 0.09) ** 2) * (centroid[:, 2] > 0.3)
+    w /= w.sum()
+
+    rng = np.random.default_rng(seed)
+    tri = rng.choice(len(f), size=n, p=w)
+    r1, r2 = rng.random(n), rng.random(n)
+    su = np.sqrt(r1)
+    wa, wb, wc = 1.0 - su, su * (1.0 - r2), su * r2
+
+    fade = (m["fade"][f[tri, 0]] * wa + m["fade"][f[tri, 1]] * wb
+            + m["fade"][f[tri, 2]] * wc)
+    return {
+        "ia": np.ascontiguousarray(f[tri, 0], dtype=np.int32),
+        "ib": np.ascontiguousarray(f[tri, 1], dtype=np.int32),
+        "ic": np.ascontiguousarray(f[tri, 2], dtype=np.int32),
+        "wa": np.ascontiguousarray(wa[:, None], dtype=np.float32),
+        "wb": np.ascontiguousarray(wb[:, None], dtype=np.float32),
+        "wc": np.ascontiguousarray(wc[:, None], dtype=np.float32),
+        "fade": np.ascontiguousarray(fade, dtype=np.float32),
+        "neck": np.ascontiguousarray(m["face_group"][tri] < 0.5),
+        "seed": np.ascontiguousarray(rng.random(n), dtype=np.float32),
+    }
+
+
+def get_point_cloud() -> dict:
+    """Process-wide cached point table."""
+    global _PC_CACHE
+    if _PC_CACHE is None:
+        _PC_CACHE = build_point_cloud()
+    return _PC_CACHE

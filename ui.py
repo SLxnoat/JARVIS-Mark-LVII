@@ -23,6 +23,10 @@ import psutil
 # Before any Qt import: Qt's video backend prints signed stream URLs otherwise.
 os.environ.setdefault("QT_LOGGING_RULES", "qt.multimedia.*=false")
 
+# Avoid libqgtk3 GSettings schema crash on modern GNOME/Wayland
+if sys.platform.startswith("linux") and os.environ.get("XDG_SESSION_TYPE") == "wayland":
+    os.environ.setdefault("QT_QPA_PLATFORMTHEME", "generic")
+
 from PyQt6.QtWidgets import QApplication
 
 from gui import hud as _gui_hud
@@ -126,6 +130,14 @@ class JarvisUI:
     @on_text_command.setter
     def on_text_command(self, cb):
         self._win.on_text_command = cb
+
+    @property
+    def dispatch_remote_command(self):
+        return getattr(self._win, "dispatch_remote_command", None)
+
+    @dispatch_remote_command.setter
+    def dispatch_remote_command(self, cb):
+        self._win.dispatch_remote_command = cb
 
     @property
     def on_remote_clicked(self):

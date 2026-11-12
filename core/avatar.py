@@ -32,7 +32,9 @@ import numpy as np
 from PyQt6.QtCore import QLineF, QPointF, QRectF, Qt
 from PyQt6.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF, QRadialGradient
 
-from core.avatar_mesh import JAW_MAX, JAW_PIVOT, get_head_mesh
+from core import avatar_holo as _holo
+from core.avatar_holo import draw_dots
+from core.avatar_mesh import JAW_MAX, JAW_PIVOT, get_head_mesh, get_point_cloud
 
 # Perspective camera distance in head-half-heights. Large enough that the nose
 # does not balloon, small enough to keep a sense of depth.
@@ -124,6 +126,11 @@ class HoloAvatar:
     # see-through glass wireframe. Flip here, or per instance.
     shaded = True
 
+    # Which head to draw: "points" is the dotted point-cloud hologram (the
+    # default); "solid" is the lit, shaded head the avatar shipped with. Both
+    # are posed by the same rig, so lip-sync and expression are identical.
+    mode = "points"
+
     def __init__(self) -> None:
         mesh = get_head_mesh()
         self._v0 = mesh["verts"]
@@ -147,7 +154,12 @@ class HoloAvatar:
 
         # Crown (+1.0) down to the bottom of the neck, in head-half-heights.
         # Callers size the head to the room they have with this.
-        self.SPAN = mesh["span"][0] - mesh["span"][1]
+        self._span_solid = mesh["span"][0] - mesh["span"][1]
+
+        # Point cloud and the furniture around it. Built once, shared.
+        self._pc = get_point_cloud()
+        self._fx = _holo.HoloFx()
+        self._wire_gain = 1.0
 
         self._lut_cache: list = []
         self._lut_key = None
@@ -202,6 +214,21 @@ class HoloAvatar:
         self._v_wide = 0.0
         self._wide = 0.0           # smoothed lip spread, -1 round .. +1 spread
         self._v_peak = 0.18        # running estimate of this voice's loud level
+
+    # Vertical extent the caller must leave, in head-half-heights: above the
+    # crown (TOP) and below it (BOT). The point-cloud mode needs room for the
+    # projection ring and the brackets; the solid head only needs its neck.
+    @property
+    def TOP(self) -> float:
+        return _holo.TOP if self.mode == "points" else 1.0
+
+    @property
+    def BOT(self) -> float:
+        return _holo.BOT if self.mode == "points" else self._span_solid - 1.0
+
+    @property
+    def SPAN(self) -> float:
+        return self.TOP + self.BOT
 
     # ── animation ───────────────────────────────────────────────────────────
 
@@ -399,6 +426,9 @@ class HoloAvatar:
         self._glow += ((0.0 if muted else amp) - self._glow) * (
             0.35 if (0.0 if muted else amp) > self._glow else 0.10)
 
+        self._fx.step(dt, amp, live, muted,
+                      st in ("SLEEPING", "STANDBY", "OFFLINE"))
+
         self._scan += dt * (0.55 + 1.5 * self._glow)
         if self._scan > 1.35:
             self._scan = -1.75
@@ -478,7 +508,8 @@ class HoloAvatar:
         return self._lut_cache
 
     def paint(self, p: QPainter, cx: float, cy: float, r: float,
-              primary: QColor, accent: QColor, bg: QColor | None = None) -> None:
+              primary: QColor, accent: QColor, bg: QColor | None = None,
+              half_w: float | None = None) -> None:
         """Draw the avatar with its head centre at (cx, cy).
 
         `r` is the head's half-height in pixels — the caller owns the layout, so
@@ -488,6 +519,11 @@ class HoloAvatar:
             bg = QColor(0, 0, 0)
         amp = self._glow
         verts, norms = self._pose()
+
+        if self.mode == "points":
+            self._paint_hologram(p, cx, cy, r, half_w if half_w else r * 2.6,
+                                 verts, norms, primary, accent, bg, amp)
+            return
 
         # ── aura ────────────────────────────────────────────────────────────
         ar = r * 1.95
@@ -713,3 +749,183 @@ class HoloAvatar:
         p.drawPolygon(inner)                       # lip edge
         p.setPen(QPen(_c(primary, 110 * face), 1.1))
         p.drawPolygon(self._ring(xs, ys, lm["lips_out"]))
+
+    # ── point-cloud hologram ────────────────────────────────────────────────
+
+    def _paint_hologram(self, p: QPainter, cx: float, cy: float, r: float,
+                        half_w: float, verts, norms, primary: QColor,
+                        accent: QColor, bg: QColor, amp: float) -> None:
+        """The dotted head: dots, thin data links and glow. No filled facets.
+
+        Dot size follows 1/w like a vertex shader's gl_PointSize would, and every
+        dot is drawn additively at low alpha — so the head stays largely
+        see-through and the starfield and grid read through it.
+        """
+        # soft aura only; the dots carry the form
+        ar = r * 1.8
+        grad = QRadialGradient(cx, cy, ar)
+        grad.setColorAt(0.0, _c(primary, 10 + 26 * amp))
+        grad.setColorAt(0.5, _c(primary, 5 + 12 * amp))
+        grad.setColorAt(1.0, _c(primary, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(grad))
+        p.drawEllipse(QRectF(cx - ar, cy - ar, ar * 2, ar * 2))
+
+        self._fx.paint_back(p, cx, cy, r, half_w, primary, accent, amp)
+
+        p.save()
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Plus)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        w = _CAM_D - verts[:, 2]
+        np.maximum(w, 0.35, out=w)
+        k = (_CAM_D / w) * r
+        xs = cx + verts[:, 0] * k
+        ys = cy - verts[:, 1] * k
+
+        self._paint_links(p, xs, ys, norms, primary, amp)
+        self._paint_cloud(p, cx, cy, r, verts, norms, primary, amp)
+        self._paint_dot_features(p, xs, ys, r, primary, accent, amp)
+        p.restore()
+
+        self._fx.paint_front(p, cx, cy, r, half_w, primary, accent, amp)
+
+    def _paint_cloud(self, p: QPainter, cx: float, cy: float, r: float,
+                     verts, norms, primary: QColor, amp: float) -> None:
+        pc = self._pc
+        ia, ib, ic = pc["ia"], pc["ib"], pc["ic"]
+        wa, wb, wc = pc["wa"], pc["wb"], pc["wc"]
+        pts = verts[ia] * wa + verts[ib] * wb + verts[ic] * wc
+        nrm = norms[ia] * wa + norms[ib] * wb + norms[ic] * wc
+
+        w = _CAM_D - pts[:, 2]
+        np.maximum(w, 0.35, out=w)
+        near = _CAM_D / w                       # > 1 towards the viewer
+        xs = cx + pts[:, 0] * near * r
+        ys = cy - pts[:, 1] * near * r
+
+        nl = np.sqrt((nrm * nrm).sum(1)) + 1e-9
+        nz = nrm[:, 2] / nl
+        front = np.clip(nz, 0.0, 1.0)
+        rim = (1.0 - front) ** 2.2
+
+        seed = pc["seed"]
+        twinkle = 0.88 + 0.12 * np.sin(self._t * 2.6 + seed * 40.0)
+
+        # Brightness: face-on dots crisp, the silhouette edge glows, dots on the
+        # far side are a faint ghost layer (only a third of them) for volume.
+        alpha = np.where(nz >= 0.0,
+                         0.17 + 0.34 * front ** 0.8 + 0.30 * rim,
+                         np.where(seed < 0.33, 0.085 * (1.0 + 2.0 * np.clip(-nz, 0, 1)), 0.0))
+        alpha *= pc["fade"] * twinkle * (0.92 + 0.30 * amp)
+        # energy sweep, and a faint fixed scanline texture
+        alpha += 0.42 * np.exp(-((pts[:, 1] - self._scan) / 0.10) ** 2) * (nz >= 0)
+        alpha *= 0.86 + 0.14 * np.cos(ys * (2.0 * math.pi / 4.0))
+        # Neck: rows, fading out downward with `fade`.
+        neck = pc["neck"]
+        band = 0.35 + 0.65 * (0.5 + 0.5 * np.cos(pts[:, 1] * 150.0))
+        alpha = np.where(neck, alpha * band, alpha)
+        # Depth: nearer dots denser and brighter.
+        alpha *= np.clip(0.55 + 0.9 * (near - 0.95) * 3.0, 0.45, 1.25)
+
+        size = np.maximum(0.9, r * 0.0062 * near ** 2.4 * (0.85 + 0.3 * seed))
+        draw_dots(p, xs, ys, size, np.clip(alpha, 0.0, 1.0), primary,
+                  levels=6, size_bins=3, glow=0.16)
+
+    def _paint_links(self, p: QPainter, xs, ys, norms, primary: QColor,
+                     amp: float) -> None:
+        """Fine data connectors: a sparse subset of mesh edges, front side only."""
+        nz = norms[:, 2]
+        va = np.clip(nz, 0.0, 1.0) ** 0.7 * self._fade
+        va += 0.35 * (np.clip(nz, 0, 1) > 0) * np.exp(-((self._v[:, 1] - self._scan) / 0.12) ** 2)
+        ea = 0.5 * (va[self._e0] + va[self._e1])
+        keep = np.flatnonzero(ea > 0.12)
+        if keep.size == 0:
+            return
+        e0, e1 = self._e0[keep], self._e1[keep]
+        lvl = np.minimum((ea[keep] * 3.0).astype(np.int32), 2)
+        quad = np.stack([xs[e0], ys[e0], xs[e1], ys[e1]], axis=1)
+        pen = QPen()
+        pen.setWidthF(1.0)
+        for b in range(3):
+            sel = np.flatnonzero(lvl == b)
+            if sel.size == 0:
+                continue
+            pen.setColor(_c(primary, 22 + 20 * b + 22 * amp))
+            p.setPen(pen)
+            p.drawLines([QLineF(q[0], q[1], q[2], q[3]) for q in quad[sel].tolist()])
+
+    def _paint_dot_features(self, p: QPainter, xs, ys, r: float,
+                            primary: QColor, accent: QColor, amp: float) -> None:
+        """Eyes, brows and lips, made of dots only."""
+        face = max(0.0, math.cos(self._yaw) * math.cos(self._pitch)) ** 2
+        if face < 0.02:
+            return
+        lm = self._lm
+        vis = 1.0 - self._blink
+        unit = max(1.0, r * 0.0075)
+
+        # ── eyes: dotted lid, then dual dotted iris / pupil apertures ───────
+        for key in ("eye_l", "eye_r"):
+            idx = lm[key]
+            ex, ey = xs[idx], ys[idx]
+            mid_y = float(ey.mean())
+            sq = max(0.05, vis * (0.55 + 0.45 * self._lids))
+            ey = mid_y + (ey - mid_y) * sq
+            lx, ly = _holo.resample(ex, ey, 30, closed=True)
+            _holo.draw_dots(p, lx, ly, unit * 1.25, face * 0.9, primary,
+                            levels=3, size_bins=1, glow=0.5)
+            if vis <= 0.30:
+                continue
+            ccx, ccy = float(ex.mean()), mid_y
+            bw = float(ex.max() - ex.min())
+            bh = float(ey.max() - ey.min())
+            rad = max(bw * 0.24, bh * 0.55)
+            gx = ccx + self._gaze[0] * bw * 0.15
+            gy = ccy + self._gaze[1] * max(bh, bw * 0.2) * 0.45
+
+            halo = QRadialGradient(gx, gy, rad * 3.2)
+            halo.setColorAt(0.0, _c(accent, (60 + 70 * amp) * face * vis))
+            halo.setColorAt(1.0, _c(accent, 0))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(halo))
+            p.drawEllipse(QPointF(gx, gy), rad * 3.2, rad * 3.2)
+
+            rings = ((1.00, 24, 1.15), (0.68, 16, 1.0), (0.36, 8, 1.15))
+            ax_, ay_ = [], []
+            for rr, n, _s in rings:
+                a = np.linspace(0, 2 * math.pi, n, endpoint=False) + self._fx.phase * 0.4
+                ax_.append(gx + np.cos(a) * rad * rr)
+                ay_.append(gy + np.sin(a) * rad * rr * max(0.35, vis))
+            ax_, ay_ = np.concatenate(ax_), np.concatenate(ay_)
+            _holo.draw_dots(p, ax_, ay_, unit * 1.45, face * vis * 0.95, accent,
+                            levels=3, size_bins=1, glow=0.55)
+            _holo.draw_dots(p, [gx], [gy], unit * 2.6, face * vis, accent,
+                            levels=2, size_bins=1, glow=0.7)
+
+        # ── brows ───────────────────────────────────────────────────────────
+        for key in ("brow_l", "brow_r"):
+            idx = lm[key]
+            bx, by = _holo.resample(xs[idx], ys[idx], 18)
+            _holo.draw_dots(p, bx, by, unit * 1.2, face * 0.80, primary,
+                            levels=3, size_bins=1, glow=0.3)
+
+        # ── lips; an open mouth is a sparse dot field, never a filled hole ──
+        ox, oy = _holo.resample(xs[lm["lips_out"]], ys[lm["lips_out"]], 40, closed=True)
+        _holo.draw_dots(p, ox, oy, unit * 1.15, face * 0.70, primary,
+                        levels=3, size_bins=1, glow=0.3)
+        lips_in = lm["lips_in"]
+        ix, iy = _holo.resample(xs[lips_in], ys[lips_in], 32, closed=True)
+        _holo.draw_dots(p, ix, iy, unit * 1.3, face * (0.80 + 0.2 * self._mouth),
+                        accent if self._mouth > 0.2 else primary,
+                        levels=3, size_bins=1, glow=0.45)
+        if self._mouth > 0.05:
+            lo_x, lo_y = _holo.resample(xs[lips_in[:10]], ys[lips_in[:10]], 14)
+            up_x, up_y = _holo.resample(xs[self._lip_up[::-1]], ys[self._lip_up[::-1]], 14)
+            fx, fy = [], []
+            for f in (0.25, 0.5, 0.75):
+                fx.append(lo_x + (up_x - lo_x) * f)
+                fy.append(lo_y + (up_y - lo_y) * f)
+            _holo.draw_dots(p, np.concatenate(fx), np.concatenate(fy), unit * 1.0,
+                            face * min(1.0, self._mouth * 1.4) * 0.65, accent,
+                            levels=3, size_bins=1, glow=0.2)

@@ -40,6 +40,7 @@ from gui.theme import (
 )
 
 from gui.style import blend, chamfer, px_font, with_alpha
+from gui.ambient import AmbientLighting, AIWaveformVisualizer, CognitiveTelemetry
 
 try:
     from gui.reactor import Reactor3D
@@ -48,7 +49,7 @@ except Exception:      # pragma: no cover — the classic core still draws
 
 
 # Which hud_style values draw the avatar (as opposed to the reactor core).
-_FACE_STYLES = ("face", "face_solid")
+_FACE_STYLES = ("face", "face_solid", "face_holo", "face_hologram", "face_matrix", "matrix", "hologram")
 
 
 class HudCanvas(QWidget):
@@ -122,6 +123,11 @@ class HudCanvas(QWidget):
         self._vis_i = None        # first schedule frame not yet handed to the mouth
         self._base_scale = 1.0    # slow "breathing" target; amp is added per-frame
         self._base_halo  = 55.0
+
+        # Ambient lighting, dynamic AI audio visualizer & telemetry
+        self._ambient = AmbientLighting()
+        self._visualizer = AIWaveformVisualizer()
+        self._telemetry = CognitiveTelemetry()
 
         self._tmr = QTimer(self)
         self._tmr.timeout.connect(self._step)
@@ -376,6 +382,11 @@ class HudCanvas(QWidget):
             self._scale += (self._tgt_scale - self._scale) * sp
             self._halo  += (self._tgt_halo  - self._halo)  * sp
 
+        # Step ambient lighting, AI spectrum physics, and telemetry
+        self._ambient.step(dt, self.state, self.speaking, self.muted, amp)
+        self._visualizer.step(dt, self.state, self.speaking, self.muted, amp)
+        self._telemetry.step(dt, self.state, self.speaking)
+
         self._blink_tick += 1
         if self._blink_tick >= 38:
             self._blink = not self._blink
@@ -606,6 +617,10 @@ class HudCanvas(QWidget):
             self._grid_key = key
         p.drawPixmap(0, 0, self._grid_cache)
 
+        # ── Dynamic Ambient Lighting: Floor Horizon Spill ─────────────────────
+        self._ambient.paint_horizon_glow(p, float(W), float(H), H * 0.70)
+        amb_col = self._ambient.current_color
+
         cx, cy = W / 2, H / 2
         fw = min(W, H)
         # The state line and the waveform take the bottom of the canvas; the
@@ -615,13 +630,24 @@ class HudCanvas(QWidget):
         band_h = max(60.0, sy - 14.0 - band_t)
 
         if self._avatar is not None and self.hud_style in _FACE_STYLES:
-            # "face" is the dotted hologram, "face_solid" the lit solid head.
-            self._avatar.mode = "solid" if self.hud_style == "face_solid" else "points"
+            # "face_solid" draws solid head, "face_matrix"/"points" draws points,
+            # and "face"/"face_holo"/"hologram" activates the refactored hologram head.
+            if self.hud_style == "face_solid":
+                self._avatar.mode = "solid"
+            elif self.hud_style in ("face_matrix", "matrix", "points"):
+                self._avatar.mode = "points"
+            else:
+                self._avatar.mode = "hologram"
+
             av = self._avatar
-            # The head and everything that hangs off it (projection ring,
-            # brackets) must fit the band: size from TOP + BOT, not just the head.
+            # The head and everything that hangs off it must fit the band:
             r_head = min(fw * 0.355, band_h / (av.TOP + av.BOT + 0.08))
             head_cy = band_t + (band_h - (av.TOP + av.BOT) * r_head) / 2.0 + av.TOP * r_head
+
+            # Ambient aura & telemetry framing behind avatar
+            self._ambient.paint_aura(p, cx, head_cy, r_head)
+            self._telemetry.paint_arcs(p, cx, head_cy, r_head * 1.32, self.state, self.speaking, amb_col)
+
             if self.muted:
                 main = acc = qcol(C.MUTED_C)
             else:
@@ -646,10 +672,17 @@ class HudCanvas(QWidget):
             ext = Reactor3D.TOP + Reactor3D.BOTTOM
             r = min(W * 0.25, band_h / ext)
             core_cy = band_t + (band_h - ext * r) / 2.0 + Reactor3D.TOP * r
+            self._ambient.paint_aura(p, cx, core_cy, r)
+            self._telemetry.paint_arcs(p, cx, core_cy, r * 1.45, self.state, self.speaking, amb_col)
             self._paint_core(p, cx, core_cy, r, W, band_h)
         else:
             r = min(W * 0.46, band_h / 2.0)
+            self._ambient.paint_aura(p, cx, band_t + band_h / 2.0, r)
+            self._telemetry.paint_arcs(p, cx, band_t + band_h / 2.0, r * 1.45, self.state, self.speaking, amb_col)
             self._paint_core_classic(p, cx, band_t + band_h / 2.0, r, W, band_h)
+
+        # ── Ambient Edge Lighting along Frame ────────────────────────────────
+        self._ambient.paint_edge_illumination(p, float(W), float(H))
 
         # state line: spaced capitals between two fading rules that pulse
         if self.muted:
@@ -676,28 +709,10 @@ class HudCanvas(QWidget):
             p.setPen(QPen(QBrush(lg), 1))
             p.drawLine(QLineF(x0, sy + 11, x0 + sgn * rule, sy + 11))
 
-        # waveform — the real audio level (the mic while listening, the voice
-        # while speaking), mirrored below its baseline like a reflection
-        wy = sy + 50
-        N = 48
-        span = min(W * 0.60, 420.0)
-        bw = span / N
+        # ── Studio AI Audio Spectrum & Harmonic Visualizer ────────────────────
+        wy = sy + 50.0
         amp = self._amp_disp
-        mid = (N - 1) / 2.0
-        wx0 = cx - span / 2
-        for i in range(N):
-            if self.muted:
-                hgt, c = 1.5, qcol(C.MUTED_C)
-            else:
-                env = (1.0 - abs(i - mid) / mid) ** 0.7      # centre-weighted hump
-                shimmer = 0.55 + 0.45 * math.sin(self._tick * 0.18 + i * 0.7)
-                idle = 2.0 + 1.5 * math.sin(self._tick * 0.09 + i * 0.6)
-                hgt = max(1.5, min(24.0, idle + amp * 22.0 * env * shimmer))
-                c = (blend(col, 0.35 + 0.65 * env) if amp > 0.05
-                     else blend(C.PRI, 0.28 + 0.2 * env))
-            x = wx0 + i * bw
-            w = max(1.5, bw - 2.0)
-            p.fillRect(QRectF(x, wy - hgt, w, hgt), c)
-            p.fillRect(QRectF(x, wy + 1.5, w, hgt * 0.45), blend(c, 0.30))
+        self._visualizer.paint(p, cx, wy, W * 0.60, self.state, self.speaking,
+                               self.muted, amp, amb_col)
 
         p.end()   # end deterministically so the backing store never flushes an active painter

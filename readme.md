@@ -955,7 +955,29 @@ Mark LVII/
 │   │                         #   next launch. This is where anything that is NOT
 │   │                         #   about driving the computer lives; see actions/.
 │   ├── _template.py          # Copy this to write a new skill — one file, drop in, done
+│   ├── _whatsapp_core.py     # Shared WhatsApp cross-platform driver (helper, skipped by loader)
+│   ├── whatsapp_call.py      # Place and end WhatsApp voice / video calls
+│   ├── whatsapp_guard.py     # Answer, screen or auto-reply to incoming WhatsApp calls
 │   ├── telegram_bridge.py    # Remote Telegram companion & bot command center
+│   ├── telegram_remote.py    # Check Telegram pairing state and trigger pairing
+│   ├── chat_takeover.py      # Reads on-screen / clipboard chat and drafts contextual reply
+│   ├── screen_agent.py       # Visual UI inspection & step-by-step element interaction
+│   ├── gmail_control.py      # Read unread, search, draft, and send emails via Gmail
+│   ├── calendar_control.py   # Read upcoming schedule and create calendar appointments
+│   ├── obsidian_vault.py     # Read, search, create, and append notes in local Obsidian vault
+│   ├── document_review.py    # Review documents and show structured findings on HUD
+│   ├── excel_writer.py       # Create and append rows to Excel (.xlsx) / CSV spreadsheets
+│   ├── image_generator.py    # AI image generation with Pollinations & Imagen
+│   ├── upload_video.py       # Prepare and upload Desktop/Downloads videos to YouTube
+│   ├── printer_control.py    # 3D printer telemetry and control (OctoPrint / Moonraker)
+│   ├── home_assistant.py     # Control smart home lights, switches, and scenes via Home Assistant
+│   ├── shopping_list.py      # Persistent grocery and task checklist manager
+│   ├── pomodoro.py           # Pomodoro focus and break timer with interval tracking
+│   ├── water_reminder.py     # Daily hydration tracker and reminder status
+│   ├── quiz.py               # Spoken & interactive quizzes rendered via HUD
+│   ├── spaced_repetition.py  # Leitner flashcards spaced repetition study system
+│   ├── calorie_counter.py    # Food nutrition estimation via webcam or image
+│   ├── pushup_counter.py     # Pushup repetition tracking and workout logger
 │   ├── systemd_sentinel.py   # Linux systemd service manager, failed unit scanner & journalctl logs
 │   ├── git_workspace.py      # Git status, branch inspection, workspace repo scanner & diffs
 │   ├── open_rss_briefing.py  # Zero-cost RSS/Atom news aggregator (Hacker News, ArXiv AI, Linux)

@@ -166,6 +166,14 @@ def apply_ui_accent(accent_hex: str) -> bool:
         r, g, b = colorsys.hsv_to_rgb((h + dh) % 1.0, s, v)
         setattr(C, key, "#{:02x}{:02x}{:02x}".format(
             int(r * 255 + 0.5), int(g * 255 + 0.5), int(b * 255 + 0.5)))
+
+    try:
+        from gui.style import _BLEND_CACHE, _HEX_RGB_CACHE
+        _BLEND_CACHE.clear()
+        _HEX_RGB_CACHE.clear()
+    except Exception:
+        pass
+
     return True
 
 

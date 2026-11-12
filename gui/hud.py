@@ -472,23 +472,39 @@ class HudCanvas(QWidget):
         else:
             _blinked = False
 
-        # Repaint throttling — advancing the animation state above is cheap at
-        # 60 Hz, but the paint is heavy. Active (speaking, audio, thinking) runs
-        # at ~30 Hz, which is the frame rate animation has used for talking
-        # characters forever and is indistinguishable here; idle drops to ~20 Hz
-        # so a sleeping HUD stops pinning a CPU core. The visuals stay smooth
-        # either way because the animation state keeps stepping at 60 Hz.
-        self._paint_tick = (self._paint_tick + 1) % 6
-        active = (self.speaking or amp > 0.02
-                  or self.state in ("THINKING", "PROCESSING"))
-        if _blinked or (self._paint_tick % 2 == 0 if active
-                        else self._paint_tick % 3 == 0):
-            # Nothing is on screen when the window is hidden or minimised, so
-            # rendering the avatar into it is pure waste — and this app is meant
-            # to sit running all day. The animation state above keeps stepping,
-            # so it picks up mid-motion instead of snapping when you come back.
-            if self._on_screen():
-                self.update()
+        # ── Dynamic Level of Detail (LOD) Framerate Governor ─────────────────
+        # Active: ~60 Hz (16ms) during speaking, listening, thinking, or interaction
+        # Idle: ~24 Hz (42ms) during quiet background breathing (saving 60%+ CPU wakeups)
+        # Minimized / Occluded: 0 FPS (500ms sleep heartbeat, 0% CPU render overhead)
+        on_screen = self._on_screen()
+        if not on_screen:
+            if self._tmr.interval() != 500:
+                self._tmr.setInterval(500)
+            return
+
+        active = (
+            self.speaking
+            or amp > 0.02
+            or self.state in ("THINKING", "PROCESSING", "LISTENING")
+            or (hasattr(self, "_cursor_pos") and self._cursor_pos is not None)
+        )
+        desired_interval = 16 if active else 42
+        if self._tmr.interval() != desired_interval:
+            self._tmr.setInterval(desired_interval)
+
+        self.update()
+
+    def showEvent(self, e) -> None:
+        super().showEvent(e)
+        if hasattr(self, "_tmr"):
+            self._tmr.setInterval(16)
+            if not self._tmr.isActive():
+                self._tmr.start()
+
+    def hideEvent(self, e) -> None:
+        super().hideEvent(e)
+        if hasattr(self, "_tmr"):
+            self._tmr.setInterval(500)
 
     def _on_screen(self) -> bool:
         """True only when this canvas can actually be seen by the user."""

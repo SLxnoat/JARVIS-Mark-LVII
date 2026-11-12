@@ -74,14 +74,64 @@ def px_font(px: float, weight=QFont.Weight.Normal, mono: bool = False,
     return f
 
 
+_HEX_RGB_CACHE: dict[str, tuple[int, int, int]] = {}
+_BLEND_CACHE: dict[tuple[int, int, int, int, int, int, int], QColor] = {}
+
+
+def _parse_rgb(c) -> tuple[int, int, int]:
+    """Fast RGB tuple extraction bypassing repeated QColor instantiation."""
+    if isinstance(c, tuple) and len(c) == 3:
+        return c
+    if isinstance(c, QColor):
+        return (c.red(), c.green(), c.blue())
+    s = str(c).strip().lstrip("#")
+    cached = _HEX_RGB_CACHE.get(s)
+    if cached is not None:
+        return cached
+    if len(s) == 6:
+        try:
+            rgb = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+        except ValueError:
+            qc = QColor(c)
+            rgb = (qc.red(), qc.green(), qc.blue())
+    elif len(s) == 3:
+        try:
+            rgb = (int(s[0] * 2, 16), int(s[1] * 2, 16), int(s[2] * 2, 16))
+        except ValueError:
+            qc = QColor(c)
+            rgb = (qc.red(), qc.green(), qc.blue())
+    else:
+        qc = QColor(c)
+        rgb = (qc.red(), qc.green(), qc.blue())
+    _HEX_RGB_CACHE[s] = rgb
+    return rgb
+
+
+def blend_fast(col, a: float, base=None) -> QColor:
+    """High-performance pre-blended color LUT bypassing runtime QColor parsing."""
+    k_int = int(round(max(0.0, min(1.0, float(a))) * 255.0))
+    r1, g1, b1 = _parse_rgb(col)
+    r0, g0, b0 = _parse_rgb(base if base is not None else C.BG)
+    key = (r1, g1, b1, r0, g0, b0, k_int)
+    cached = _BLEND_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    inv_k = 255 - k_int
+    r = (r0 * inv_k + r1 * k_int) // 255
+    g = (g0 * inv_k + g1 * k_int) // 255
+    b = (b0 * inv_k + b1 * k_int) // 255
+    res = QColor(r, g, b)
+    if len(_BLEND_CACHE) > 4096:
+        _BLEND_CACHE.clear()
+    _BLEND_CACHE[key] = res
+    return res
+
+
 def blend(col, a: float, base=None) -> QColor:
     """`col` mixed onto the background (or `base`) by `a` — opaque, so it is
     drawn on the raster engine's fast path."""
-    col, bg = QColor(col), QColor(base if base is not None else C.BG)
-    k = max(0.0, min(1.0, float(a)))
-    return QColor(int(bg.red() + (col.red() - bg.red()) * k),
-                  int(bg.green() + (col.green() - bg.green()) * k),
-                  int(bg.blue() + (col.blue() - bg.blue()) * k))
+    return blend_fast(col, a, base)
 
 
 def with_alpha(col, a: float) -> QColor:

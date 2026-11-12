@@ -57,3 +57,5 @@ config/api_keys.json
 config/telegram_paired.json
 config/telegram_qr.png
 
+config/certs/jarvis.crt
+config/certs/jarvis.key

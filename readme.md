@@ -81,6 +81,11 @@ It's not just an assistant — it's an extension of your digital life.
 | ⚛️ 3-D Reactor Core | A depth-cued sphere with gyro rings, drawn in software at ~5 ms a frame — the classic face is still one setting away |
 | 🧑‍💻 8K Cybernetic Hologram Face | High-tech 8,000 particle point-cloud humanoid hologram rendered in software (QPainter + NumPy) with depth-scaled particles, dual glowing digital eyes, telemetry orbits, matrix circuit traces, and dynamic live UI theme color synchronization |
 | 🤖 Telegram Bot Remote Center | Full remote control from your phone via Telegram — direct main-session injection with all 19 OS tools, auto-wake, live execution replies, screen/camera capture, voice notes, multimodal photo vision, and autonomous task steering |
+| 🛡️ Systemd Sentinel | Linux systemd service inspection, failed unit scanning, and journalctl log triage |
+| 🐙 Git Workspace | Git repository status, branch tracking, commit history, diff summaries, and dirty workspace scanning |
+| 📡 Open RSS Briefing | Zero-cost, subscription-free RSS/Atom news aggregator for Hacker News, AI papers, and tech feeds |
+| 🎧 Bluetooth Governor | Manage paired Bluetooth peripherals, inspect battery levels, and toggle device connections |
+| ⚡ Network Speed & Diagnostics | Instant ICMP ping latency, packet loss analysis, and non-blocking bandwidth speed tests |
 | 🧑‍🎤 Holographic Avatar | An animated human head in the HUD — real facial geometry, lit and drawn in software, no GPU or extra packages |
 | 👄 Real Lip-Sync | ~50 mouth shapes a second from the audio's formants **and** the transcript — closures, spreads and rounds, not a volume meter |
 | 🌍 Language-Free Mouth | Articulation is derived by Unicode reduction, so Latin, Cyrillic and Greek scripts all work from one rule set — and scripts that hide pronunciation fall back cleanly |
@@ -289,6 +294,38 @@ A clean, standalone plugin transforming Telegram into a powerful remote companio
   * `/reports` & `/report <id>` — Browse and download full research reports as files.
 * **Executive Briefing & Keypad:** `/brief` for on-demand morning briefings and `/menu` for an interactive 1-tap quick button grid.
 * **Safety Confirmation Gate:** Destructive actions (shutdown, restart, WiFi toggle) trigger inline `[✅ Approve]` / `[❌ Deny]` keyboard confirmation before execution.
+
+### 🛠️ 5 New Zero-Cost Autonomous Plugins
+
+Five powerful, open-source, zero-cost plugins built with zero new dependencies (using only the existing Python standard library and `httpx`), adhering strictly to the Qt thread-safety contract and auto-discovered on startup:
+
+* **🛡️ Systemd Sentinel (`plugins/systemd_sentinel.py`):**
+  * Inspect Linux background services, check unit states, and view recent `journalctl` error logs.
+  * Rapidly scan for all system-wide failed services (`list_failed`) and trigger service restarts.
+  * Formats clean telemetry on the HUD dynamic content panel.
+  * *Voice prompts:* *"Jarvis, check if docker is running"*, *"Show me why nginx failed"*, *"Any system services down?"*.
+
+* **🐙 Git Workspace (`plugins/git_workspace.py`):**
+  * Check branch status, staged/unstaged changes, and untracked files across any local Git repository.
+  * Inspect recent commits, view diff summaries, or scan development workspaces for dirty repos with uncommitted work.
+  * *Voice prompts:* *"What branch am I on in this repo?"*, *"Show recent commits in my project"*, *"Scan my projects folder for uncommitted changes"*.
+
+* **📡 Open RSS Briefing (`plugins/open_rss_briefing.py`):**
+  * Zero-subscription, privacy-respecting RSS/Atom headline aggregator using standard library XML parsing and async `httpx`.
+  * Pre-configured feeds: Hacker News, ArXiv AI, Ars Technica, Phoronix, and Linux Weekly News (plus custom feeds).
+  * Returns concise voice digests while rendering full titled lists with direct URLs on the HUD.
+  * *Voice prompts:* *"Read me the top tech headlines"*, *"What's new on Hacker News?"*, *"Check ArXiv for AI news"*.
+
+* **🎧 Bluetooth Governor (`plugins/bluetooth_governor.py`):**
+  * Control and monitor Bluetooth devices via `bluetoothctl` with zero external binary requirements.
+  * List paired and connected peripherals (headphones, mice, keyboards), query battery percentages, and trigger connection/disconnection.
+  * *Voice prompts:* *"List my bluetooth devices"*, *"What is my headphone battery level?"*, *"Connect my bluetooth earbuds"*.
+
+* **⚡ Network Speed & Diagnostics (`plugins/network_speed.py`):**
+  * Zero-cost network performance diagnostics without third-party speedtest binaries or subscriptions.
+  * ICMP latency and packet loss ping tests against global DNS nodes (Cloudflare, Google, Quad9) or default gateway.
+  * Fast, non-blocking chunked streaming bandwidth download test via Cloudflare CDN edge servers.
+  * *Voice prompts:* *"Test my network speed"*, *"Jarvis, ping 1.1.1.1"*, *"Check network latency and packet loss"*.
 
 ### 🩹 Fixes
 
@@ -918,35 +955,12 @@ Mark LVII/
 │   │                         #   next launch. This is where anything that is NOT
 │   │                         #   about driving the computer lives; see actions/.
 │   ├── _template.py          # Copy this to write a new skill — one file, drop in, done
-│   │                         #   A file starting with _ is a shared driver, not a skill:
-│   │                         #   the loader skips it, and the skills beside it import it.
-│   ├── _whatsapp_core.py     # Shared WhatsApp driver — desktop app or Web, all three OSes
-│   ├── whatsapp_call.py      # Place and end WhatsApp voice / video calls
-│   ├── whatsapp_guard.py     # Answer, decline or auto-reply to INCOMING WhatsApp calls
-│   ├── telegram_remote.py    # Drive JARVIS from anywhere over Telegram
-│   ├── chat_takeover.py      # Reads an on-screen chat and replies in it
-│   ├── screen_agent.py       # Looks at the screen and works it, step by step
-│   ├── gmail_control.py      # Read, search, send and draft email
-│   ├── calendar_control.py   # Read and create calendar events
-│   ├── obsidian_vault.py     # Read and write notes in an Obsidian vault
-│   ├── document_review.py    # Review a document and report what should change
-│   ├── excel_writer.py       # Spreadsheet output
-│   ├── code_helper.py        # Write and run small programs
-│   ├── dev_agent.py          # Multi-file project work
-│   ├── image_generator.py    # Generate images
-│   ├── upload_video.py       # Upload the video on your Desktop to YouTube
-│   ├── youtube_video.py      # Search, summarise and fetch transcripts
-│   ├── printer_control.py    # 3D printers, over MQTT
-│   ├── home_assistant.py     # Smart-home devices
-│   ├── game_updater.py       # Update or install games through their launcher
-│   ├── flight_finder.py      # Flight search
-│   ├── shopping_list.py      # Shopping list
-│   ├── pomodoro.py           # Pomodoro timer
-│   ├── water_reminder.py     # Hydration reminders with intake tracking
-│   ├── quiz.py               # Spoken quizzes
-│   ├── spaced_repetition.py  # Flashcard review
-│   ├── calorie_counter.py    # Food through the webcam
-│   └── pushup_counter.py     # Counts pushups through the webcam
+│   ├── telegram_bridge.py    # Remote Telegram companion & bot command center
+│   ├── systemd_sentinel.py   # Linux systemd service manager, failed unit scanner & journalctl logs
+│   ├── git_workspace.py      # Git status, branch inspection, workspace repo scanner & diffs
+│   ├── open_rss_briefing.py  # Zero-cost RSS/Atom news aggregator (Hacker News, ArXiv AI, Linux)
+│   ├── bluetooth_governor.py # Bluetooth device manager, battery checker & connection switch
+│   └── network_speed.py      # Non-blocking bandwidth test, ICMP ping latency & packet loss
 ├── actions/                  # Bundled skills — each self-describes via a TOOL dict + handler
 │                             #   Everything here drives the COMPUTER, which is what decides
 │                             #   whether a new skill belongs in this folder at all.

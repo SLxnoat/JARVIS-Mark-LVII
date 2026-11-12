@@ -43,6 +43,7 @@ from gui.theme import (
 
 from gui.style import blend, chamfer, px_font, with_alpha
 from gui.ambient import AmbientLighting, AIWaveformVisualizer, CognitiveTelemetry
+from gui.eq_ribbon import ConcentricAudioEqualizer
 from gui.ar_engine import (
     Camera3D,
     generate_orbit_ring,
@@ -137,6 +138,7 @@ class HudCanvas(QWidget):
         self._ambient = AmbientLighting()
         self._visualizer = AIWaveformVisualizer()
         self._telemetry = CognitiveTelemetry()
+        self._eq_ribbon = ConcentricAudioEqualizer()
 
         # ── 3D AR Holographic Spatial Engine & Depth Layers ──────────────────
         self.setMouseTracking(True)
@@ -483,6 +485,7 @@ class HudCanvas(QWidget):
         self._ambient.step(dt, self.state, self.speaking, self.muted, amp)
         self._visualizer.step(dt, self.state, self.speaking, self.muted, amp)
         self._telemetry.step(dt, self.state, self.speaking)
+        self._eq_ribbon.step(dt, self.state, self.speaking, self.muted, amp)
 
         # Step 3D drifting space dust particles (Layer 0)
         if hasattr(self, "_dust_particles") and self._dust_particles is not None:
@@ -971,6 +974,7 @@ class HudCanvas(QWidget):
             # Ambient aura & telemetry framing behind avatar
             self._ambient.paint_aura(p, cx_eff, cy_eff, r_head_eff)
             self._telemetry.paint_arcs(p, cx_eff, cy_eff, r_head_eff * 1.32, self.state, self.speaking, amb_col)
+            self._eq_ribbon.paint(p, cx_eff, cy_eff, r_head_eff * 1.18, self.speaking, self.state, self.muted)
             self._paint_layer1_spatial_gimbals(p, cx_eff, cy_eff, r_head_eff)
 
             if self.muted:
@@ -1004,6 +1008,7 @@ class HudCanvas(QWidget):
             r_eff = r * scale_mult
             self._ambient.paint_aura(p, cx_eff, cy_eff, r_eff)
             self._telemetry.paint_arcs(p, cx_eff, cy_eff, r_eff * 1.45, self.state, self.speaking, amb_col)
+            self._eq_ribbon.paint(p, cx_eff, cy_eff, r_eff * 1.25, self.speaking, self.state, self.muted)
             self._paint_core(p, cx_eff, cy_eff, r_eff, W, band_h)
         else:
             r = min(W * 0.46, band_h / 2.0)

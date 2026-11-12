@@ -168,6 +168,8 @@ def _worker(action: str, player):
             try:
                 player.show_content("TACTICAL SPACE WEATHER RADAR", card)
                 player.write_log(f"☀️ [SpaceWeather] Solar class: {flare['flare_class']} | Kp-index: {geomag['kp']} ({geomag['status']}).")
+                if hasattr(player, "show_ar_celestial_orbit"):
+                    player.show_ar_celestial_orbit()
             except Exception:
                 pass
     except Exception as e:

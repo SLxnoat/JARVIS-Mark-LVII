@@ -124,6 +124,10 @@ class MainWindow(QMainWindow):
     _browser_focus_sig  = pyqtSignal(bool)             # (focused) — toggle center stage focus
     _neuro_learn_sig    = pyqtSignal(str, str, float)  # (rule_id, trigger, confidence) — dopaminergic spark
     _neuro_show_sig     = pyqtSignal()                 # render/toggle AR neuro-cortex constellation
+    _defense_alert_sig  = pyqtSignal(str, str)         # (threat_type, details) — polar radar threat ring
+    _defense_show_sig   = pyqtSignal()                 # render/toggle AR defense radar
+    _celestial_show_sig = pyqtSignal()                 # render/toggle AR celestial ephemeris & ISS orbit
+    _mission_control_show_sig = pyqtSignal()           # render/toggle AR mission control agent capsules
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -433,6 +437,14 @@ class MainWindow(QMainWindow):
         self._neuro_panel = None
         self._neuro_learn_sig.connect(self._on_neuro_learn)
         self._neuro_show_sig.connect(self._on_neuro_show)
+
+        self._defense_panel = None
+        self._celestial_panel = None
+        self._mission_control_panel = None
+        self._defense_alert_sig.connect(self._on_defense_alert)
+        self._defense_show_sig.connect(self._on_defense_show)
+        self._celestial_show_sig.connect(self._on_celestial_show)
+        self._mission_control_show_sig.connect(self._on_mission_control_show)
 
         # AR Browser Focus Shortcut (Ctrl+B)
         from PyQt6.QtGui import QKeySequence, QShortcut
@@ -765,6 +777,120 @@ class MainWindow(QMainWindow):
         if hasattr(self, "hud"):
             self.hud.unregister_holo_pane("neuro")
             self.hud.update()
+
+    def _ensure_defense_panel(self):
+        if self._defense_panel is None:
+            from gui.defense_panel import DefensePanel
+            self._defense_panel = DefensePanel(self)
+            self._defense_panel.closed.connect(self._on_defense_close)
+        return self._defense_panel
+
+    def _on_defense_alert(self, threat_type: str, details: str) -> None:
+        """Triggers pulsating crimson threat rings across the polar defense radar."""
+        panel = self._ensure_defense_panel()
+        panel.set_threat(threat_type, details)
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="defense",
+                title=f"ALERT: {threat_type.upper()}",
+                center=(-175.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_defense_show(self) -> None:
+        """Projects the Polar Defense Radar onto HUD Layer 2."""
+        panel = self._ensure_defense_panel()
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="defense",
+                title="Tactical Defense Radar",
+                center=(-175.0, 35.0, -35.0),
+                width=240.0,
+                height=150.0,
+                yaw=18.0,
+                pitch=6.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_defense_close(self) -> None:
+        """Closes the AR Defense Radar holo surface."""
+        if hasattr(self, "hud"):
+            self.hud.unregister_holo_pane("defense")
+            self.hud.update()
+
+    def _ensure_celestial_panel(self):
+        if self._celestial_panel is None:
+            from gui.celestial_orbit import CelestialOrbitWidget
+            self._celestial_panel = CelestialOrbitWidget(self)
+            self._celestial_panel.closed.connect(self._on_celestial_close)
+        return self._celestial_panel
+
+    def _on_celestial_show(self) -> None:
+        """Projects Celestial Ephemeris & 3D ISS orbit onto HUD Layer 2."""
+        panel = self._ensure_celestial_panel()
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="celestial",
+                title="Celestial Orbit // ISS",
+                center=(0.0, -110.0, -40.0),
+                width=260.0,
+                height=160.0,
+                yaw=0.0,
+                pitch=18.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_celestial_close(self) -> None:
+        """Closes the AR Celestial Ephemeris holo surface."""
+        if hasattr(self, "hud"):
+            self.hud.unregister_holo_pane("celestial")
+            self.hud.update()
+
+    def _ensure_mission_control_panel(self):
+        if self._mission_control_panel is None:
+            from gui.task_capsules import MissionControlDeck
+            self._mission_control_panel = MissionControlDeck(self)
+            self._mission_control_panel.closed.connect(self._on_mission_control_close)
+            self._mission_control_panel.report_opened.connect(self._on_mission_report)
+        return self._mission_control_panel
+
+    def _on_mission_control_show(self) -> None:
+        """Projects Mission Control Task Capsules onto HUD Layer 2."""
+        panel = self._ensure_mission_control_panel()
+        panel.refresh_tasks()
+        ar_pix = panel.render_ar_pixmap(480, 300)
+        if hasattr(self, "hud"):
+            self.hud.register_holo_pane(
+                pane_id="mission_control",
+                title="Mission Control // Tasks",
+                center=(175.0, -110.0, -40.0),
+                width=260.0,
+                height=160.0,
+                yaw=-18.0,
+                pitch=12.0,
+                pixmap=ar_pix,
+            )
+            self.hud.update()
+
+    def _on_mission_control_close(self) -> None:
+        """Closes the AR Mission Control holo surface."""
+        if hasattr(self, "hud"):
+            self.hud.unregister_holo_pane("mission_control")
+            self.hud.update()
+
+    def _on_mission_report(self, title: str, markdown: str) -> None:
+        """Displays agent markdown report in content panel."""
+        self._show_content(title, markdown)
 
     def _fit_video(self, *_a) -> None:
         """Size whatever is on the surface to the panel, keeping its shape."""

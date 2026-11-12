@@ -137,6 +137,8 @@ def _worker(action: str, lat: float, lon: float, player):
                 player.show_content("TACTICAL ORBITAL RADAR", card)
                 dist = _haversine_distance_km(lat, lon, iss["lat"], iss["lon"])
                 player.write_log(f"🛰️ [OrbitalRadar] ISS acquired at ({iss['lat']}°, {iss['lon']}°). Distance: {dist} km.")
+                if hasattr(player, "show_ar_celestial_orbit"):
+                    player.show_ar_celestial_orbit()
             except Exception:
                 pass
     except Exception as e:

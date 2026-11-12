@@ -191,6 +191,10 @@ def _worker(action: str, player):
                 player.show_content("TACTICAL FIREWALL WARDEN", card)
                 pub_count = len([s for s in sockets if s.get("public")])
                 player.write_log(f"🛡️ [FirewallWarden] {fw['engine']} policy: {fw['default_input']}. {pub_count} public socket(s).")
+                if hasattr(player, "show_ar_defense_radar"):
+                    player.show_ar_defense_radar()
+                if hasattr(player, "_win") and hasattr(player._win, "_defense_panel") and player._win._defense_panel is not None:
+                    player._win._defense_panel.radar.set_sockets(sockets)
             except Exception:
                 pass
     except Exception as e:

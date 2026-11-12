@@ -390,6 +390,26 @@ class JarvisUI:
         if hasattr(self._win, "_neuro_show_sig"):
             self._win._neuro_show_sig.emit()
 
+    def trigger_defense_alert(self, threat_type: str, details: str) -> None:
+        """Thread-safe: trigger pulsating crimson perimeter breach rings on Polar Radar."""
+        if hasattr(self._win, "_defense_alert_sig"):
+            self._win._defense_alert_sig.emit(str(threat_type or "PERIMETER"), str(details or ""))
+
+    def show_ar_defense_radar(self) -> None:
+        """Thread-safe: project Polar Defense Radar onto HUD Layer 2."""
+        if hasattr(self._win, "_defense_show_sig"):
+            self._win._defense_show_sig.emit()
+
+    def show_ar_celestial_orbit(self) -> None:
+        """Thread-safe: project Celestial Ephemeris & 3D ISS Orbit onto HUD Layer 2."""
+        if hasattr(self._win, "_celestial_show_sig"):
+            self._win._celestial_show_sig.emit()
+
+    def show_ar_mission_control(self) -> None:
+        """Thread-safe: project Mission Control Task Capsules onto HUD Layer 2."""
+        if hasattr(self._win, "_mission_control_show_sig"):
+            self._win._mission_control_show_sig.emit()
+
     def stop_video(self) -> None:
         """Thread-safe: close the video and give the HUD back to the avatar."""
         self._win._video_close_sig.emit()

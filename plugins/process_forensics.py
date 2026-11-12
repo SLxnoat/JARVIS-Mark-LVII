@@ -169,8 +169,12 @@ def _worker(action: str, player):
                 threat_count = len(report.get("unlinked", [])) + len(report.get("tmp_exec", []))
                 if threat_count > 0:
                     player.write_log(f"🚨 [ProcessForensics] Flagged {threat_count} anomalous process(es) in memory!")
+                    if hasattr(player, "trigger_defense_alert"):
+                        player.trigger_defense_alert("Process Anomaly", f"{threat_count} unlinked or tmp binary running")
                 else:
                     player.write_log(f"🔍 [ProcessForensics] Scanned {report.get('total_scanned')} PIDs. Memory space clean.")
+                    if hasattr(player, "show_ar_defense_radar"):
+                        player.show_ar_defense_radar()
             except Exception:
                 pass
     except Exception as e:

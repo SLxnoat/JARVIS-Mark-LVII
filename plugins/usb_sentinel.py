@@ -211,8 +211,12 @@ def _worker(action: str, player):
                 susp = [d for d in devices if d.get("is_suspicious")]
                 if susp:
                     player.write_log(f"🚨 [USBSentry] Alert: {len(susp)} suspicious USB device(s) flagged!")
+                    if hasattr(player, "trigger_defense_alert"):
+                        player.trigger_defense_alert("BadUSB Injector", f"{len(susp)} unauthorized HID endpoint(s)")
                 else:
                     player.write_log(f"🛡️ [USBSentry] Audited {len(devices)} physical USB devices. Perimeter secure.")
+                    if hasattr(player, "show_ar_defense_radar"):
+                        player.show_ar_defense_radar()
             except Exception:
                 pass
     except Exception as e:

@@ -1335,8 +1335,8 @@ class MainWindow(QMainWindow):
             if hasattr(self, "_footer"):
                 self._footer.hide()
             if hasattr(self, "_body_layout"):
-                self._body_layout.setContentsMargins(0, 0, 0, 0)
-                self._body_layout.setSpacing(0)
+                self._body_layout.setContentsMargins(6, 6, 6, 6)
+                self._body_layout.setSpacing(6)
             if hasattr(self, "_fs_exit_btn"):
                 self._fs_exit_btn.show()
                 self._position_fs_exit_btn()
@@ -1559,16 +1559,7 @@ class MainWindow(QMainWindow):
 
     def _fit_side_columns(self) -> None:
         """Side columns grow with the window, within limits, so the centre keeps
-        the space a larger window was opened for."""
-        if getattr(self, "_is_holodeck", False):
-            if hasattr(self, "_left_panel"):
-                self._left_panel.hide()
-                self._left_panel.setFixedWidth(0)
-            if hasattr(self, "_right_panel"):
-                self._right_panel.hide()
-                self._right_panel.setFixedWidth(0)
-            return
-
+        the space a larger window was opened for. Available in normal and fullscreen modes."""
         W = self.width()
         if hasattr(self, "_left_panel"):
             if getattr(self, "_left_collapsed", False):

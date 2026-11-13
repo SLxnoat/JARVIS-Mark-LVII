@@ -325,8 +325,9 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.assertFalse(getattr(self.win, "_is_holodeck", False))
         self.win.toggle_holodeck_mode()
         self.assertTrue(getattr(self.win, "_is_holodeck", False))
-        self.assertFalse(self.win._left_panel.isVisible())
-        self.assertFalse(self.win._right_panel.isVisible())
+        # Left and right panels remain visible in fullscreen mode (unless explicitly collapsed)
+        self.assertTrue(self.win._left_panel.isVisible())
+        self.assertTrue(self.win._right_panel.isVisible())
         self.assertTrue(self.win._fs_exit_btn.isVisible())
 
         # Test escape exit via key filter

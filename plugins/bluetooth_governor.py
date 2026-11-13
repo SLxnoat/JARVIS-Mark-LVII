@@ -149,7 +149,7 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
                 msg = "No connected Bluetooth devices with reporting batteries were found."
 
             if player and hasattr(player, "show_content"):
-                player.show_content("Bluetooth Batteries", "\n".join(f"🔋 {b}" for b in connected_batteries) if connected_batteries else "No active device batteries detected.")
+                player.show_content("Bluetooth Batteries", "\n".join(f" {b}" for b in connected_batteries) if connected_batteries else "No active device batteries detected.")
             return msg
 
         else:  # Default: 'list'
@@ -159,8 +159,8 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
                 info = _get_device_info(d["mac"])
                 connected = info.get("connected", "").lower() == "yes"
                 bat = info.get("battery percentage")
-                bat_str = f" [🔋 {bat}%]" if bat else ""
-                status_str = "🟢 Connected" if connected else "⚪ Disconnected"
+                bat_str = f"[ {bat}%]" if bat else ""
+                status_str = " Connected" if connected else " Disconnected"
                 dev_rows.append(f"{status_str} — {d['name']} ({d['mac']}){bat_str}")
                 if connected:
                     connected_names.append(d["name"])

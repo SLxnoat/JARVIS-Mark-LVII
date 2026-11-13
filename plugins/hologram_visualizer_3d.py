@@ -229,13 +229,13 @@ def _project_and_rasterize(
 
 def _render_hud_card(model_name: str, yaw: float, pitch: float, ascii_art: str) -> str:
     lines = [
-        "### 💠 3D HOLOGRAPHIC WIREFRAME PROJECTOR (JARVIS MARK-LVII)\n",
+        "###  3D HOLOGRAPHIC WIREFRAME PROJECTOR (JARVIS MARK-LVII)\n",
         f"**Active Wireframe:** `{model_name.upper()} MATRIX`",
         f"**Orientation:** Yaw `{yaw:.1f}°` | Pitch `{pitch:.1f}°` | Projection: `Perspective (FOV 75°)`\n",
         "```text",
         ascii_art,
         "```\n",
-        "#### 🔬 Model Geometric Telemetry",
+        "####  Model Geometric Telemetry",
         f"- **Mesh Class:** Dynamic Mathematical Vector Wireframe",
         f"- **Depth Cues:** Foreground (`#`), Midground (`+`), Background (`·`)",
         f"- **Rendering Subsystem:** 100% Software Depth-Buffer (Zero GPU load)\n",
@@ -259,13 +259,13 @@ def _worker(model: str, yaw: float, pitch: float, player):
         if player:
             try:
                 player.show_content("3D HOLOGRAPHIC WIREFRAME", card)
-                player.write_log(f"💠 [Hologram3D] Projected 3D {model} mesh (Yaw: {yaw}°, Pitch: {pitch}°).")
+                player.write_log(f"[Hologram3D] Projected 3D {model} mesh (Yaw: {yaw}°, Pitch: {pitch}°).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Hologram3D] Error: {e}")
+                player.write_log(f"[Hologram3D] Error: {e}")
             except Exception:
                 pass
 

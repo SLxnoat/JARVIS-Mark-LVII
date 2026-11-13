@@ -79,7 +79,7 @@ def _review_worker(file_path: str, focus: str, player):
         raw_text = _read_document_text(file_path)
         if not raw_text.strip():
             if player:
-                player.write_log(f"⚠️ [Review] Document at {file_path} appears empty.")
+                player.write_log(f"[Review] Document at {file_path} appears empty.")
             return
 
         prompt = f"""Review the following document focusing on '{focus}'.
@@ -110,14 +110,14 @@ DOCUMENT EXCERPT:
         if player:
             try:
                 player.show_review(title, summary, findings)
-                player.write_log(f"📄 [Review] Completed review for {Path(file_path).name} ({len(findings)} findings).")
+                player.write_log(f"[Review] Completed review for {Path(file_path).name} ({len(findings)} findings).")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Review] Error reviewing {file_path}: {e}")
+                player.write_log(f"[Review] Error reviewing {file_path}: {e}")
             except Exception:
                 pass
 

@@ -27,10 +27,10 @@ def config_exists() -> bool:
 # plugins polling a server, background tasks. Every setter read the file,
 # changed one key and rewrote it IN PLACE, which failed two ways:
 #
-#   * a reader that arrived mid-write saw half a file, parsed nothing, and
-#     treated every setting as unset — wake word off, no key, Gemini mode;
-#   * a SETTER that arrived mid-write did the same, then wrote its one key into
-#     an otherwise empty dict — erasing every other setting for good.
+# * a reader that arrived mid-write saw half a file, parsed nothing, and
+# treated every setting as unset — wake word off, no key, Gemini mode;
+# * a SETTER that arrived mid-write did the same, then wrote its one key into
+# an otherwise empty dict — erasing every other setting for good.
 #
 # Writes now go to a temporary file that replaces the real one in a single step,
 # so a reader sees the old file or the new one and never half of either, and
@@ -197,7 +197,7 @@ def get_hud_style() -> str:
 
     Taste, not capability — both render in the same software painter and cost
     about the same. Defaults to the head because that is what MARK LIV shipped
-    with; anyone who preferred the older look can switch back in ⚙ and the
+    with; anyone who preferred the older look can switch back in  and the
     choice survives a restart.
     """
     v = str(load_api_keys().get("hud_style", "face")).strip().lower()

@@ -109,7 +109,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
                 if player:
                     try:
-                        player.write_log("💪 [Workout] Pushup tracking session started.")
+                        player.write_log("[Workout] Pushup tracking session started.")
                     except Exception:
                         pass
                 return "Pushup session started. Get into position; I am tracking your form and repetitions!"
@@ -129,7 +129,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
                 if player:
                     try:
-                        player.write_log(f"💪 [Workout] Session ended: {reps_done} pushups in {mins}m {secs}s.")
+                        player.write_log(f"[Workout] Session ended: {reps_done} pushups in {mins}m {secs}s.")
                     except Exception:
                         pass
                 return f"Great workout! You completed {reps_done} pushups in {mins} minutes and {secs} seconds."
@@ -139,7 +139,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 _save_workout(reps, 60.0)
                 if player:
                     try:
-                        player.write_log(f"💪 [Workout] Logged {reps} pushups.")
+                        player.write_log(f"[Workout] Logged {reps} pushups.")
                     except Exception:
                         pass
                 return f"Logged {reps} pushups to your workout history."
@@ -168,7 +168,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
                 if player:
                     try:
-                        md = f"### 💪 Pushup Workout History\n\n**Total Pushups:** `{total_reps}`\n\n**Recent Sessions:**\n" + "\n".join(lines)
+                        md = f"###  Pushup Workout History\n\n**Total Pushups:** `{total_reps}`\n\n**Recent Sessions:**\n" + "\n".join(lines)
                         player.show_content("Workout History", md)
                     except Exception:
                         pass

@@ -173,24 +173,24 @@ def _scan_usb_lsusb() -> List[Dict[str, Any]]:
 
 def _render_hud_card(action: str, devices: List[Dict[str, Any]]) -> str:
     lines = [
-        "### 🛡️ TACTICAL USB SENTRY & PORT SHIELD (JARVIS MARK-LVII)\n",
+        "### ️ TACTICAL USB SENTRY & PORT SHIELD (JARVIS MARK-LVII)\n",
         f"**Active Physical Ports Monitored:** `{len(devices)}`\n",
     ]
 
     suspicious = [d for d in devices if d.get("is_suspicious")]
     if suspicious:
-        lines.append(f"🚨 **SECURITY ALERT: {len(suspicious)} UNVERIFIED/ANOMALOUS USB DEVICE(S) DETECTED!**")
+        lines.append(f" **SECURITY ALERT: {len(suspicious)} UNVERIFIED/ANOMALOUS USB DEVICE(S) DETECTED!**")
         for s in suspicious:
-            lines.append(f"- ⚠️ **{s['product']}** (VID: `{s['vid']}`, PID: `{s['pid']}`) — `{s['flag_reason']}`")
+            lines.append(f"-  **{s['product']}** (VID: `{s['vid']}`, PID: `{s['pid']}`) — `{s['flag_reason']}`")
         lines.append("")
     else:
-        lines.append("🟢 **Perimeter Integrity:** `SECURE` — No BadUSB or HID injection devices detected.\n")
+        lines.append(" **Perimeter Integrity:** `SECURE` — No BadUSB or HID injection devices detected.\n")
 
-    lines.append("#### 🔌 Connected Physical USB Peripherals")
+    lines.append("####  Connected Physical USB Peripherals")
     lines.append("```text")
     for d in devices:
         cls_str = ", ".join(d["classes"])
-        status_tag = " [ALERT 🚨]" if d.get("is_suspicious") else (" [KEYBOARD ⌨️]" if d.get("is_keyboard") else "")
+        status_tag = "[ALERT ]" if d.get("is_suspicious") else ("[KEYBOARD ⌨️]" if d.get("is_keyboard") else "")
         lines.append(f"Bus {d['bus']} Dev {d['dev']} | {d['vid']}:{d['pid']} | {d['product'][:30]:30s} | {cls_str}{status_tag}")
     lines.append("```\n")
 
@@ -212,15 +212,15 @@ def _worker(action: str, player):
                 if susp:
                     if hasattr(player, "trigger_defense_alert"):
                         player.trigger_defense_alert("ROGUE_USB", f"{len(susp)} suspicious USB device(s) flagged")
-                    player.write_log(f"🚨 [USBSentry] Alert: {len(susp)} suspicious USB device(s) flagged!")
+                    player.write_log(f"[USBSentry] Alert: {len(susp)} suspicious USB device(s) flagged!")
                 else:
-                    player.write_log(f"🛡️ [USBSentry] Audited {len(devices)} physical USB devices. Perimeter secure.")
+                    player.write_log(f"️ [USBSentry] Audited {len(devices)} physical USB devices. Perimeter secure.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [USBSentry] Error: {e}")
+                player.write_log(f"[USBSentry] Error: {e}")
             except Exception:
                 pass
 

@@ -114,8 +114,8 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
                 msg = f"All {len(clean_repos)} repositories in your workspace are clean and committed."
 
             if player and hasattr(player, "show_content"):
-                report = "📁 Dirty Repositories:\n" + ("\n".join(f"• {r}" for r in dirty_repos) if dirty_repos else "None")
-                report += "\n\n✅ Clean Repositories:\n" + ("\n".join(f"• {r}" for r in clean_repos) if clean_repos else "None")
+                report = " Dirty Repositories:\n" + ("\n".join(f"• {r}" for r in dirty_repos) if dirty_repos else "None")
+                report += "\n\n Clean Repositories:\n" + ("\n".join(f"• {r}" for r in clean_repos) if clean_repos else "None")
                 player.show_content("Workspace Git Scan", report)
             return msg
 

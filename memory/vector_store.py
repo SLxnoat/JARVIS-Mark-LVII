@@ -64,10 +64,10 @@ def _get_client():
                     metadata={"hnsw:space": "cosine"},
                 )
             _initialized = True
-            print(f"[VectorStore] ✅ ChromaDB initialized at {_CHROMA_DIR}")
+            print(f"[VectorStore]  ChromaDB initialized at {_CHROMA_DIR}")
             return _client
         except Exception as e:
-            print(f"[VectorStore] ⚠️ ChromaDB initialization failed: {e}")
+            print(f"[VectorStore]  ChromaDB initialization failed: {e}")
             _client = None
             _initialized = False
             return None
@@ -116,7 +116,7 @@ def upsert_fact(category: str, key: str, value: str, updated: str | None = None)
             )
             return True
         except Exception as e:
-            print(f"[VectorStore] ⚠️ Upsert error ({doc_id}): {e}")
+            print(f"[VectorStore]  Upsert error ({doc_id}): {e}")
             return False
 
 
@@ -137,7 +137,7 @@ def delete_fact(category: str, key: str) -> bool:
             coll.delete(ids=[doc_id])
             return True
         except Exception as e:
-            print(f"[VectorStore] ⚠️ Delete error ({doc_id}): {e}")
+            print(f"[VectorStore]  Delete error ({doc_id}): {e}")
             return False
 
 
@@ -186,7 +186,7 @@ def semantic_search(query: str, n_results: int = 5, target_category: str | None 
                         "updated": meta.get("updated", ""),
                     })
             except Exception as e:
-                print(f"[VectorStore] ⚠️ Query error in {coll.name}: {e}")
+                print(f"[VectorStore]  Query error in {coll.name}: {e}")
 
     results.sort(key=lambda x: x["distance"])
     return results[:n_results]
@@ -218,7 +218,7 @@ def upsert_session(date_str: str, summary: str, language: str = "") -> bool:
             )
             return True
         except Exception as e:
-            print(f"[VectorStore] ⚠️ Session upsert error: {e}")
+            print(f"[VectorStore]  Session upsert error: {e}")
             return False
 
 
@@ -238,7 +238,7 @@ def migrate_from_json(json_path: Path | None = None) -> int:
         if not isinstance(data, dict):
             return 0
     except Exception as e:
-        print(f"[VectorStore] ⚠️ Migration read error: {e}")
+        print(f"[VectorStore]  Migration read error: {e}")
         return 0
 
     migrated = 0
@@ -261,7 +261,7 @@ def migrate_from_json(json_path: Path | None = None) -> int:
                 migrated += 1
 
     if migrated:
-        print(f"[VectorStore] 🚀 Migrated {migrated} items from {json_path.name} into ChromaDB")
+        print(f"[VectorStore]  Migrated {migrated} items from {json_path.name} into ChromaDB")
     return migrated
 
 

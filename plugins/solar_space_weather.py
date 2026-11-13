@@ -70,19 +70,19 @@ def _get_solar_flares() -> Dict[str, Any]:
         # Determine flare class: A (<1e-7), B (1e-7 to 1e-6), C (1e-6 to 1e-5), M (1e-5 to 1e-4), X (>=1e-4)
         if flux < 1e-7:
             flare_class = f"A{round(flux * 1e8, 1)}"
-            severity = "QUIET 🟢"
+            severity = "QUIET "
         elif flux < 1e-6:
             flare_class = f"B{round(flux * 1e7, 1)}"
-            severity = "BACKGROUND 🟢"
+            severity = "BACKGROUND "
         elif flux < 1e-5:
             flare_class = f"C{round(flux * 1e6, 1)}"
-            severity = "MINOR ACTIVITY 🟡"
+            severity = "MINOR ACTIVITY "
         elif flux < 1e-4:
             flare_class = f"M{round(flux * 1e5, 1)}"
-            severity = "STRONG FLARE 🟠 (R1-R2 Radio Blackout)"
+            severity = "STRONG FLARE  (R1-R2 Radio Blackout)"
         else:
             flare_class = f"X{round(flux * 1e4, 1)}"
-            severity = "EXTREME FLARE 🔴 (R3-R5 Severe Radio Blackout)"
+            severity = "EXTREME FLARE  (R3-R5 Severe Radio Blackout)"
 
         return {
             "flux": flux,
@@ -95,7 +95,7 @@ def _get_solar_flares() -> Dict[str, Any]:
     return {
         "flux": 3.2e-7,
         "flare_class": "B3.2",
-        "severity": "NOMINAL BACKGROUND 🟢",
+        "severity": "NOMINAL BACKGROUND ",
         "time_tag": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
@@ -109,19 +109,19 @@ def _get_planetary_k_index() -> Dict[str, Any]:
         time_tag = latest.get("time_tag", time.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
         if kp < 3.0:
-            status = "QUIET 🟢"
+            status = "QUIET "
             storm_scale = "No Storm (G0)"
         elif kp < 4.5:
-            status = "UNSETTLED 🟡"
+            status = "UNSETTLED "
             storm_scale = "Sub-storm (G0)"
         elif kp < 6.0:
-            status = "MINOR STORM 🟠"
+            status = "MINOR STORM "
             storm_scale = "G1 Minor Storm"
         elif kp < 7.0:
-            status = "MODERATE STORM 🟠"
+            status = "MODERATE STORM "
             storm_scale = "G2 Moderate Storm"
         else:
-            status = "SEVERE GEOMAGNETIC STORM 🔴"
+            status = "SEVERE GEOMAGNETIC STORM "
             storm_scale = "G3-G5 Severe Storm"
 
         return {
@@ -133,7 +133,7 @@ def _get_planetary_k_index() -> Dict[str, Any]:
 
     return {
         "kp": 2.3,
-        "status": "QUIET 🟢",
+        "status": "QUIET ",
         "scale": "Nominal Magnetosphere (G0)",
         "time_tag": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
@@ -141,16 +141,16 @@ def _get_planetary_k_index() -> Dict[str, Any]:
 
 def _render_hud_card(action: str, flare: Dict[str, Any], geomag: Dict[str, Any]) -> str:
     lines = [
-        "### ☀️ TACTICAL SPACE WEATHER RADAR (NOAA / JARVIS MARK-LVII)\n",
+        "###  TACTICAL SPACE WEATHER RADAR (NOAA / JARVIS MARK-LVII)\n",
         f"**Solar Flare Radiation State:** `{flare['flare_class']}` *({flare['severity']})*",
         f"**Planetary Kp-Index:** `{geomag['kp']} / 9.0` *({geomag['status']})*\n",
-        "#### 🔬 Solar & Magnetospheric Metrics",
+        "####  Solar & Magnetospheric Metrics",
         f"- **X-Ray Flux Level:** `{flare['flux']:.2e} W/m²` *(GOES-16 0.1-0.8 nm sensor)*",
         f"- **Geomagnetic Storm Scale:** `{geomag['scale']}`",
         "- **Radio Propagation Status:** High-Frequency (HF) radio conditions nominal",
         "- **GNSS / GPS Signal Impact:** Standard ionospheric refraction (No degradation)",
         "- **Aurora Oval Activity:** High-latitude polar zones only\n",
-        "#### 🛡️ Workstation Threat Assessment",
+        "#### ️ Workstation Threat Assessment",
         "- **EMP / Induced Ground Currents:** None (Threshold nominal)",
         "- **Satellite Downlink Risk:** Low (Clear orbital window)",
         f"\n*NOAA SWPC satellite telemetry captured at {time.strftime('%H:%M:%S UTC')}.*",
@@ -167,13 +167,13 @@ def _worker(action: str, player):
         if player:
             try:
                 player.show_content("TACTICAL SPACE WEATHER RADAR", card)
-                player.write_log(f"☀️ [SpaceWeather] Solar class: {flare['flare_class']} | Kp-index: {geomag['kp']} ({geomag['status']}).")
+                player.write_log(f"[SpaceWeather] Solar class: {flare['flare_class']} | Kp-index: {geomag['kp']} ({geomag['status']}).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [SpaceWeather] Error: {e}")
+                player.write_log(f"[SpaceWeather] Error: {e}")
             except Exception:
                 pass
 

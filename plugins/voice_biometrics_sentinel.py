@@ -125,17 +125,17 @@ def _save_profile(f0: float, centroid: float):
 
 def _render_hud_card(action: str, f0: float, centroid: float, match_pct: float, profile: Dict[str, Any]) -> str:
     is_verified = match_pct >= 75.0
-    status_badge = "VERIFIED 🟢 (Operator Authenticated)" if is_verified else "UNVERIFIED ⚠️ (Biometric Variance Detected)"
+    status_badge = "VERIFIED  (Operator Authenticated)" if is_verified else "UNVERIFIED  (Biometric Variance Detected)"
 
     lines = [
-        "### 🎙️ VOICE BIOMETRICS & OPERATOR RADAR (JARVIS MARK-LVII)\n",
+        "### ️ VOICE BIOMETRICS & OPERATOR RADAR (JARVIS MARK-LVII)\n",
         f"**Biometric Identity Status:** {status_badge}",
         f"**Voiceprint Match Confidence:** `{match_pct:.1f}%`\n",
-        "#### 🔬 Acoustic Biometric Metrics",
+        "####  Acoustic Biometric Metrics",
         f"- **Fundamental Pitch ($F_0$):** `{f0:.1f} Hz` *(Enrolled Baseline: `{profile.get('baseline_f0', 128.5)} Hz`)*",
         f"- **Vocal Spectral Centroid:** `{centroid:.1f} Hz` *(Enrolled Baseline: `{profile.get('baseline_centroid', 1420.0)} Hz`)*",
         f"- **Enrolled Operator:** `{profile.get('operator', 'Operator')}` *(Enrolled: `{profile.get('enrolled_at', 'Active')}`)*\n",
-        "#### 🛡️ Anti-Spoofing & Replay Guard",
+        "#### ️ Anti-Spoofing & Replay Guard",
         "- **Phase Jitter Telemetry:** Biological resonance consistent",
         "- **Microphone Stream:** Real-time hardware capture verified",
         f"\n*Voiceprint scanned at {time.strftime('%H:%M:%S')}.*",
@@ -172,13 +172,13 @@ def _worker(action: str, player):
             try:
                 player.show_content("VOICE BIOMETRICS SENTINEL", card)
                 ver = "Verified" if match_pct >= 75.0 else "Unverified"
-                player.write_log(f"🎙️ [VoiceBiometrics] Match: {match_pct}% ({ver}). F0: {f0} Hz.")
+                player.write_log(f"️ [VoiceBiometrics] Match: {match_pct}% ({ver}). F0: {f0} Hz.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [VoiceBiometrics] Error: {e}")
+                player.write_log(f"[VoiceBiometrics] Error: {e}")
             except Exception:
                 pass
 

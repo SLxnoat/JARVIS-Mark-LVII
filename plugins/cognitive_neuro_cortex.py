@@ -382,7 +382,7 @@ def _handle_query_associative(params: dict, player=None) -> str:
     linked_items = [f"**{k}** ({v.get('relation', 'related')})" for k, v in list(connections.items())[:8]]
 
     md = (
-        f"### 🕸️ Associative Concept Activation: `{query.upper()}`\n\n"
+        f"### ️ Associative Concept Activation: `{query.upper()}`\n\n"
         f"- **Primary Concept Node:** `{query}`\n"
         f"- **Activation Count:** `{node.get('activations', 1)}`\n"
         f"- **Direct Synaptic Connections:** {len(connections)}\n\n"
@@ -453,18 +453,18 @@ def _render_cortex_hud(player=None):
         concept_badges = " &nbsp;•&nbsp; ".join(f"`{k}` ({len(v.get('connections', {}))} links)" for k, v in top_concepts)
 
         md = (
-            "## 🧠 Cognitive Neuro-Cortex: Brain Self-Learning Engine\n\n"
+            "##  Cognitive Neuro-Cortex: Brain Self-Learning Engine\n\n"
             f"> **Plasticity Status:** `ACTIVE (Plastic)` &nbsp;|&nbsp; "
             f"**Learned Rules:** `{len(rules)}` &nbsp;|&nbsp; "
             f"**Procedural Habits:** `{len(habits)}` &nbsp;|&nbsp; "
             f"**Concept Nodes:** `{len(graph)}`\n\n"
-            "### ⚡ Active Learned Behavioral Rules (Top Priority Overrides)\n\n"
+            "###  Active Learned Behavioral Rules (Top Priority Overrides)\n\n"
             "| ID | Trigger Condition | Learned Behavioral Rule | Confidence | Reinforcements |\n"
             "|:---|:---|:---|:---|:---|\n"
             f"{rule_rows or '| - | No active learned rules recorded yet | - | - | - |'}\n\n"
-            "### 🔄 Mined Procedural Habits (Basal Ganglia Sequences)\n\n"
+            "###  Mined Procedural Habits (Basal Ganglia Sequences)\n\n"
             f"{habit_items or 'No procedural habits registered yet.'}\n\n"
-            "### 🕸️ Semantic Concept Knowledge Mesh\n\n"
+            "### ️ Semantic Concept Knowledge Mesh\n\n"
             f"{concept_badges or 'No concept nodes registered yet.'}\n\n"
             "---\n*Self-Learning Neuro-Cortex • Hippocampal Consolidation & Dopaminergic Feedback Ready*"
         )

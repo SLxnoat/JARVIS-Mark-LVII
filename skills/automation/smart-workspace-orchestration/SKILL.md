@@ -89,7 +89,7 @@ tool_chain(
 
 - **Spoken response**: Concise voice confirmation (e.g. *"Downloads sorted into 5 categories, 24 files organized, sir."*).
 - **HUD telemetry**: Display the before/after organization manifest via `player.show_content("Workspace Cleaner", markdown)`.
-- **Activity log**: Post summary via `player.write_log("🧹 [Cleaner] Organized 24 files in ~/Downloads.")`.
+- **Activity log**: Post summary via `player.write_log("[Cleaner] Organized 24 files in ~/Downloads.")`.
 
 ## Pitfalls & Anti-Patterns
 

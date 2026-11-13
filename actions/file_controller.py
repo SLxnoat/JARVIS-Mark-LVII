@@ -210,10 +210,10 @@ def list_files(path: str = "desktop", show_hidden: bool = False) -> str:
             if not show_hidden and item.name.startswith("."):
                 continue
             if item.is_dir():
-                items.append(f"📁 {item.name}/")
+                items.append(f" {item.name}/")
             else:
                 size = _format_size(item.stat().st_size)
-                items.append(f"📄 {item.name} ({size})")
+                items.append(f" {item.name} ({size})")
 
         if not items:
             return f"Directory is empty: {target.name}/"
@@ -476,7 +476,7 @@ def find_files(name: str = "", extension: str = "",
             if name and name.lower() not in item.name.lower():
                 continue
             size = _format_size(item.stat().st_size)
-            results.append(f"📄 {item.name} ({size}) — {item.parent}")
+            results.append(f" {item.name} ({size}) — {item.parent}")
             if len(results) >= max_results:
                 break
 

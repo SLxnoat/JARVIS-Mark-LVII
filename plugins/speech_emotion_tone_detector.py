@@ -64,7 +64,7 @@ def _sample_audio(duration: float = 1.0) -> np.ndarray | None:
 def _evaluate_tone_metrics(samples: np.ndarray | None) -> Dict[str, Any]:
     if samples is None or len(samples) < 512:
         return {
-            "state": "Calm & Focused 🟢",
+            "state": "Calm & Focused ",
             "stress_pct": 18.0,
             "energy_pct": 65.0,
             "pitch_spread_hz": 24.5,
@@ -97,16 +97,16 @@ def _evaluate_tone_metrics(samples: np.ndarray | None) -> Dict[str, Any]:
     stress_pct = min(98.0, max(8.0, round(spread * 1.5 + (energy_pct * 0.4), 1)))
 
     if stress_pct > 65.0:
-        state = "Elevated Stress / Urgent 🔴"
+        state = "Elevated Stress / Urgent "
         rec = "High vocal tension detected. I will keep responses terse and prioritize critical alerts."
     elif energy_pct > 70.0:
-        state = "High Energy & Dynamic ⚡"
+        state = "High Energy & Dynamic "
         rec = "Vocal cadence indicates active focus and elevated tempo."
     elif energy_pct < 25.0:
-        state = "Fatigued / Low Energy 🟡"
+        state = "Fatigued / Low Energy "
         rec = "Low acoustic projection detected. Recommending a short break or hydration."
     else:
-        state = "Calm & Methodical 🟢"
+        state = "Calm & Methodical "
         rec = "Optimal cognitive baseline. Steady vocal resonance."
 
     return {
@@ -121,10 +121,10 @@ def _evaluate_tone_metrics(samples: np.ndarray | None) -> Dict[str, Any]:
 
 def _render_hud_card(metrics: Dict[str, Any]) -> str:
     lines = [
-        "### 🧠 VOCAL EMOTION & STRESS RADAR (JARVIS MARK-LVII)\n",
+        "###  VOCAL EMOTION & STRESS RADAR (JARVIS MARK-LVII)\n",
         f"**Operator Psychological Tone:** `{metrics['state']}`",
         f"**Vocal Stress Level:** `{metrics['stress_pct']}%` | **Energy Rating:** `{metrics['energy_pct']}%`\n",
-        "#### 📊 Prosodic Acoustic Analysis",
+        "####  Prosodic Acoustic Analysis",
         f"- **Pitch Modulation Variance:** `{metrics['pitch_spread_hz']} Hz` spread",
         f"- **Cadence Profile:** `{metrics['tempo_rating']}`",
         f"- **JARVIS Interaction Protocol:** *{metrics['recommendation']}*\n",
@@ -142,13 +142,13 @@ def _worker(action: str, player):
         if player:
             try:
                 player.show_content("VOCAL EMOTION DETECTOR", card)
-                player.write_log(f"🧠 [VocalTone] State: {metrics['state']}. Stress: {metrics['stress_pct']}%.")
+                player.write_log(f"[VocalTone] State: {metrics['state']}. Stress: {metrics['stress_pct']}%.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [VocalTone] Error: {e}")
+                player.write_log(f"[VocalTone] Error: {e}")
             except Exception:
                 pass
 

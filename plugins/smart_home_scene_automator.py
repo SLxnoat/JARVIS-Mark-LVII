@@ -86,14 +86,14 @@ def _execute_protocol(protocol: str) -> List[str]:
 
 def _render_hud_card(protocol: str, actions: List[str]) -> str:
     lines = [
-        "### 🛡️ TACTICAL PROTOCOL AUTOMATION (JARVIS MARK-LVII)\n",
+        "### ️ TACTICAL PROTOCOL AUTOMATION (JARVIS MARK-LVII)\n",
         f"**Active Directive:** `PROTOCOL {protocol.upper()}`",
-        f"**Execution Status:** `ENGAGED 🟢`\n",
-        "#### 📋 Coordinated Actions Executed",
+        f"**Execution Status:** `ENGAGED `\n",
+        "####  Coordinated Actions Executed",
     ]
 
     for act in actions:
-        lines.append(f"- 🟢 {act}")
+        lines.append(f"-  {act}")
 
     lines.append(f"\n*Protocol synchronized at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -107,13 +107,13 @@ def _worker(protocol: str, player):
         if player:
             try:
                 player.show_content("SCENE PROTOCOL AUTOMATOR", card)
-                player.write_log(f"🛡️ [Protocols] Engaged Protocol {protocol.title()} ({len(actions)} actions).")
+                player.write_log(f"️ [Protocols] Engaged Protocol {protocol.title()} ({len(actions)} actions).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Protocols] Error: {e}")
+                player.write_log(f"[Protocols] Error: {e}")
             except Exception:
                 pass
 

@@ -75,10 +75,10 @@ def _synthesize_shell_command(intent: str) -> Dict[str, Any]:
 
 def _render_hud_card(intent: str, data: Dict[str, Any]) -> str:
     risk = data.get("risk_level", "SAFE")
-    risk_badge = "🟢 SAFE (Read-Only)" if risk == "SAFE" else ("🟡 MODIFYING (State Change)" if risk == "MODIFYING" else "🔴 DANGEROUS / DESTRUCTIVE")
+    risk_badge = " SAFE (Read-Only)" if risk == "SAFE" else (" MODIFYING (State Change)" if risk == "MODIFYING" else " DANGEROUS / DESTRUCTIVE")
 
     lines = [
-        "### 💻 TACTICAL TERMINAL COPILOT (JARVIS MARK-LVII)\n",
+        "###  TACTICAL TERMINAL COPILOT (JARVIS MARK-LVII)\n",
         f"**Requested Intent:** `{intent}`",
         f"**Safety Rating:** {risk_badge}\n",
         "#### ⌨️ Synthesized Shell Command",
@@ -86,7 +86,7 @@ def _render_hud_card(intent: str, data: Dict[str, Any]) -> str:
         data.get("command", ""),
         "```\n",
         f"**Operation Summary:** {data.get('explanation', '')}\n",
-        "#### 🔬 Flag & Argument Breakdown",
+        "####  Flag & Argument Breakdown",
     ]
 
     flags = data.get("flags_breakdown", [])
@@ -108,13 +108,13 @@ def _worker(intent: str, player):
         if player:
             try:
                 player.show_content("TERMINAL COPILOT", card)
-                player.write_log(f"💻 [TerminalCopilot] Synthesized: `{data.get('command')[:40]}` ({data.get('risk_level')}).")
+                player.write_log(f"[TerminalCopilot] Synthesized: `{data.get('command')[:40]}` ({data.get('risk_level')}).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [TerminalCopilot] Error: {e}")
+                player.write_log(f"[TerminalCopilot] Error: {e}")
             except Exception:
                 pass
 

@@ -193,7 +193,7 @@ def _write_file(
     file_imports = file_info.get("imports", [])
 
     file_list = "\n".join(
-        f"  [{i+1}] {f['path']}: {f.get('description', '')}"
+        f"[{i+1}] {f['path']}: {f.get('description', '')}"
         for i, f in enumerate(all_files)
     )
 
@@ -254,7 +254,7 @@ Code for {file_path}:"""
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(code, encoding="utf-8")
 
-        print(f"[DevAgent] ✅ Written: {file_path} ({len(code)} chars)")
+        print(f"[DevAgent]  Written: {file_path} ({len(code)} chars)")
         return code
 
     except Exception as e:
@@ -281,7 +281,7 @@ def _install_dependencies(dependencies: list[str], project_dir: Path) -> str:
     if not to_install:
         return f"All dependencies already installed: {', '.join(dependencies)}"
 
-    print(f"[DevAgent] 📦 Installing: {to_install}")
+    print(f"[DevAgent]  Installing: {to_install}")
     try:
         result = subprocess.run(
             [sys.executable, "-m", "pip", "install"] + to_install,
@@ -312,14 +312,14 @@ def _open_vscode(project_dir: Path) -> bool:
                 stderr=subprocess.DEVNULL
             )
             time.sleep(1.5)
-            print(f"[DevAgent] 💻 VSCode opened: {project_dir}")
+            print(f"[DevAgent]  VSCode opened: {project_dir}")
             return True
         except Exception:
             continue
     return False
 
 def _run_project(run_command: str, project_dir: Path, timeout: int = 30) -> str:
-    print(f"[DevAgent] 🚀 Running: {run_command}")
+    print(f"[DevAgent]  Running: {run_command}")
     try:
         parts = run_command.split()
         if parts[0].lower() == "python":
@@ -361,7 +361,7 @@ def _try_auto_install(error_output: str, project_dir: Path) -> bool:
         return False
 
     pkg = match.group(1).replace("_", "-").split(".")[0]
-    print(f"[DevAgent] 🔧 Auto-installing missing package: {pkg}")
+    print(f"[DevAgent]  Auto-installing missing package: {pkg}")
     try:
         result = subprocess.run(
             [sys.executable, "-m", "pip", "install", pkg],
@@ -453,12 +453,12 @@ Fixed code for {fix_path}:"""
             full_path.write_text(fixed, encoding="utf-8")
 
             updated_codes[fix_path] = fixed
-            print(f"[DevAgent] 🔧 Fixed: {fix_path}")
+            print(f"[DevAgent]  Fixed: {fix_path}")
 
         except Exception as e:
             if _is_rate_limit(e):
                 raise RateLimitError(str(e))
-            print(f"[DevAgent] ⚠️ Could not fix {fix_path}: {e}")
+            print(f"[DevAgent]  Could not fix {fix_path}: {e}")
 
     return updated_codes
 
@@ -627,7 +627,7 @@ def _build_project(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Improving a folder that already exists
+# Improving a folder that already exists
 # ─────────────────────────────────────────────────────────────────────────────
 # Building from nothing is the easy half. What people actually have is a folder
 # that half works, and what they want is "add a settings page to this" or "fix
@@ -635,27 +635,27 @@ def _build_project(
 # upload box. This is that.
 #
 # WHAT IT WILL NOT DO
-#   * Write outside the folder. Every path the model names is resolved and
-#     checked against the folder before anything touches the disk.
-#   * Delete anything. Removing a user's file on a model's say-so is the one
-#     mistake that is not cheap to undo, so the plan cannot ask for it.
-#   * Run the project. A folder somebody hands over may be a server, a GUI or a
-#     script that sends email. What IS run, in a separate process: changed
-#     modules are imported, and in a JARVIS project each changed plugin is
-#     called the way the app calls it — unless its code can act on the world
-#     (send, delete, launch), in which case it is only loaded and validated.
-#     See core/code_checks.py.
+# * Write outside the folder. Every path the model names is resolved and
+# checked against the folder before anything touches the disk.
+# * Delete anything. Removing a user's file on a model's say-so is the one
+# mistake that is not cheap to undo, so the plan cannot ask for it.
+# * Run the project. A folder somebody hands over may be a server, a GUI or a
+# script that sends email. What IS run, in a separate process: changed
+# modules are imported, and in a JARVIS project each changed plugin is
+# called the way the app calls it — unless its code can act on the world
+# (send, delete, launch), in which case it is only loaded and validated.
+# See core/code_checks.py.
 #
 # WHAT IT READS FIRST
-#   The project's own rules (AGENTS.md, CLAUDE.md or CONTRIBUTING.md) and, for
-#   JARVIS itself, the thread-safe `player` methods read out of ui.py. Without
-#   them a model writes code that is valid and wrong for this app — widgets
-#   built off the Qt thread, a separate window instead of the quiz board.
+# The project's own rules (AGENTS.md, CLAUDE.md or CONTRIBUTING.md) and, for
+# JARVIS itself, the thread-safe `player` methods read out of ui.py. Without
+# them a model writes code that is valid and wrong for this app — widgets
+# built off the Qt thread, a separate window instead of the quiz board.
 #
 # WHAT MAKES IT SAFE TO SAY YES TO
-#   Every file is copied to .jarvis_backup/<time>/ inside the folder before it
-#   is changed, and the whole job is one entry on the shared undo stack: "undo"
-#   puts every file back and removes the ones it created.
+# Every file is copied to .jarvis_backup/<time>/ inside the folder before it
+# is changed, and the whole job is one entry on the shared undo stack: "undo"
+# puts every file back and removes the ones it created.
 
 _SKIP_DIRS = {".git", ".hg", ".svn", "node_modules", "venv", ".venv", "env",
               "__pycache__", ".mypy_cache", ".pytest_cache", "dist", "build",

@@ -73,10 +73,10 @@ def _optimize_prompt(draft: str, framework: str) -> str:
 
 def _render_hud_card(draft: str, framework: str, optimized: str) -> str:
     lines = [
-        "### ⚡ PROMPT ENGINEERING FORGE (JARVIS MARK-LVII)\n",
+        "###  PROMPT ENGINEERING FORGE (JARVIS MARK-LVII)\n",
         f"**Framework Applied:** `{framework.upper()}`",
         f"**Input Concept:** *{draft[:100]}...*\n",
-        "#### 🛠️ Production-Grade Optimized Prompt",
+        "#### ️ Production-Grade Optimized Prompt",
         "```markdown",
         optimized[:1200],
         "```\n",
@@ -93,13 +93,13 @@ def _worker(draft: str, framework: str, player):
         if player:
             try:
                 player.show_content("PROMPT FORGE", card)
-                player.write_log(f"⚡ [PromptForge] Forged production prompt ({framework}).")
+                player.write_log(f"[PromptForge] Forged production prompt ({framework}).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [PromptForge] Error: {e}")
+                player.write_log(f"[PromptForge] Error: {e}")
             except Exception:
                 pass
 

@@ -95,7 +95,7 @@ def _audit_ssh_keys() -> List[Dict[str, Any]]:
                 is_modern = "ed25519" in key_type
                 is_weak_rsa = "rsa" in key_type and key_bytes_len < 400
 
-                status = "EXCELLENT 🟢" if is_modern else ("WEAK / LEGACY ⚠️" if is_weak_rsa else "ACCEPTABLE 🟡")
+                status = "EXCELLENT " if is_modern else ("WEAK / LEGACY " if is_weak_rsa else "ACCEPTABLE ")
                 advice = "Modern elliptic curve cipher" if is_modern else ("Recommend upgrading to Ed25519" if is_weak_rsa else "Standard RSA key")
 
                 keys.append({
@@ -143,11 +143,11 @@ def _render_hud_card(
     entropy: float | None,
 ) -> str:
     lines = [
-        "### 🔐 TACTICAL CRYPTOGRAPHIC SENTINEL (JARVIS MARK-LVII)\n",
+        "###  TACTICAL CRYPTOGRAPHIC SENTINEL (JARVIS MARK-LVII)\n",
     ]
 
     if action in ("audit_ssh_keys", "full_crypto_audit"):
-        lines.append(f"#### 🔑 SSH Key Hygiene ({len(ssh_keys)} public keys audited)")
+        lines.append(f"####  SSH Key Hygiene ({len(ssh_keys)} public keys audited)")
         if ssh_keys:
             for k in ssh_keys:
                 lines.append(f"- **`{k['filename']}`** ({k['type']}) — `{k['status']}`\n  *Comment:* `{k['comment']}` | *Note:* {k['advice']}")
@@ -156,15 +156,15 @@ def _render_hud_card(
         lines.append("")
 
     if file_hashes:
-        lines.append("#### 🧬 Cryptographic File Hashes")
+        lines.append("####  Cryptographic File Hashes")
         lines.append(f"- **File:** `{file_hashes['file']}` *({file_hashes['size_bytes']} bytes)*")
         lines.append(f"- **SHA-256:** `{file_hashes['sha256']}`")
         lines.append(f"- **BLAKE2b:** `{file_hashes['blake2b']}`")
         lines.append(f"- **SHA-512 (Prefix):** `{file_hashes['sha512']}`\n")
 
     if entropy is not None:
-        lines.append("#### 🎲 Shannon Entropy Analysis")
-        desc = "High randomness / Encrypted blob / Strong token 🟢" if entropy > 6.0 else ("Moderate entropy / Human prose 🟡" if entropy > 3.5 else "Low entropy / Predictable text 🔴")
+        lines.append("####  Shannon Entropy Analysis")
+        desc = "High randomness / Encrypted blob / Strong token " if entropy > 6.0 else ("Moderate entropy / Human prose " if entropy > 3.5 else "Low entropy / Predictable text ")
         lines.append(f"- **Measured Entropy:** `{entropy:.3f} / 8.0 bits per byte`")
         lines.append(f"- **Assessment:** {desc}\n")
 
@@ -183,14 +183,14 @@ def _worker(action: str, target_path: str, input_text: str, player):
         if player:
             try:
                 player.show_content("CRYPTOGRAPHIC SENTINEL", card)
-                player.write_log(f"🔐 [CryptoSentinel] Audited {len(ssh_keys)} SSH keys. Cryptographic integrity confirmed.")
+                player.write_log(f"[CryptoSentinel] Audited {len(ssh_keys)} SSH keys. Cryptographic integrity confirmed.")
             except Exception:
                 pass
         return ssh_keys, file_hashes, entropy, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [CryptoSentinel] Error: {e}")
+                player.write_log(f"[CryptoSentinel] Error: {e}")
             except Exception:
                 pass
         return [], None, None, str(e)

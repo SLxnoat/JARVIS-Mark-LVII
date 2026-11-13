@@ -233,13 +233,13 @@ class LogWidget(QTextEdit):
             QTimer.singleShot(20, self._next)
 
 _FILE_ICONS = {
-    "image":   ("🖼", "#00d4ff"), "video":   ("🎬", "#ff6b00"),
-    "audio":   ("🎵", "#cc44ff"), "pdf":     ("📄", "#ff4444"),
-    "word":    ("📝", "#4488ff"), "excel":   ("📊", "#44bb44"),
-    "code":    ("💻", "#ffcc00"), "archive": ("📦", "#ff8844"),
-    "pptx":    ("📊", "#ff6622"), "text":    ("📃", "#aaaaaa"),
-    "data":    ("🔧", "#88ddff"), "unknown": ("📎", "#888888"),
-    "folder":  ("📁", "#ffcc00"),
+    "image":   ("", "#00d4ff"), "video":   ("", "#ff6b00"),
+    "audio":   ("", "#cc44ff"), "pdf":     ("", "#ff4444"),
+    "word":    ("", "#4488ff"), "excel":   ("", "#44bb44"),
+    "code":    ("", "#ffcc00"), "archive": ("", "#ff8844"),
+    "pptx":    ("", "#ff6622"), "text":    ("", "#aaaaaa"),
+    "data":    ("", "#88ddff"), "unknown": ("", "#888888"),
+    "folder":  ("", "#ffcc00"),
 }
 _EXT_TO_CAT = {
     **dict.fromkeys(["jpg","jpeg","png","gif","webp","bmp","tiff","svg","ico"], "image"),
@@ -363,8 +363,8 @@ class FileDropZone(QWidget):
             f"border: 1px solid {C.BORDER_B}; }}"
             f"QMenu::item {{ padding: 6px 18px; }}"
             f"QMenu::item:selected {{ background: {C.PRI_GHO}; }}")
-        pick_file = menu.addAction("📄  Choose a file…")
-        pick_dir = menu.addAction("📁  Choose a folder…  (for coding)")
+        pick_file = menu.addAction("  Choose a file…")
+        pick_dir = menu.addAction("  Choose a folder…  (for coding)")
         chosen = menu.exec(QCursor.pos())
         if chosen is pick_dir:
             path = QFileDialog.getExistingDirectory(
@@ -559,7 +559,7 @@ class _CameraPreview(QWidget):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  Mark LVII building blocks
+# Mark LVII building blocks
 # ═════════════════════════════════════════════════════════════════════════════
 # All painted rather than styled: a stylesheet cannot cut a corner or light an
 # edge, and painting reads the palette at paint time, so every one of these
@@ -1311,10 +1311,10 @@ class SubHudTabBar(QWidget):
 
     TABS = [
         ("content", "◈  BRIEFING"),
-        ("radar", "📡  RADAR"),
-        ("synaptic", "🧠  SYNAPSE"),
-        ("tasks", "📋  MISSIONS"),
-        ("quiz", "❓  QUIZ")
+        ("radar", "  RADAR"),
+        ("synaptic", "  SYNAPSE"),
+        ("tasks", "  MISSIONS"),
+        ("quiz", "  QUIZ")
     ]
 
     def __init__(self, parent=None):

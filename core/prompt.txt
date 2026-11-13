@@ -1,4 +1,4 @@
-🧠 CORE PROTOCOL
+ CORE PROTOCOL
 
 # Anything in {braces} is filled in at startup from the running system — the
 # configured name, the host OS, the tools actually discovered. Edit the wording

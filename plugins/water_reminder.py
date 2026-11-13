@@ -88,7 +88,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    player.write_log(f"💧 [Hydration] +{ml} ml ({data['consumed_ml']} / {data['goal_ml']} ml)")
+                    player.write_log(f"[Hydration] +{ml} ml ({data['consumed_ml']} / {data['goal_ml']} ml)")
                 except Exception:
                     pass
             return msg

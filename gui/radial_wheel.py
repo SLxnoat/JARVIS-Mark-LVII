@@ -42,12 +42,12 @@ class RadialQuickWheel(QWidget):
     closed = pyqtSignal()
 
     NODES: List[RadialSlice] = [
-        RadialSlice("radar", "TACTICAL RADAR", "Perimeter Sentry & Sockets", C.RED, "🛡️"),
-        RadialSlice("synaptic", "SYNAPTIC BOARD", "Cognitive Rules & Sparks", C.ACC2, "🧠"),
-        RadialSlice("tasks", "MISSION TASKS", "Autonomous Agent Capsules", C.GREEN, "🚀"),
-        RadialSlice("browser", "WEB BROWSER", "Playwright Surface & DOM", C.PRI, "🌐"),
-        RadialSlice("terminal", "DEV SANDBOX", "Terminal & Dev Agent", "#00e676", "💻"),
-        RadialSlice("settings", "SYSTEM HUD", "Providers & Palette Themes", "#b388ff", "⚙️"),
+        RadialSlice("radar", "TACTICAL RADAR", "Perimeter Sentry & Sockets", C.RED, "️"),
+        RadialSlice("synaptic", "SYNAPTIC BOARD", "Cognitive Rules & Sparks", C.ACC2, ""),
+        RadialSlice("tasks", "MISSION TASKS", "Autonomous Agent Capsules", C.GREEN, ""),
+        RadialSlice("browser", "WEB BROWSER", "Playwright Surface & DOM", C.PRI, ""),
+        RadialSlice("terminal", "DEV SANDBOX", "Terminal & Dev Agent", "#00e676", ""),
+        RadialSlice("settings", "SYSTEM HUD", "Providers & Palette Themes", "#b388ff", ""),
     ]
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:

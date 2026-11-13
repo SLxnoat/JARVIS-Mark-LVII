@@ -85,7 +85,7 @@ class CommandSpotlight(QWidget):
 
         # Header Search Row
         search_row = QHBoxLayout()
-        lbl_icon = QLabel("🔍")
+        lbl_icon = QLabel("")
         lbl_icon.setStyleSheet("border: none; background: transparent; font-size: 14px;")
         search_row.addWidget(lbl_icon)
 
@@ -157,10 +157,10 @@ class CommandSpotlight(QWidget):
 
         # 1. Primary Workspaces
         core_actions = [
-            ("tactical_radar", "Open Tactical Sentry Radar", "SECURITY", "360-degree perimeter sweep & socket inspection", "🛡️"),
-            ("synaptic_board", "Open Cognitive Synaptic Board", "NEURO", "Interactive self-learning rules & dopaminergic sparks", "🧠"),
-            ("mission_control", "Open Mission Control Tasks", "TASKS", "Autonomous agent task capsules & reports", "🚀"),
-            ("holodeck_mode", "Toggle Fullscreen Holodeck (F11)", "VIEWPORT", "Expand HUD canvas to 100% display area", "⛶"),
+            ("tactical_radar", "Open Tactical Sentry Radar", "SECURITY", "360-degree perimeter sweep & socket inspection", "️"),
+            ("synaptic_board", "Open Cognitive Synaptic Board", "NEURO", "Interactive self-learning rules & dopaminergic sparks", ""),
+            ("mission_control", "Open Mission Control Tasks", "TASKS", "Autonomous agent task capsules & reports", ""),
+            ("holodeck_mode", "Toggle Fullscreen Holodeck (F11)", "VIEWPORT", "Expand HUD canvas to 100% display area", ""),
             ("toggle_drawers", "Toggle Tactical Drawers (Ctrl+[ / Ctrl+])", "WORKSPACE", "Collapse or expand left and right columns", "◫"),
         ]
         for cid, title, cat, desc, icon in core_actions:
@@ -176,7 +176,7 @@ class CommandSpotlight(QWidget):
                 title = py_file.stem.replace("_", " ").title()
                 cat = "PLUGIN"
                 desc = f"Execute {title} plugin"
-                icon = "⚙️"
+                icon = ""
                 self._all_commands.append(SpotlightCommand(cmd_id, title, cat, desc, icon))
 
     def _populate_list(self, commands: List[SpotlightCommand]) -> None:

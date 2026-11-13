@@ -99,12 +99,12 @@ def _render_hud_card(
     repairs_done: int,
     success: bool,
 ) -> str:
-    status_badge = "EXECUTION SUCCESSFUL 🟢" if success else "EXECUTION FAILED 🔴"
+    status_badge = "EXECUTION SUCCESSFUL " if success else "EXECUTION FAILED "
     lines = [
-        "### ⚡ AUTONOMOUS CODE DEBUGGER & SANDBOX (JARVIS MARK-LVII)\n",
+        "###  AUTONOMOUS CODE DEBUGGER & SANDBOX (JARVIS MARK-LVII)\n",
         f"**Sandbox Status:** `{status_badge}`",
         f"**Self-Repair Iterations:** `{repairs_done}`\n",
-        "#### 🖥️ Sandbox Execution Output (stdout)",
+        "#### ️ Sandbox Execution Output (stdout)",
     ]
 
     if stdout.strip():
@@ -115,13 +115,13 @@ def _render_hud_card(
         lines.append("- *(No standard output produced)*\n")
 
     if stderr.strip() and not success:
-        lines.append("#### ⚠️ Unresolved Traceback (stderr)")
+        lines.append("####  Unresolved Traceback (stderr)")
         lines.append("```text")
         lines.append(stderr.strip()[:400])
         lines.append("```\n")
 
     if repairs_done > 0:
-        lines.append("#### 🛠️ Repaired Python Code")
+        lines.append("#### ️ Repaired Python Code")
         lines.append("```python")
         lines.append(final_code[:600])
         lines.append("```\n")
@@ -150,7 +150,7 @@ def _worker(code: str, max_repairs: int, player):
             if attempt < max_repairs:
                 if player:
                     try:
-                        player.write_log(f"⚡ [Sandbox] Intercepted traceback on attempt {attempt + 1}. Auto-repairing via Gemini...")
+                        player.write_log(f"[Sandbox] Intercepted traceback on attempt {attempt + 1}. Auto-repairing via Gemini...")
                     except Exception:
                         pass
                 repaired = _repair_code_with_gemini(current_code, stderr)
@@ -166,13 +166,13 @@ def _worker(code: str, max_repairs: int, player):
             try:
                 player.show_content("AUTONOMOUS CODE SANDBOX", card)
                 res_tag = "Passed" if success else "Failed"
-                player.write_log(f"⚡ [Sandbox] Execution finished: {res_tag} ({repairs_done} repairs).")
+                player.write_log(f"[Sandbox] Execution finished: {res_tag} ({repairs_done} repairs).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Sandbox] Error: {e}")
+                player.write_log(f"[Sandbox] Error: {e}")
             except Exception:
                 pass
 

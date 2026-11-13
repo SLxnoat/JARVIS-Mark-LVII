@@ -124,7 +124,7 @@ def _scan_process_anomalies() -> Dict[str, Any]:
 
 def _render_hud_card(action: str, report: Dict[str, Any]) -> str:
     lines = [
-        "### 🔍 TACTICAL PROCESS FORENSICS (JARVIS MARK-LVII)\n",
+        "###  TACTICAL PROCESS FORENSICS (JARVIS MARK-LVII)\n",
         f"**Active Process Monitored:** `{report.get('total_scanned', 0)}` PIDs\n",
     ]
 
@@ -133,7 +133,7 @@ def _render_hud_card(action: str, report: Dict[str, Any]) -> str:
 
     has_threats = bool(unlinked or tmp_exec)
     if has_threats:
-        lines.append("🚨 **SECURITY ADVISORY: POTENTIAL ANOMALOUS PROCESS EXECUTION DETECTED!**")
+        lines.append(" **SECURITY ADVISORY: POTENTIAL ANOMALOUS PROCESS EXECUTION DETECTED!**")
         if unlinked:
             lines.append(f"**Unlinked Running Binaries ({len(unlinked)}):** (Binary deleted from disk while active in RAM)")
             for u in unlinked[:6]:
@@ -144,9 +144,9 @@ def _render_hud_card(action: str, report: Dict[str, Any]) -> str:
                 lines.append(f"- PID `{t['pid']}` (`{t['name']}`) — Path: `{t['exe']}`")
         lines.append("")
     else:
-        lines.append("🟢 **Memory Integrity:** `CLEAN` — No unlinked binaries or executions from temporary directories.\n")
+        lines.append(" **Memory Integrity:** `CLEAN` — No unlinked binaries or executions from temporary directories.\n")
 
-    lines.append("#### ⚡ Top Memory Consuming Processes")
+    lines.append("####  Top Memory Consuming Processes")
     lines.append("```text")
     lines.append(f"{'PID':<7s} {'PPID':<7s} {'RSS (MB)':<10s} {'NAME':<20s} {'COMMAND'}")
     lines.append("-" * 70)
@@ -168,15 +168,15 @@ def _worker(action: str, player):
                 player.show_content("TACTICAL PROCESS FORENSICS", card)
                 threat_count = len(report.get("unlinked", [])) + len(report.get("tmp_exec", []))
                 if threat_count > 0:
-                    player.write_log(f"🚨 [ProcessForensics] Flagged {threat_count} anomalous process(es) in memory!")
+                    player.write_log(f"[ProcessForensics] Flagged {threat_count} anomalous process(es) in memory!")
                 else:
-                    player.write_log(f"🔍 [ProcessForensics] Scanned {report.get('total_scanned')} PIDs. Memory space clean.")
+                    player.write_log(f"[ProcessForensics] Scanned {report.get('total_scanned')} PIDs. Memory space clean.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [ProcessForensics] Error: {e}")
+                player.write_log(f"[ProcessForensics] Error: {e}")
             except Exception:
                 pass
 

@@ -161,7 +161,7 @@ def _say(text: str) -> None:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  THE LINK — used by both sides
+# THE LINK — used by both sides
 # ═════════════════════════════════════════════════════════════════════════════
 
 def new_secret() -> str:
@@ -374,7 +374,7 @@ class Client:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  WAKE-ON-LAN
+# WAKE-ON-LAN
 # ═════════════════════════════════════════════════════════════════════════════
 # A magic packet does not cross the internet by itself. Either the router
 # forwards a UDP port to the LAN (wake_host + wake_port), or something at home
@@ -439,7 +439,7 @@ def send_wake(cfg: dict) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  TIME — the user's clock
+# TIME — the user's clock
 # ═════════════════════════════════════════════════════════════════════════════
 
 def user_tz() -> timezone:
@@ -456,7 +456,7 @@ def user_now() -> datetime:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  WHEN THINGS HAPPEN — repeat rules, reminder buttons, the briefing's shape
+# WHEN THINGS HAPPEN — repeat rules, reminder buttons, the briefing's shape
 # ═════════════════════════════════════════════════════════════════════════════
 # Every scheduled entry carries a rule and the absolute moment it next fires.
 # Firing means "that moment has passed", never "the clock reads HH:MM right
@@ -506,7 +506,7 @@ def normalise_entry(entry: dict, now: datetime) -> dict | None:
 # Reminder buttons. They are protocol tokens, like /screen: matched exactly,
 # never interpreted, and handled without a model in the way — pressing
 # "+10 min" must work on the day the quota has run out.
-BTN_DONE, BTN_10, BTN_60, BTN_DAY = "✅ Done", "⏰ +10 min", "⏰ +1 h", "⏰ Tomorrow"
+BTN_DONE, BTN_10, BTN_60, BTN_DAY = " Done", " +10 min", " +1 h", " Tomorrow"
 REMINDER_BUTTONS = {BTN_DONE: 0, BTN_10: 10, BTN_60: 60, BTN_DAY: 1440}
 
 
@@ -608,23 +608,23 @@ def weather_today(city: str) -> dict:
 def brief_fallback(now: datetime, facts: dict, news: dict) -> str:
     """The briefing without a model: numbers, times and headlines, no prose —
     so it needs no language, and the phone still gets it when the quota is gone."""
-    lines = [f"☀️ {now:%d.%m.%Y %H:%M}"]
+    lines = [f" {now:%d.%m.%Y %H:%M}"]
     w = facts.get("weather")
     if w:
-        lines.append(f"🌤 {w['place']}: {w.get('now_c')}°C · {w.get('min_c')}–{w.get('max_c')}°C"
+        lines.append(f" {w['place']}: {w.get('now_c')}°C · {w.get('min_c')}–{w.get('max_c')}°C"
                      f" · ☔ {w.get('rain_chance_pct')}%")
     for item in facts.get("today") or []:
-        lines.append(f"⏰ {item['time']} {item['text']}")
+        lines.append(f" {item['time']} {item['text']}")
     for task in facts.get("tasks") or []:
-        lines.append(f"✅ {task['task'][:90]}")
+        lines.append(f" {task['task'][:90]}")
     for topic, rows in news.items():
         for row in rows[:2]:
-            lines.append(f"📰 {topic}: {row['title']}")
+            lines.append(f" {topic}: {row['title']}")
     return "\n".join(lines)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  STATE — JSON files under cloud_state/, written atomically
+# STATE — JSON files under cloud_state/, written atomically
 # ═════════════════════════════════════════════════════════════════════════════
 # A database would be more of everything this needs less of: one writer, tens
 # of items, and a person debugging it should be able to `cat` the file.
@@ -877,7 +877,7 @@ class CloudState:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  BRAIN — the same prompt and memory, thinking in text, with tools
+# BRAIN — the same prompt and memory, thinking in text, with tools
 # ═════════════════════════════════════════════════════════════════════════════
 # main.py's prompt builders cannot be imported here: main.py imports PyQt6 and
 # sounddevice at module scope. The two it needs are restated rather than
@@ -1009,20 +1009,20 @@ class Brain:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  TOOLS — an allowlist, and two walls in front of the user's computer
+# TOOLS — an allowlist, and two walls in front of the user's computer
 # ═════════════════════════════════════════════════════════════════════════════
 # WALL 1 — only the user can reach the computer. Background jobs, scheduled
-#   tasks and headline alerts are never offered home_computer, and it refuses
-#   them if they ask anyway. They spend their time reading pages written by
-#   strangers; none of that may become an action on the user's machine.
-#   Background tasks do not use this toolbox at all: they run on core/tasks,
-#   under core/tasks/tools.py's rules (see cloud_task_tools below).
+# tasks and headline alerts are never offered home_computer, and it refuses
+# them if they ask anyway. They spend their time reading pages written by
+# strangers; none of that may become an action on the user's machine.
+# Background tasks do not use this toolbox at all: they run on core/tasks,
+# under core/tasks/tools.py's rules (see cloud_task_tools below).
 #
 # WALL 2 — not after reading the web. Inside a turn the user did start, once a
-#   web page or a file has been read, home_computer refuses for the rest of that
-#   turn. A page cannot ride a legitimate request into "…and open this on the
-#   computer". Sending the request again as its own message works, because that
-#   one is the user's.
+# web page or a file has been read, home_computer refuses for the rest of that
+# turn. A page cannot ride a legitimate request into "…and open this on the
+# computer". Sending the request again as its own message works, because that
+# one is the user's.
 #
 # file_processor is borrowed from the desktop and narrowed: paths must resolve
 # inside the workspace, so an injected "summarise config/api_keys.json" cannot
@@ -1529,7 +1529,7 @@ def cloud_task_tools(workdir: Path, wanted, toolbox: ToolBox, extras=_TASK_EXTRA
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  TELEGRAM — plugins/telegram_remote.py on a server, unchanged
+# TELEGRAM — plugins/telegram_remote.py on a server, unchanged
 # ═════════════════════════════════════════════════════════════════════════════
 # That file is a security boundary with thirteen documented walls; a second bot
 # would be a second copy of every one of them, drifting. It needs a "player"
@@ -1729,7 +1729,7 @@ class TelegramFront:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  HTTPS SERVER — the desktop's door
+# HTTPS SERVER — the desktop's door
 # ═════════════════════════════════════════════════════════════════════════════
 # The port is on the internet: the TLS handshake happens on the worker thread
 # (a silent client cannot stall accept()), a failing address is blocked before
@@ -1921,7 +1921,7 @@ def serve(runtime, host: str, port: int, cert: Path, key: Path):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  RUNTIME — everything that runs on the server
+# RUNTIME — everything that runs on the server
 # ═════════════════════════════════════════════════════════════════════════════
 
 _TG_KEYS = ("bot_token", "relay_replies", "voice_replies")
@@ -2038,7 +2038,7 @@ class Runtime:
                                      str(payload.get("caption") or ""))
         text = str(payload.get("text") or payload.get("error") or "").strip()
         if text:
-            self.telegram.reply(chat, f"🖥 {text}", _assistant_name())
+            self.telegram.reply(chat, f" {text}", _assistant_name())
 
     def send_file(self, chat, path: Path) -> None:
         threading.Thread(target=self.telegram.send_bytes, daemon=True,
@@ -2128,7 +2128,7 @@ class Runtime:
                     or time.monotonic() - sent["at"] < _PROGRESS_GAP):
                 return
             sent["at"], sent["n"] = time.monotonic(), sent["n"] + 1
-            self.telegram.reply(chat, f"⏳ {text}", name)
+            self.telegram.reply(chat, f" {text}", name)
             return
         if event in ("started", "waiting"):
             self.log(f"SYS: job {task['id']} {event}" + (f" — {text[:160]}" if text else ""))
@@ -2160,7 +2160,7 @@ class Runtime:
     def fire_reminder(self, text: str, chat=None) -> None:
         """Sent as written — no model in the way. A reminder that depends on a
         model answering is a reminder that is lost the day the quota runs out."""
-        self.telegram.send_markup(chat, f"⏰ {text}", reminder_keyboard())
+        self.telegram.send_markup(chat, f" {text}", reminder_keyboard())
         self.state.set_last_reminder(chat, text)
         self.state.add_activity("reminder", text)
         self.log(f"SYS: reminder sent — {text[:80]}")
@@ -2171,11 +2171,11 @@ class Runtime:
         last = self.state.last_reminder(chat)
         keyboard = self.telegram.normal_keyboard()
         if not last or time.time() - float(last.get("at") or 0) > 12 * 3600:
-            self.telegram.send_markup(chat, "🤷", keyboard)
+            self.telegram.send_markup(chat, "", keyboard)
             return {"ok": False, "reason": "no recent reminder"}
         text = last["text"]
         if minutes <= 0:
-            self.telegram.send_markup(chat, f"✅ {text[:120]}", keyboard)
+            self.telegram.send_markup(chat, f" {text[:120]}", keyboard)
             self.state.add_activity("reminder_done", text)
             return {"ok": True, "done": True}
         when = user_now() + timedelta(minutes=minutes)
@@ -2183,7 +2183,7 @@ class Runtime:
                           trigger={"type": "time", "rule": {"type": "once", "at_ts": when.timestamp()}},
                           options={"chat": last.get("chat") or chat, "origin": "snooze"})
         label = f"{when:%H:%M}" if minutes < 1440 else f"{when:%d.%m %H:%M}"
-        self.telegram.send_markup(chat, f"💤 {label} — {text[:120]}", keyboard)
+        self.telegram.send_markup(chat, f" {label} — {text[:120]}", keyboard)
         self.log(f"SYS: reminder snoozed to {label}.")
         return {"ok": True, "snoozed_to": label}
 
@@ -2703,7 +2703,7 @@ def init_link(state: CloudState, host: str = "", port: int = 0, rotate: bool = F
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-#  INSTALL (on the server, as root) and DEPLOY (from your computer)
+# INSTALL (on the server, as root) and DEPLOY (from your computer)
 # ═════════════════════════════════════════════════════════════════════════════
 
 _UNIT = """[Unit]
@@ -2919,7 +2919,7 @@ def main() -> None:
     doc, cert, key = init_link(state, args.host, args.port, rotate=args.rotate)
     if args.init or args.pair_code or args.rotate:
         _say("\nPairing code — paste it into JARVIS on your computer:\n"
-             "  ⚙ → PLUGIN SETTINGS → CLOUD AGENT → Pairing code\n\n"
+             "   → PLUGIN SETTINGS → CLOUD AGENT → Pairing code\n\n"
              f"  {make_pair_code(doc['host'], doc['port'], doc['secret'], doc['fingerprint'])}\n\n"
              "Treat it like a password: anyone holding it can talk to this server.")
         if args.rotate:

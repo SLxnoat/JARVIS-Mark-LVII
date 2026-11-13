@@ -112,7 +112,7 @@ class SetupOverlay(QWidget):
 
         os_row = QHBoxLayout(); os_row.setSpacing(6)
         self._os_btns: dict[str, QPushButton] = {}
-        for key, label in [("windows","⊞  Windows"),("mac","  macOS"),("linux","🐧  Linux")]:
+        for key, label in [("windows","⊞  Windows"),("mac","  macOS"),("linux","  Linux")]:
             btn = QPushButton(label)
             btn.setFont(hud_font(9, QFont.Weight.Bold))
             btn.setFixedHeight(32)
@@ -314,7 +314,7 @@ class CustomizeOverlay(QWidget):
                f"border: 1px solid {C.BORDER}; border-radius: 3px; padding: 4px 8px; }}"
                f"QLineEdit:focus {{ border: 1px solid {C.PRI}; }}")
 
-        lay.addWidget(_lbl("⚙  CUSTOMISE ASSISTANT", 12, True))
+        lay.addWidget(_lbl("  CUSTOMISE ASSISTANT", 12, True))
         sep = QFrame(); sep.setFrameShape(QFrame.Shape.HLine)
         sep.setStyleSheet(f"color: {C.BORDER}; margin: 2px 0;")
         lay.addWidget(sep)
@@ -521,7 +521,7 @@ class PluginManagerOverlay(QWidget):
         lay.setContentsMargins(20, 16, 20, 16)
         lay.setSpacing(6)
 
-        hdr = QLabel("🧩  PLUGIN MANAGER")
+        hdr = QLabel("  PLUGIN MANAGER")
         hdr.setFont(hud_font(12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         lay.addWidget(hdr)
@@ -557,7 +557,7 @@ class PluginManagerOverlay(QWidget):
     def _build_row(self, p: dict) -> QHBoxLayout:
         row = QHBoxLayout(); row.setSpacing(6)
 
-        label_text = p["name"] if p["valid"] else f"{p['name']}  (⚠ {p['file']})"
+        label_text = p["name"] if p["valid"] else f"{p['name']}  ( {p['file']})"
         lbl = QLabel(label_text)
         lbl.setFont(hud_font(8))
         lbl.setStyleSheet(f"color: {C.TEXT if p['valid'] else C.TEXT_DIM}; background: transparent;")
@@ -662,7 +662,7 @@ class ConfirmBanner(_HudOverlay):
         lay.setContentsMargins(20, 16, 20, 16)
         lay.setSpacing(8)
 
-        hdr = QLabel("⚠  CONFIRM")
+        hdr = QLabel("  CONFIRM")
         hdr.setFont(hud_font(11, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.ACC}; background: transparent;")
         lay.addWidget(hdr)
@@ -760,7 +760,7 @@ class AudioDeviceOverlay(_HudOverlay):
         lay.setContentsMargins(20, 16, 20, 16)
         lay.setSpacing(6)
 
-        hdr = QLabel("🎧  AUDIO DEVICES")
+        hdr = QLabel("  AUDIO DEVICES")
         hdr.setFont(hud_font(12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         lay.addWidget(hdr)
@@ -1168,7 +1168,7 @@ class MemoryOverlay(_HudOverlay):
 
         from memory.memory_manager import all_entries_for_ui
 
-        hdr = QLabel("🧠  WHAT JARVIS REMEMBERS")
+        hdr = QLabel("  WHAT JARVIS REMEMBERS")
         hdr.setFont(hud_font(12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         self._lay.addWidget(hdr)
@@ -1422,7 +1422,7 @@ class PluginSettingsOverlay(QWidget):
         root.setContentsMargins(22, 16, 22, 16)
         root.setSpacing(8)
 
-        root.addWidget(self._lbl("⚙  PLUGIN SETTINGS", 12, True))
+        root.addWidget(self._lbl("  PLUGIN SETTINGS", 12, True))
         sep = QFrame(); sep.setFrameShape(QFrame.Shape.HLine)
         sep.setStyleSheet(f"color: {C.BORDER}; margin: 2px 0;")
         root.addWidget(sep)
@@ -1717,7 +1717,7 @@ class RemoteKeyOverlay(QWidget):
         # cannot be reached and does not explain why is the single most
         # frustrating failure this app has.
         if bind_error:
-            lay.addWidget(_lbl("⚠  " + bind_error, 8, color="#f4b942"))
+            lay.addWidget(_lbl("  " + bind_error, 8, color="#f4b942"))
 
         try:
             from dashboard.server import blocking_firewall_rules
@@ -1726,7 +1726,7 @@ class RemoteKeyOverlay(QWidget):
             _blocked = []
         if _blocked:
             warn = _lbl(
-                "⚠  Windows is blocking incoming connections to this copy of "
+                "  Windows is blocking incoming connections to this copy of "
                 "Python, so your phone cannot reach this page. Restart JARVIS "
                 "and accept the Windows prompt, or remove the rules named "
                 + ", ".join(sorted({n for n, _ in _blocked}))

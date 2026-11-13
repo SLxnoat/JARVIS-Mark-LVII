@@ -77,21 +77,21 @@ def _translate_phrase(text: str, target_lang: str) -> Dict[str, Any]:
 
 def _render_hud_card(orig: str, target_lang: str, data: Dict[str, Any]) -> str:
     lines = [
-        "### 🌐 MULTILINGUAL LIVE INTERPRETER (JARVIS MARK-LVII)\n",
+        "###  MULTILINGUAL LIVE INTERPRETER (JARVIS MARK-LVII)\n",
         f"**Language Pair:** `{data.get('source_language', 'Detected')}` ➔ `{target_lang.title()}`\n",
-        "#### 💬 Original Source Phrase",
+        "####  Original Source Phrase",
         f"> *\"{orig}\"*\n",
-        "#### 🎯 Translated Output",
+        "####  Translated Output",
         f"### {data.get('translated_text', '')}\n",
     ]
 
     phonetic = data.get("phonetic_pronunciation")
     if phonetic and phonetic != "N/A":
-        lines.append(f"**🗣️ Phonetic Pronunciation:** `{phonetic}`\n")
+        lines.append(f"**️ Phonetic Pronunciation:** `{phonetic}`\n")
 
     nuance = data.get("nuance_note")
     if nuance:
-        lines.append(f"**💡 Linguistic Register & Nuance:** {nuance}\n")
+        lines.append(f"** Linguistic Register & Nuance:** {nuance}\n")
 
     lines.append(f"*Translation synchronized at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -105,14 +105,14 @@ def _worker(text: str, target_lang: str, player):
         if player:
             try:
                 player.show_content("MULTILINGUAL INTERPRETER", card)
-                player.write_log(f"🌐 [Translator] {data.get('source_language')} ➔ {target_lang}: \"{data.get('translated_text')[:40]}\".")
+                player.write_log(f"[Translator] {data.get('source_language')} ➔ {target_lang}: \"{data.get('translated_text')[:40]}\".")
             except Exception:
                 pass
         return data, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Translator] Error: {e}")
+                player.write_log(f"[Translator] Error: {e}")
             except Exception:
                 pass
         return {"translated_text": text, "source_language": "Auto"}, str(e)

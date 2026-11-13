@@ -129,10 +129,10 @@ def _transform_clipboard_content(raw: str) -> Tuple[str, str, str]:
 
 def _render_hud_card(fmt: str, summary: str, trans: str) -> str:
     lines = [
-        "### 📋 SMART CLIPBOARD COPILOT (JARVIS MARK-LVII)\n",
+        "###  SMART CLIPBOARD COPILOT (JARVIS MARK-LVII)\n",
         f"**Detected Format:** `{fmt.upper()}`",
         f"**Transformation:** *{summary}*\n",
-        "#### 🔄 Transformed Output",
+        "####  Transformed Output",
         "```text",
         trans[:1000],
         "```\n",
@@ -150,13 +150,13 @@ def _worker(text_arg: str, player):
         if player:
             try:
                 player.show_content("SMART CLIPBOARD", card)
-                player.write_log(f"📋 [SmartClipboard] Identified {fmt}: {summary}.")
+                player.write_log(f"[SmartClipboard] Identified {fmt}: {summary}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [SmartClipboard] Error: {e}")
+                player.write_log(f"[SmartClipboard] Error: {e}")
             except Exception:
                 pass
 

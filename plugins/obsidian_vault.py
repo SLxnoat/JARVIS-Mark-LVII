@@ -97,7 +97,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 try:
                     listing = "\n".join(f"- **{f.stem}** *({f.relative_to(vault)})*" for f in top)
-                    player.show_content("Obsidian Notes", f"### 📓 Obsidian Vault (`{vault}`)\n\n{listing}")
+                    player.show_content("Obsidian Notes", f"###  Obsidian Vault (`{vault}`)\n\n{listing}")
                 except Exception:
                     pass
             return f"Found {len(files)} note(s) in Obsidian. Recent notes include: {', '.join(names[:5])}."
@@ -120,7 +120,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    summary = f"### 🔍 Notes matching '{query}':\n\n" + "\n".join(
+                    summary = f"###  Notes matching '{query}':\n\n" + "\n".join(
                         f"- **{f.stem}** (`{f.relative_to(vault)}`)" for f in matched[:12]
                     )
                     player.show_content(f"Obsidian Search: {query}", summary)
@@ -142,7 +142,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             text = target.read_text(encoding="utf-8", errors="replace")
             if player:
                 try:
-                    player.show_content(f"Obsidian: {target.stem}", f"### 📄 {target.stem}\n\n{text}")
+                    player.show_content(f"Obsidian: {target.stem}", f"###  {target.stem}\n\n{text}")
                 except Exception:
                     pass
             preview = text[:200].replace("\n", " ").strip()

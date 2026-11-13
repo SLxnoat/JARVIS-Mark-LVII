@@ -92,7 +92,7 @@ Once all tests pass, stage and commit the changes cleanly following the conventi
 
 - **Spoken response**: Direct summary of architectural changes (e.g. *"Refactoring complete. 3 modules decoupled, all 17 unit tests passing."*).
 - **HUD telemetry**: Display the architectural diff or AST tree using `player.show_content("Architecture Map", markdown)`.
-- **Activity log**: Post commit hash via `player.write_log("🔧 [Refactor] Codebase restructured cleanly.")`.
+- **Activity log**: Post commit hash via `player.write_log("[Refactor] Codebase restructured cleanly.")`.
 
 ## Pitfalls & Anti-Patterns
 

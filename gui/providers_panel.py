@@ -155,7 +155,7 @@ class ProvidersOverlay(_HudOverlay):
         outer.setContentsMargins(22, 18, 22, 18)
         outer.setSpacing(10)
 
-        title = QLabel("🔌  ENGINE  &  PROVIDERS")
+        title = QLabel("  ENGINE  &  PROVIDERS")
         title.setFont(hud_font(13, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         outer.addWidget(title)
@@ -174,13 +174,13 @@ class ProvidersOverlay(_HudOverlay):
         self._mode = get_provider_mode()
         cards = QHBoxLayout(); cards.setSpacing(10)
         self._card_gemini = self._mode_card(
-            "☁  GEMINI LIVE",
+            "  GEMINI LIVE",
             "One connection carries your voice, its voice, the transcript and "
             "the tools together. The fastest option — about half a second to "
             "the first word.",
             "gemini")
         self._card_local = self._mode_card(
-            "🖥  MY OWN SETUP",
+            "  MY OWN SETUP",
             "Your choice of hearing, thinking and speaking. Can run entirely on "
             "this computer, with nothing leaving it. Slower: 1.5 to 4 seconds.",
             "pipeline")
@@ -626,9 +626,9 @@ class ProvidersOverlay(_HudOverlay):
         def fmt(entry, decl):
             label = entry["label"]
             if entry.get("local") is True:
-                label = f"🖥  {label}"
+                label = f"  {label}"
             elif entry.get("local") is False:
-                label = f"☁  {label}"
+                label = f"  {label}"
             else:
                 label = f"    {label}"
             note = entry.get("note") or ""
@@ -827,7 +827,7 @@ class ProvidersOverlay(_HudOverlay):
         QTimer.singleShot(0, self._rebuild_body)
 
     def _sidecar_box_widget(self) -> QWidget:
-        head = self._label("⚡  BACKGROUND REQUESTS", 9, C.PRI, bold=True)
+        head = self._label("  BACKGROUND REQUESTS", 9, C.PRI, bold=True)
         w, lay = self._box([head])
         lay.addWidget(self._label(
             "Reading a document, looking at your screen, writing code — the "
@@ -842,8 +842,8 @@ class ProvidersOverlay(_HudOverlay):
         sid = self._sidecar
 
         def fmt(entry, _decl):
-            mark = "🖥" if entry.get("local") else (
-                "☁" if entry.get("local") is False else "  ")
+            mark = "" if entry.get("local") else (
+                "" if entry.get("local") is False else "  ")
             return f"{mark}  Fall back to {entry['label']}"
 
         self._sidecar_combo = self._service_combo(
@@ -882,7 +882,7 @@ class ProvidersOverlay(_HudOverlay):
         whole source file at a time. Whatever is picked is tried FIRST for code,
         with Gemini behind it, so a service having a bad day still produces a
         project instead of nothing."""
-        head = self._label("🛠  CODING", 9, C.PRI, bold=True)
+        head = self._label("  CODING", 9, C.PRI, bold=True)
         w, lay = self._box([head])
         lay.addWidget(self._label(
             "The model that plans, writes and fixes projects when you ask the "
@@ -892,9 +892,9 @@ class ProvidersOverlay(_HudOverlay):
         sid = self._coding
 
         def fmt(entry, _decl):
-            mark = "🖥" if entry.get("local") else (
-                "☁" if entry.get("local") is False else "  ")
-            star = "   ★ recommended" if entry.get("id") == "minimax" else ""
+            mark = "" if entry.get("local") else (
+                "" if entry.get("local") is False else "  ")
+            star = "    recommended" if entry.get("id") == "minimax" else ""
             return f"{mark}  Code with {entry['label']}{star}"
 
         self._coding_combo = self._service_combo(
@@ -953,7 +953,7 @@ class ProvidersOverlay(_HudOverlay):
                    if not self._pipe.get(slot)]
         if "THINKING" in missing:
             self._footer.setText(
-                "⚠  ② THINKING is not set — without it the assistant falls back "
+                "  ② THINKING is not set — without it the assistant falls back "
                 "to Gemini Live and says so in the log.")
         elif missing:
             words = " and ".join(f"{m.lower()}" for m in missing)

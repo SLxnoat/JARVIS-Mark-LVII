@@ -267,7 +267,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
         spoken = f"{val:g} {from_u.upper()} is equal to {res_str} {to_u.upper()}, sir."
 
         md = (
-            f"## 📐 Scientific & Technical Conversion: {domain_name}\n\n"
+            f"##  Scientific & Technical Conversion: {domain_name}\n\n"
             f"> **Input:** `{val:g} {from_u.upper()}` &nbsp; ➡️ &nbsp; **Output:** **`{res_str} {to_u.upper()}`**\n\n"
             f"| Parameter | Value |\n"
             f"|:---|:---|\n"
@@ -279,7 +279,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
         # Highlight binary compute storage difference if applicable
         if from_u in ("tb", "tib") or to_u in ("tb", "tib"):
             md += (
-                f"\n> 💡 **Storage Insight:** Decimal Terabytes (`1 TB = 10^12 bytes`) are commonly used by drive makers, "
+                f"\n>  **Storage Insight:** Decimal Terabytes (`1 TB = 10^12 bytes`) are commonly used by drive makers, "
                 f"while Operating Systems report binary Tebibytes (`1 TiB = 2^40 bytes = 1.0995 TB`).\n"
             )
 

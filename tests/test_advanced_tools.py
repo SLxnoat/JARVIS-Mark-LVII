@@ -152,13 +152,22 @@ class TestAdvancedTools(unittest.TestCase):
         self.assertIn("pipeline", res.lower())
 
     def test_session_recovery_markers(self):
-        write_turn_marker(prompt="Audit container fleet", tool_name="docker_sentinel")
-        marker = check_recovery_marker()
-        self.assertIsNotNone(marker)
-        self.assertEqual(marker["tool_name"], "docker_sentinel")
-        # Ensure it was cleared after recovery
-        marker_again = check_recovery_marker()
-        self.assertIsNone(marker_again)
+        import tempfile
+        import memory.session_recovery as sr
+        from unittest.mock import patch
+        # Patch MARKER_FILE to a writable temp location so the sandbox
+        # read-only filesystem constraint does not interfere.
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as _f:
+            tmp_path = Path(_f.name)
+        tmp_path.unlink(missing_ok=True)  # let write_turn_marker create it fresh
+        with patch.object(sr, "MARKER_FILE", tmp_path):
+            write_turn_marker(prompt="Audit container fleet", tool_name="docker_sentinel")
+            marker = check_recovery_marker()
+            self.assertIsNotNone(marker)
+            self.assertEqual(marker["tool_name"], "docker_sentinel")
+            # Ensure it was cleared after recovery
+            marker_again = check_recovery_marker()
+            self.assertIsNone(marker_again)
 
 
 if __name__ == "__main__":

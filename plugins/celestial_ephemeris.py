@@ -77,21 +77,21 @@ def _calculate_moon_phase(dt: datetime.datetime | None = None) -> Dict[str, Any]
     illumination = 0.5 * (1 - math.cos(2 * math.pi * phase_ratio)) * 100.0
 
     if phase_ratio < 0.03 or phase_ratio > 0.97:
-        phase_name = "New Moon 🌑"
+        phase_name = "New Moon "
     elif phase_ratio < 0.22:
-        phase_name = "Waxing Crescent 🌒"
+        phase_name = "Waxing Crescent "
     elif phase_ratio < 0.28:
-        phase_name = "First Quarter 🌓"
+        phase_name = "First Quarter "
     elif phase_ratio < 0.47:
-        phase_name = "Waxing Gibbous 🌔"
+        phase_name = "Waxing Gibbous "
     elif phase_ratio < 0.53:
-        phase_name = "Full Moon 🌕"
+        phase_name = "Full Moon "
     elif phase_ratio < 0.72:
-        phase_name = "Waning Gibbous 🌖"
+        phase_name = "Waning Gibbous "
     elif phase_ratio < 0.78:
-        phase_name = "Last Quarter 🌗"
+        phase_name = "Last Quarter "
     else:
-        phase_name = "Waning Crescent 🌘"
+        phase_name = "Waning Crescent "
 
     return {
         "phase_name": phase_name,
@@ -127,10 +127,10 @@ def _get_naked_eye_planets() -> List[Dict[str, str]]:
 
 def _render_hud_card(action: str, moon: Dict[str, Any], planets: List[Dict[str, str]], twilight: Dict[str, str]) -> str:
     lines = [
-        "### 🔭 CELESTIAL EPHEMERIS & HORIZON RADAR (JARVIS MARK-LVII)\n",
+        "###  CELESTIAL EPHEMERIS & HORIZON RADAR (JARVIS MARK-LVII)\n",
         f"**Lunar Phase:** `{moon['phase_name']}` *(Illumination: `{moon['illumination_pct']}%`)*",
         f"**Lunar Age:** `{moon['age_days']} days` into current 29.5-day synodic cycle\n",
-        "#### 🪐 Naked-Eye Planetary Observation Matrix",
+        "####  Naked-Eye Planetary Observation Matrix",
         "```text",
         f"{'PLANET':<10s} {'VISUAL MAG':<12s} {'CONSTELLATION':<16s} {'OBSERVATION WINDOW'}",
         "-" * 72,
@@ -139,7 +139,7 @@ def _render_hud_card(action: str, moon: Dict[str, Any], planets: List[Dict[str, 
         lines.append(f"{p['name']:<10s} {p['mag']:<12s} {p['constellation']:<16s} {p['visibility']}")
     lines.append("```\n")
 
-    lines.append("#### 🌌 Twilight Thresholds & Sky Darkness")
+    lines.append("####  Twilight Thresholds & Sky Darkness")
     lines.append(f"- **Solar Declination:** `{twilight['solar_declination']}`")
     lines.append(f"- **Civil Twilight:** `{twilight['civil_twilight']}`")
     lines.append(f"- **Nautical Twilight:** `{twilight['nautical_twilight']}`")
@@ -159,14 +159,14 @@ def _worker(action: str, lat: float, lon: float, player):
         if player:
             try:
                 player.show_content("CELESTIAL EPHEMERIS", card)
-                player.write_log(f"🔭 [Celestial] Moon: {moon['phase_name']} ({moon['illumination_pct']}%). {len(planets)} planets mapped.")
+                player.write_log(f"[Celestial] Moon: {moon['phase_name']} ({moon['illumination_pct']}%). {len(planets)} planets mapped.")
             except Exception:
                 pass
         return moon, planets, twilight, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Celestial] Error: {e}")
+                player.write_log(f"[Celestial] Error: {e}")
             except Exception:
                 pass
         return {"phase_name": "Waxing Gibbous", "illumination_pct": 50}, [], {}, str(e)

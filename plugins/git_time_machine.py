@@ -96,9 +96,9 @@ def _analyze_git_history(limit: int = 50) -> Dict[str, Any]:
 
 def _render_hud_card(data: Dict[str, Any]) -> str:
     lines = [
-        "### ⏳ GIT TIME MACHINE & REPO CHURN RADAR (JARVIS MARK-LVII)\n",
+        "###  GIT TIME MACHINE & REPO CHURN RADAR (JARVIS MARK-LVII)\n",
         f"**Commits Evaluated:** `{data['commits_analyzed']}` | **Lines Added:** `+{data['added_lines']:,}` | **Lines Deleted:** `-{data['deleted_lines']:,}`\n",
-        "#### 🔥 Codebase Refactoring Hotspots (Most Frequently Modified)",
+        "####  Codebase Refactoring Hotspots (Most Frequently Modified)",
         "```text",
         f"{'MODIFICATIONS':<15s} {'FILE PATH'}",
         "-" * 65,
@@ -109,7 +109,7 @@ def _render_hud_card(data: Dict[str, Any]) -> str:
 
     lines.append("```\n")
 
-    lines.append("#### 🧑‍💻 Author Contribution Velocity")
+    lines.append("#### ‍ Author Contribution Velocity")
     for author, count in data["authors"]:
         lines.append(f"- **{author}:** `{count}` commits in inspected window")
 
@@ -126,13 +126,13 @@ def _worker(limit: int, player):
             try:
                 player.show_content("GIT TIME MACHINE", card)
                 hot_name = data["top_hotspots"][0][0] if data["top_hotspots"] else "None"
-                player.write_log(f"⏳ [TimeMachine] Scanned {data['commits_analyzed']} commits. Top hotspot: {hot_name}.")
+                player.write_log(f"[TimeMachine] Scanned {data['commits_analyzed']} commits. Top hotspot: {hot_name}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [TimeMachine] Error: {e}")
+                player.write_log(f"[TimeMachine] Error: {e}")
             except Exception:
                 pass
 

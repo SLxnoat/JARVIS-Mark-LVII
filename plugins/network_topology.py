@@ -401,28 +401,28 @@ def _exposure_flags(host: str, open_svcs: list[tuple[int, str]]) -> list[str]:
     port_map = dict(open_svcs)
 
     if 23 in port_map:
-        flags.append("🔴 Telnet (23) open — unencrypted remote admin protocol, consider disabling")
+        flags.append(" Telnet (23) open — unencrypted remote admin protocol, consider disabling")
     if 21 in port_map:
         banner = _grab_banner(host, 21)
-        flags.append(f"🟠 FTP (21) open — unencrypted file transfer{f' [{banner}]' if banner else ''}")
+        flags.append(f" FTP (21) open — unencrypted file transfer{f'[{banner}]' if banner else ''}")
     if 445 in port_map:
-        flags.append("🟠 SMB (445) exposed to LAN — confirm this host should be reachable")
+        flags.append(" SMB (445) exposed to LAN — confirm this host should be reachable")
     if 80 in port_map and 443 not in port_map:
-        flags.append("🟡 HTTP (80) open with no HTTPS (443) counterpart — unencrypted web admin UI")
+        flags.append(" HTTP (80) open with no HTTPS (443) counterpart — unencrypted web admin UI")
     if 443 in port_map:
         tls = _tls_cert_info(host, 443)
         if tls.get("ok"):
             if tls.get("expired"):
-                flags.append(f"🔴 TLS certificate EXPIRED on {tls.get('expiry')}")
+                flags.append(f" TLS certificate EXPIRED on {tls.get('expiry')}")
             elif tls.get("weak_protocol"):
-                flags.append(f"🔴 Weak TLS protocol negotiated: {tls.get('protocol')}")
+                flags.append(f" Weak TLS protocol negotiated: {tls.get('protocol')}")
             else:
                 expiry_str = f", expires {tls.get('expiry')}" if tls.get("expiry") else ""
-                flags.append(f"🟢 TLS OK — {tls.get('protocol')}, issuer: {tls.get('issuer')}{expiry_str}")
+                flags.append(f" TLS OK — {tls.get('protocol')}, issuer: {tls.get('issuer')}{expiry_str}")
         else:
-            flags.append("🟡 HTTPS (443) open but TLS handshake could not be inspected")
+            flags.append(" HTTPS (443) open but TLS handshake could not be inspected")
     if not flags:
-        flags.append("🟢 No legacy/plaintext exposure detected on probed ports")
+        flags.append(" No legacy/plaintext exposure detected on probed ports")
     return flags
 
 
@@ -445,7 +445,7 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
             open_svcs = _probe_ports(host, ports)
 
             hud_lines = [
-                f"### 🛡️ Tactical Service Verification: `{host}`\n",
+                f"### ️ Tactical Service Verification: `{host}`\n",
                 f"**Interface:** `{iface}` | **Probed Ports:** `{len(ports)}`\n",
             ]
             if open_svcs:
@@ -453,14 +453,14 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
                 for port, name in open_svcs:
                     banner = _grab_banner(host, port)
                     tag = f" — `{banner}`" if banner else ""
-                    hud_lines.append(f"- 🟢 **Port {port}** — `{name}`{tag}")
+                    hud_lines.append(f"-  **Port {port}** — `{name}`{tag}")
             else:
                 hud_lines.append("> ℹ️ No standard services open on probed ports.")
 
             if player:
                 try:
                     player.show_content("SERVICE VERIFICATION", "\n".join(hud_lines))
-                    player.write_log(f"🛡️ [Radar] Service check on {host}: {len(open_svcs)} open ports.")
+                    player.write_log(f"️ [Radar] Service check on {host}: {len(open_svcs)} open ports.")
                 except Exception:
                     pass
             return
@@ -472,7 +472,7 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
             flags = _exposure_flags(host, open_svcs)
 
             hud_lines = [
-                f"### 🔎 Exposure Audit: `{host}`\n",
+                f"###  Exposure Audit: `{host}`\n",
                 f"**Open Ports:** `{len(open_svcs)}` | **Probed:** `{len(ports)}`\n",
                 "**Findings:**",
             ]
@@ -481,7 +481,7 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
             if player:
                 try:
                     player.show_content("EXPOSURE AUDIT", "\n".join(hud_lines))
-                    player.write_log(f"🔎 [Radar] Exposure audit on {host}: {len(flags)} findings.")
+                    player.write_log(f"[Radar] Exposure audit on {host}: {len(flags)} findings.")
                 except Exception:
                     pass
             return
@@ -517,8 +517,8 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
             })
 
         hud_lines = [
-            "### 🛰️ TACTICAL NETWORK RADAR (JARVIS MARK-LVII)\n",
-            f"**Primary Gateway:** `{gw_ip}` *({iface})* — [ONLINE 🟢]\n",
+            "### ️ TACTICAL NETWORK RADAR (JARVIS MARK-LVII)\n",
+            f"**Primary Gateway:** `{gw_ip}` *({iface})* — [ONLINE ]\n",
             f"**JARVIS Host Node:** `{local_ip}`\n",
             f"**Discovered Active Nodes:** `{len(nodes_info)}`\n",
             "```text",
@@ -528,10 +528,10 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
         for idx, node in enumerate(nodes_info):
             prefix = "└── " if idx == len(nodes_info) - 1 else "├── "
             label = " (DEFAULT GATEWAY)" if node["is_gateway"] else (" (JARVIS HOST)" if node["is_host"] else "")
-            hname = f" [{node['hostname']}]" if node["hostname"] != "Unknown Node" else ""
+            hname = f"[{node['hostname']}]" if node["hostname"] != "Unknown Node" else ""
             vendor_tag = f" <{node['vendor']}>" if node["vendor"] != "Unknown Vendor" else ""
             svcs = f" :: {', '.join(s[1] for s in node['services'])}" if node["services"] else ""
-            hud_lines.append(f"{prefix}🟢 {node['ip']:15s} ({node['mac']}){vendor_tag}{label}{hname}{svcs}")
+            hud_lines.append(f"{prefix} {node['ip']:15s} ({node['mac']}){vendor_tag}{label}{hname}{svcs}")
 
         hud_lines.append("```\n")
         mode_tag = "active subnet sweep" if action == "subnet_sweep" else "passive ARP cache"
@@ -540,14 +540,14 @@ def _radar_worker(action: str, target_ip: str | None, custom_ports: list[int] | 
         if player:
             try:
                 player.show_content("TACTICAL NETWORK RADAR", "\n".join(hud_lines))
-                player.write_log(f"🛰️ [Radar] Mapped network: {len(nodes_info)} nodes active (Gateway: {gw_ip}).")
+                player.write_log(f"️ [Radar] Mapped network: {len(nodes_info)} nodes active (Gateway: {gw_ip}).")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Radar] Scan error: {e}")
+                player.write_log(f"[Radar] Scan error: {e}")
             except Exception:
                 pass
 

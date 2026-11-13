@@ -92,7 +92,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
                 if player:
                     try:
-                        md = f"### 🏠 Home Assistant Entities ({domain or 'all'})\n\n" + "\n".join(summary)
+                        md = f"###  Home Assistant Entities ({domain or 'all'})\n\n" + "\n".join(summary)
                         player.show_content("Home Assistant", md)
                     except Exception:
                         pass
@@ -126,7 +126,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                     verb = {"turn_on": "turned on", "turn_off": "turned off", "toggle": "toggled"}.get(action, action)
                     if player:
                         try:
-                            player.write_log(f"🏠 [HomeAssistant] {verb.capitalize()} {entity_id}")
+                            player.write_log(f"[HomeAssistant] {verb.capitalize()} {entity_id}")
                         except Exception:
                             pass
                     return f"Successfully {verb} {entity_id}."

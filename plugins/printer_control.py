@@ -87,7 +87,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                         pct = progress.get("completion") or 0.0
 
                     hud_md = (
-                        f"### 🖨️ 3D Printer Status (`{job_text}`)\n\n"
+                        f"### ️ 3D Printer Status (`{job_text}`)\n\n"
                         f"- **Nozzle (Tool 0):** `{actual_tool}°C / {target_tool}°C`\n"
                         f"- **Heated Bed:** `{actual_bed}°C / {target_bed}°C`\n"
                         f"- **Print Completion:** `{pct:.1f}%`\n"
@@ -124,7 +124,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if resp.status_code in (200, 204):
                     if player:
                         try:
-                            player.write_log(f"🖨️ [Printer] Executed job command: {action}")
+                            player.write_log(f"️ [Printer] Executed job command: {action}")
                         except Exception:
                             pass
                     return f"Successfully sent '{action}' command to 3D printer."

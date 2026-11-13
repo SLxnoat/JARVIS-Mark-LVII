@@ -72,27 +72,27 @@ def _check_pwned_password_kanonymity(password: str) -> int:
 
 def _render_hud_card(query: str, qtype: str, leak_count: int) -> str:
     lines = [
-        "### 🛡️ DIGITAL FOOTPRINT & BREACH SENTINEL (JARVIS MARK-LVII)\n",
+        "### ️ DIGITAL FOOTPRINT & BREACH SENTINEL (JARVIS MARK-LVII)\n",
     ]
 
     if qtype == "password":
         masked = query[0] + ("*" * (len(query) - 2)) + query[-1] if len(query) > 2 else "***"
         if leak_count > 0:
-            lines.append(f"🚨 **SECURITY ALERT: CREDENTIAL COMPROMISED!**")
+            lines.append(f" **SECURITY ALERT: CREDENTIAL COMPROMISED!**")
             lines.append(f"- **Target Password:** `{masked}`")
             lines.append(f"- **Public Breach Sighting Count:** `{leak_count:,}` times in known credential dumps!")
-            lines.append("- **Threat Rating:** `CRITICAL 🔴 (Vulnerable to Credential Stuffing)`")
-            lines.append("\n#### ⚠️ Remediation Directive")
+            lines.append("- **Threat Rating:** `CRITICAL  (Vulnerable to Credential Stuffing)`")
+            lines.append("\n####  Remediation Directive")
             lines.append("- Immediately rotate this password across all services where it was used.")
             lines.append("- Ensure Multi-Factor Authentication (MFA / FIDO2) is enabled.")
         else:
-            lines.append("🟢 **SECURITY CLEARANCE: NO BREACH EXPOSURE DETECTED**")
+            lines.append(" **SECURITY CLEARANCE: NO BREACH EXPOSURE DETECTED**")
             lines.append(f"- **Target Password:** `{masked}`")
             lines.append("- **Public Breach Sighting Count:** `0` (Clean)")
-            lines.append("- **Threat Rating:** `SECURE 🟢` — Password has not appeared in global breach corpuses.")
+            lines.append("- **Threat Rating:** `SECURE ` — Password has not appeared in global breach corpuses.")
     else:
         lines.append(f"**Target Identity:** `{query}`")
-        lines.append("🟢 **Domain Privacy:** Public record query completed. Zero active plaintext dumps found.")
+        lines.append(" **Domain Privacy:** Public record query completed. Zero active plaintext dumps found.")
 
     lines.append(f"\n*k-Anonymity hash query concluded at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -107,13 +107,13 @@ def _worker(query: str, qtype: str, player):
             try:
                 player.show_content("DIGITAL FOOTPRINT SENTINEL", card)
                 verdict = f"Leaked {leak_count:,} times" if leak_count > 0 else "Clean"
-                player.write_log(f"🛡️ [FootprintScanner] Audited {qtype}: {verdict}.")
+                player.write_log(f"️ [FootprintScanner] Audited {qtype}: {verdict}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [FootprintScanner] Error: {e}")
+                player.write_log(f"[FootprintScanner] Error: {e}")
             except Exception:
                 pass
 

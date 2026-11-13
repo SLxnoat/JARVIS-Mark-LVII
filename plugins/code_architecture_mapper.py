@@ -87,7 +87,7 @@ def _generate_mermaid_graph(analyses: List[Dict[str, Any]]) -> str:
 
     for a in analyses[:16]:
         fname = a["file"]
-        lines.append(f'    {fname}["📦 {fname}"]')
+        lines.append(f'    {fname}[" {fname}"]')
         for imp in a["imports"]:
             if imp in file_names and imp != fname:
                 lines.append(f"    {fname} --> {imp}")
@@ -107,12 +107,12 @@ def _render_hud_card(target_dir: str, analyses: List[Dict[str, Any]], mermaid_ch
     total_funcs = sum(a["func_count"] for a in analyses)
 
     lines = [
-        "### 📐 CODEBASE ARCHITECTURE & AST RADAR (JARVIS MARK-LVII)\n",
+        "###  CODEBASE ARCHITECTURE & AST RADAR (JARVIS MARK-LVII)\n",
         f"**Target Directory:** `{target_dir}` | **Modules Audited:** `{len(analyses)}`",
         f"**Extracted Classes:** `{total_classes}` | **Functions Defined:** `{total_funcs}`\n",
-        "#### 🗺️ Visual Architectural Flowchart",
+        "#### ️ Visual Architectural Flowchart",
         mermaid_chart,
-        "\n#### 📋 Module Composition Breakdown",
+        "\n####  Module Composition Breakdown",
     ]
 
     for a in analyses[:8]:
@@ -147,13 +147,13 @@ def _worker(dir_str: str, player):
         if player:
             try:
                 player.show_content("CODE ARCHITECTURE MAPPER", card)
-                player.write_log(f"📐 [ArchitectureMapper] Mapped {len(analyses)} modules in '{dir_str}'.")
+                player.write_log(f"[ArchitectureMapper] Mapped {len(analyses)} modules in '{dir_str}'.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [ArchitectureMapper] Error: {e}")
+                player.write_log(f"[ArchitectureMapper] Error: {e}")
             except Exception:
                 pass
 

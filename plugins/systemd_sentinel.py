@@ -71,7 +71,7 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
             if not out or code != 0:
                 msg = "All systemd units are currently operating normally with zero failed services, Sir."
                 if player and hasattr(player, "show_content"):
-                    player.show_content("Systemd Units", "✅ All system services running normally.")
+                    player.show_content("Systemd Units", " All system services running normally.")
                 return msg
 
             lines = [l.strip() for l in out.splitlines() if l.strip()]

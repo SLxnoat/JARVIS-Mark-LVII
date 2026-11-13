@@ -71,13 +71,13 @@ def _save_flow_state(data: Dict[str, Any]):
 
 
 def _render_hud_card(action: str, state: Dict[str, Any], elapsed_min: int) -> str:
-    status_badge = "ACTIVE FOCUS SHIELD 🟢" if state.get("active") else "IDLE / RESTING ⚪"
+    status_badge = "ACTIVE FOCUS SHIELD " if state.get("active") else "IDLE / RESTING "
 
     lines = [
-        "### 🧠 COGNITIVE FLOW-STATE GUARDIAN (JARVIS MARK-LVII)\n",
+        "###  COGNITIVE FLOW-STATE GUARDIAN (JARVIS MARK-LVII)\n",
         f"**Guardian Shield:** `{status_badge}`",
         f"**Target Session:** `{state.get('target_minutes', 50)} min` | **Current Elapsed:** `{elapsed_min} min`\n",
-        "#### 🛡️ Active Distraction Countermeasures",
+        "#### ️ Active Distraction Countermeasures",
         "- **Notification Shield:** Interruption dampening engaged",
         "- **Quiet Hours Protocol:** Non-urgent spoken alerts suppressed",
         f"- **Historical Deep Work Total:** `{state.get('total_minutes', 0)} minutes` across `{state.get('total_sessions', 0)} sessions`\n",
@@ -117,13 +117,13 @@ def _worker(action: str, duration: int, player):
             try:
                 player.show_content("FLOW-STATE GUARDIAN", card)
                 msg = f"Started {duration}m focus" if action == "enter_flow" else ("Concluded session" if action == "exit_flow" else f"Active {elapsed}m")
-                player.write_log(f"🧠 [FlowGuardian] {msg}.")
+                player.write_log(f"[FlowGuardian] {msg}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [FlowGuardian] Error: {e}")
+                player.write_log(f"[FlowGuardian] Error: {e}")
             except Exception:
                 pass
 

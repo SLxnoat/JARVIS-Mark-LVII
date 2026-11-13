@@ -95,7 +95,7 @@ tool_chain(
 
 - **Spoken response**: 1-2 concise sentences summarizing the posture (e.g. *"Firewall active, 4 containers healthy, no degraded systemd units detected, sir."*).
 - **HUD telemetry**: Route the structured markdown review to the tactical panel via `player.show_review("Security Audit", summary, findings)`.
-- **Activity log**: Post status line via `player.write_log("🛡️ [SecurityAudit] Workstation posture nominal.")`.
+- **Activity log**: Post status line via `player.write_log("️ [SecurityAudit] Workstation posture nominal.")`.
 
 ## Pitfalls & Anti-Patterns
 

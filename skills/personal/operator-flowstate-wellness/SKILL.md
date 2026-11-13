@@ -86,7 +86,7 @@ obsidian_vault(action="search", query="systematic debugging")
 
 - **Spoken response**: Subtle, respectful confirmation (e.g. *"Focus shields engaged for 45 minutes. Distractions suppressed, sir."*).
 - **HUD telemetry**: Display timer countdown and daily hydration gauge using `player.show_content("Focus & Wellness", markdown)`.
-- **Activity log**: Post event via `player.write_log("🧠 [Focus] Pomodoro active: 45m.")`.
+- **Activity log**: Post event via `player.write_log("[Focus] Pomodoro active: 45m.")`.
 
 ## Pitfalls & Anti-Patterns
 

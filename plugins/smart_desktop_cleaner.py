@@ -136,7 +136,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
         if action == "find_duplicates":
             if not duplicates:
                 summary_text = (
-                    f"### 🔍 Duplicate Scanner: `{dir_path}`\n\n"
+                    f"###  Duplicate Scanner: `{dir_path}`\n\n"
                     "No duplicate downloaded files detected in this directory.\n"
                 )
                 if player:
@@ -148,7 +148,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
                 for d in duplicates[:20]
             )
             md = (
-                f"### 🔍 Duplicate Files Detected: `{dir_path}`\n\n"
+                f"###  Duplicate Files Detected: `{dir_path}`\n\n"
                 f"Found **{len(duplicates)}** suspected duplicate download files:\n\n"
                 f"| Duplicate File | Original Match | Size |\n"
                 f"|:---|:---|:---|\n"
@@ -184,7 +184,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
                 rows += f"\n| ... and {len(moved_records) - 25} more files | |"
 
             md = (
-                f"### 🧹 Workspace Cleaner {mode_str}: `{dir_path}`\n\n"
+                f"###  Workspace Cleaner {mode_str}: `{dir_path}`\n\n"
                 f"- **Total Files Identified:** {len(moved_records)}\n"
                 f"- **Target Directory:** `{dir_path}`\n"
                 f"- **Dry-Run Mode:** {'Enabled (No files changed)' if dry_run else 'Disabled (Files organized)'}\n\n"
@@ -206,7 +206,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
             for cat, files in category_counts.items() if files
         )
         md = (
-            f"### 📊 Directory Hygiene Inspection: `{dir_path}`\n\n"
+            f"###  Directory Hygiene Inspection: `{dir_path}`\n\n"
             f"- **Total Files:** {total_files}\n"
             f"- **Cumulative Size:** {_format_size(total_size)}\n"
             f"- **Detected Duplicates:** {len(duplicates)}\n\n"

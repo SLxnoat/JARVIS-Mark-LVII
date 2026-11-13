@@ -133,24 +133,24 @@ Analyze the food items and return ONLY a JSON object with:
         _log_meal(meal_entry)
 
         hud_md = (
-            f"### 🥗 Nutritional Estimate ({meal_type.capitalize()})\n\n"
+            f"###  Nutritional Estimate ({meal_type.capitalize()})\n\n"
             f"**Dish:** {data.get('meal_name')}\n"
             f"- **Calories:** `{data.get('calories')} kcal`\n"
             f"- **Protein:** `{data.get('protein_g')}g` | **Carbs:** `{data.get('carbs_g')}g` | **Fat:** `{data.get('fat_g')}g`\n\n"
-            f"> 💡 **Tip:** {data.get('health_tip')}"
+            f">  **Tip:** {data.get('health_tip')}"
         )
 
         if player:
             try:
                 player.show_content("Calorie Counter", hud_md)
-                player.write_log(f"🥗 [Nutrition] Logged {meal_type}: ~{data.get('calories')} kcal ({data.get('meal_name')})")
+                player.write_log(f"[Nutrition] Logged {meal_type}: ~{data.get('calories')} kcal ({data.get('meal_name')})")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Nutrition] Calorie analysis error: {e}")
+                player.write_log(f"[Nutrition] Calorie analysis error: {e}")
             except Exception:
                 pass
 

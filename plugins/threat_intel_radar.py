@@ -78,7 +78,7 @@ def _query_threat_intelligence(ioc: str, ioc_type: str) -> Dict[str, Any]:
                         "ioc": ioc,
                         "type": ioc_type,
                         "score": 92,
-                        "status": "MALICIOUS / BLACKLISTED 🔴",
+                        "status": "MALICIOUS / BLACKLISTED ",
                         "threat": res_json.get("threat", "Malware C2 / Payload Delivery"),
                         "first_seen": res_json.get("firstseen", "Recent"),
                         "urls_count": len(res_json.get("urls", [])),
@@ -91,7 +91,7 @@ def _query_threat_intelligence(ioc: str, ioc_type: str) -> Dict[str, Any]:
         "ioc": ioc,
         "type": ioc_type,
         "score": 4,
-        "status": "CLEAN / BENIGN 🟢",
+        "status": "CLEAN / BENIGN ",
         "threat": "No active threat signatures or blacklisting detected in open feeds",
         "first_seen": "N/A",
         "urls_count": 0,
@@ -100,21 +100,21 @@ def _query_threat_intelligence(ioc: str, ioc_type: str) -> Dict[str, Any]:
 
 def _render_hud_card(data: Dict[str, Any]) -> str:
     lines = [
-        "### 🚨 TACTICAL THREAT INTELLIGENCE RADAR (JARVIS MARK-LVII)\n",
+        "###  TACTICAL THREAT INTELLIGENCE RADAR (JARVIS MARK-LVII)\n",
         f"**Target Indicator (IOC):** `{data['ioc']}` *({data['type'].upper()})*",
         f"**Reputation Verdict:** `{data['status']}`",
         f"**Threat Risk Score:** `{data['score']} / 100`\n",
-        "#### 🔍 Threat Intelligence Details",
+        "####  Threat Intelligence Details",
         f"- **Signature Classification:** {data['threat']}",
         f"- **First Sighted in Feeds:** `{data['first_seen']}`",
         f"- **Associated Malicious URLs:** `{data['urls_count']}`\n",
-        "#### 🛡️ Tactical Countermeasure",
+        "#### ️ Tactical Countermeasure",
     ]
 
     if data["score"] > 50:
-        lines.append(f"- ⚠️ **ACTION REQUIRED:** Add to firewall blocklist: `sudo ufw deny from {data['ioc']}`")
+        lines.append(f"-  **ACTION REQUIRED:** Add to firewall blocklist: `sudo ufw deny from {data['ioc']}`")
     else:
-        lines.append("- 🟢 **ACTION:** No blocking required. Traffic allowed through perimeter.")
+        lines.append("-  **ACTION:** No blocking required. Traffic allowed through perimeter.")
 
     lines.append(f"\n*Threat intelligence synchronized at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -128,13 +128,13 @@ def _worker(ioc: str, ioc_type: str, player):
         if player:
             try:
                 player.show_content("THREAT INTEL RADAR", card)
-                player.write_log(f"🚨 [ThreatRadar] {ioc} ({ioc_type}): {data['status']} - Score: {data['score']}/100.")
+                player.write_log(f"[ThreatRadar] {ioc} ({ioc_type}): {data['status']} - Score: {data['score']}/100.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [ThreatRadar] Error: {e}")
+                player.write_log(f"[ThreatRadar] Error: {e}")
             except Exception:
                 pass
 

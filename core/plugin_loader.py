@@ -230,7 +230,7 @@ class PluginRegistry:
             if not player:
                 return
             if elapsed_ms > 4000:
-                player.write_log(f"JARVIS: ⚠ {name} completed in {elapsed_ms:.0f} ms")
+                player.write_log(f"JARVIS:  {name} completed in {elapsed_ms:.0f} ms")
             if isinstance(result, str) and (
                 result.startswith("Sir, the") or "[error]" in result.lower() or "failed:" in result.lower()
             ):

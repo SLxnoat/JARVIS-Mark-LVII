@@ -193,7 +193,7 @@ def _schedule_windows(target_dt: datetime, task_name: str,
     if result.returncode != 0:
         script_path.unlink(missing_ok=True)
         err = (result.stderr or result.stdout).strip()
-        print(f"[Reminder] ❌ schtasks: {err}")
+        print(f"[Reminder]  schtasks: {err}")
         return ""  
 
     return task_name
@@ -243,7 +243,7 @@ def _schedule_mac(target_dt: datetime, task_name: str,
     if result.returncode != 0:
         plist_path.unlink(missing_ok=True)
         script_path.unlink(missing_ok=True)
-        print(f"[Reminder] ❌ launchctl: {result.stderr.strip()}")
+        print(f"[Reminder]  launchctl: {result.stderr.strip()}")
         return ""
 
     return label
@@ -267,7 +267,7 @@ def _schedule_linux(target_dt: datetime, task_name: str,
         )
         if result.returncode == 0:
             return task_name
-        print(f"[Reminder] ⚠️ systemd-run failed: {result.stderr.strip()}, trying 'at'")
+        print(f"[Reminder]  systemd-run failed: {result.stderr.strip()}, trying 'at'")
 
     if shutil.which("at"):
         at_time = target_dt.strftime("%H:%M %Y-%m-%d")
@@ -278,10 +278,10 @@ def _schedule_linux(target_dt: datetime, task_name: str,
         )
         if result.returncode == 0:
             return task_name
-        print(f"[Reminder] ❌ at: {result.stderr.strip()}")
+        print(f"[Reminder]  at: {result.stderr.strip()}")
         return ""
 
-    print("[Reminder] ❌ Neither systemd-run nor at found on this Linux system.")
+    print("[Reminder]  Neither systemd-run nor at found on this Linux system.")
     return ""
 
 def reminder(
@@ -332,14 +332,14 @@ def reminder(
             job_id = _schedule_linux(target_dt, task_name, script_path)
     except Exception as e:
         script_path.unlink(missing_ok=True)
-        print(f"[Reminder] ❌ Scheduling exception: {e}")
+        print(f"[Reminder]  Scheduling exception: {e}")
         return f"Something went wrong while scheduling the reminder.{phone}"
 
     if not job_id:
         return f"I couldn't register the reminder with the system scheduler.{phone}"
 
     if player:
-        player.write_log(f"[Reminder] ✅ {date_str} {time_str} — {safe_msg[:40]}")
+        player.write_log(f"[Reminder]  {date_str} {time_str} — {safe_msg[:40]}")
 
     friendly_time = target_dt.strftime("%B %d at %I:%M %p")
     return f"Reminder set for {friendly_time}.{phone}"

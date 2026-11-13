@@ -121,7 +121,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             completed = [it for it in items if it["checked"]]
 
             # Format markdown display for HUD
-            hud_lines = ["### 🛒 Shopping List\n"]
+            hud_lines = ["###  Shopping List\n"]
             if pending:
                 hud_lines.append("**Needed Items:**")
                 for it in pending:

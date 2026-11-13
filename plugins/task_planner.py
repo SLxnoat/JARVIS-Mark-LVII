@@ -211,10 +211,10 @@ def _render_hud_briefing(
     history: List[Dict[str, Any]],
     summary: str,
     elapsed: float,
-    status: str = "COMPLETED 🟢",
+    status: str = "COMPLETED ",
 ) -> str:
     lines = [
-        "### 🎯 AUTONOMOUS MISSION SUMMARY (JARVIS MARK-LVII)\n",
+        "###  AUTONOMOUS MISSION SUMMARY (JARVIS MARK-LVII)\n",
         f"**Target Objective:** `{goal}`",
         f"**Status:** {status}",
         f"**Execution Time:** `{elapsed:.2f}s` | **Steps Taken:** `{len(history)}`\n",
@@ -223,7 +223,7 @@ def _render_hud_briefing(
     if history:
         chain = " ➔ ".join(f"`{h.get('tool', 'step')}`" for h in history)
         lines.append(f"**Execution Pipeline:** {chain}\n")
-        lines.append("#### 📋 Step Breakdown")
+        lines.append("####  Step Breakdown")
         for h in history:
             s_num = h.get("step", 1)
             s_tool = h.get("tool", "unknown")
@@ -238,7 +238,7 @@ def _render_hud_briefing(
                 f"   - *Observation:* `{s_res}`\n"
             )
 
-    lines.append("#### 🔍 Tactical Intelligence & Findings")
+    lines.append("####  Tactical Intelligence & Findings")
     lines.append(summary.strip())
     lines.append(f"\n*Autonomous mission completed at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -268,7 +268,7 @@ def _execute_planner_loop(
 
     if player:
         try:
-            player.write_log(f"🎯 [Planner] Initialized autonomous mission for: '{goal[:60]}'")
+            player.write_log(f"[Planner] Initialized autonomous mission for: '{goal[:60]}'")
         except Exception:
             pass
 
@@ -322,7 +322,7 @@ def _execute_planner_loop(
             summary = decision.get("summary") or "Objective fulfilled successfully."
             spoken = decision.get("spoken_response") or "Autonomous mission completed as requested, sir."
             elapsed = time.monotonic() - t_start
-            hud_card = _render_hud_briefing(goal, history, summary, elapsed, status="COMPLETED 🟢")
+            hud_card = _render_hud_briefing(goal, history, summary, elapsed, status="COMPLETED ")
             return spoken, hud_card
 
         tool_name = str(decision.get("tool") or "").strip()
@@ -339,7 +339,7 @@ def _execute_planner_loop(
             if consecutive_repeat_count >= 2:
                 if player:
                     try:
-                        player.write_log(f"⚠️ [Planner] Detected repeated tool invocation '{tool_name}'. Breaking loop.")
+                        player.write_log(f"[Planner] Detected repeated tool invocation '{tool_name}'. Breaking loop.")
                     except Exception:
                         pass
                 break
@@ -349,7 +349,7 @@ def _execute_planner_loop(
 
         if player:
             try:
-                player.write_log(f"🎯 [Planner] Step {step_idx}/{max_steps}: {tool_name} ➔ Executing...")
+                player.write_log(f"[Planner] Step {step_idx}/{max_steps}: {tool_name} ➔ Executing...")
             except Exception:
                 pass
 
@@ -360,7 +360,7 @@ def _execute_planner_loop(
 
         if player:
             try:
-                player.write_log(f"🎯 [Planner] Step {step_idx}/{max_steps}: {tool_name} ➔ Completed ({t_step_dur:.2f}s)")
+                player.write_log(f"[Planner] Step {step_idx}/{max_steps}: {tool_name} ➔ Completed ({t_step_dur:.2f}s)")
             except Exception:
                 pass
 
@@ -396,7 +396,7 @@ def _execute_planner_loop(
         )
         spoken = f"I've completed the autonomous investigation across {len(history)} tools, sir. Summary is displayed on your HUD."
 
-    status = "COMPLETED 🟢" if len(history) > 0 else "HALTED ⚠️"
+    status = "COMPLETED " if len(history) > 0 else "HALTED "
     hud_card = _render_hud_briefing(goal, history, summary, elapsed, status=status)
     return spoken, hud_card
 
@@ -421,7 +421,7 @@ def _background_worker(
         if player:
             try:
                 player.show_content("AUTONOMOUS TASK PLANNER", hud_card)
-                player.write_log(f"🎯 [Planner] Mission finished. Spoken: \"{spoken}\"")
+                player.write_log(f"[Planner] Mission finished. Spoken: \"{spoken}\"")
                 # Voice HUD mid-task speech channel if supported
                 if callable(getattr(player, "request_say", None)):
                     player.request_say(spoken)
@@ -431,7 +431,7 @@ def _background_worker(
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [Planner] Background worker encountered error: {e}")
+                player.write_log(f"[Planner] Background worker encountered error: {e}")
             except Exception:
                 pass
 

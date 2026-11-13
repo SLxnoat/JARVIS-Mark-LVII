@@ -138,7 +138,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         content = _read_skill(skill_name)
         if player:
             try:
-                player.write_log(f"🧠 [SkillLoader] Loaded skill: {skill_name}")
+                player.write_log(f"[SkillLoader] Loaded skill: {skill_name}")
                 summary = content[:300].replace("\n", " ") + "..."
                 player.show_content(f"Skill: {skill_name}", content[:4000])
             except Exception:
@@ -148,7 +148,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         index_text = _list_skills()
         if player:
             try:
-                player.write_log("📚 [SkillLoader] Indexed repository skills.")
+                player.write_log("[SkillLoader] Indexed repository skills.")
                 player.show_content("JARVIS Skills Index", index_text)
             except Exception:
                 pass

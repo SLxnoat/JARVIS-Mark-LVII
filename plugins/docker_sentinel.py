@@ -116,7 +116,7 @@ def _get_docker_images_cli() -> List[Dict[str, str]]:
 
 def _render_hud_card(action: str, containers: List[Dict[str, Any]], dangling: List[Dict[str, str]]) -> str:
     lines = [
-        "### 🐳 TACTICAL CONTAINER FLEET RADAR (JARVIS MARK-LVII)\n",
+        "###  TACTICAL CONTAINER FLEET RADAR (JARVIS MARK-LVII)\n",
     ]
 
     if not containers and not dangling:
@@ -128,22 +128,22 @@ def _render_hud_card(action: str, containers: List[Dict[str, Any]], dangling: Li
     running_cnt = len([c for c in containers if c.get("running")])
     restarting_cnt = len([c for c in containers if c.get("restarting")])
 
-    lines.append(f"**Containers Total:** `{len(containers)}` | **Active Running:** `{running_cnt} 🟢`")
+    lines.append(f"**Containers Total:** `{len(containers)}` | **Active Running:** `{running_cnt} `")
     if restarting_cnt > 0:
-        lines.append(f"⚠️ **ALERT:** `{restarting_cnt}` container(s) trapped in crash restart loop!")
+        lines.append(f" **ALERT:** `{restarting_cnt}` container(s) trapped in crash restart loop!")
     lines.append("")
 
-    lines.append("#### 📦 Managed Container Fleet")
+    lines.append("####  Managed Container Fleet")
     lines.append("```text")
     lines.append(f"{'CONTAINER ID':<14s} {'NAME':<20s} {'STATUS':<22s} {'PORTS'}")
     lines.append("-" * 75)
     for c in containers:
-        status_sym = "🟢" if c["running"] else ("🔴" if not c["restarting"] else "⚠️")
+        status_sym = "" if c["running"] else ("" if not c["restarting"] else "")
         lines.append(f"{c['id']:<14s} {c['name'][:18]:<20s} {status_sym} {c['status'][:18]:<20s} {c['ports'][:20]}")
     lines.append("```\n")
 
     if dangling:
-        lines.append(f"#### 🗑️ Dangling / Unused Images ({len(dangling)} reclaimable)")
+        lines.append(f"#### ️ Dangling / Unused Images ({len(dangling)} reclaimable)")
         for img in dangling[:5]:
             lines.append(f"- ID: `{img['id']}` — Size: `{img['size']}`")
         lines.append("")
@@ -162,14 +162,14 @@ def _worker(action: str, player):
             try:
                 player.show_content("CONTAINER FLEET RADAR", card)
                 running = len([c for c in containers if c.get("running")])
-                player.write_log(f"🐳 [DockerSentinel] Found {len(containers)} containers ({running} running).")
+                player.write_log(f"[DockerSentinel] Found {len(containers)} containers ({running} running).")
             except Exception:
                 pass
         return containers, dangling, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [DockerSentinel] Error: {e}")
+                player.write_log(f"[DockerSentinel] Error: {e}")
             except Exception:
                 pass
         return [], [], f"Error: {e}"

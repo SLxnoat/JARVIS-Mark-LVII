@@ -126,7 +126,7 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
 
         if player and hasattr(player, "show_content"):
             content = (
-                f"📊 Network Health Report:\n"
+                f" Network Health Report:\n"
                 f"• Download Speed: {speed_str}\n"
                 f"• Latency (Ping): {avg_ms:.1f} ms (Min: {ping_data['min_ms']:.1f} ms, Max: {ping_data['max_ms']:.1f} ms)\n"
                 f"• Packet Loss: {loss}%\n"

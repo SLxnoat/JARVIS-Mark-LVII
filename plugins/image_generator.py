@@ -69,18 +69,18 @@ def _generate_worker(prompt: str, aspect_ratio: str, player):
         if player:
             try:
                 hud_md = (
-                    f"### 🎨 Generated Image\n\n"
+                    f"###  Generated Image\n\n"
                     f"**Prompt:** *\"{prompt}\"*\n\n"
                     f"Saved to: `{out_path.resolve()}`"
                 )
                 player.show_content("AI Image Generator", hud_md)
-                player.write_log(f"🎨 [Image] Generated image: {out_path.name}")
+                player.write_log(f"[Image] Generated image: {out_path.name}")
             except Exception:
                 pass
     else:
         if player:
             try:
-                player.write_log(f"⚠️ [Image] Failed to generate image for prompt: '{prompt[:40]}...'")
+                player.write_log(f"[Image] Failed to generate image for prompt: '{prompt[:40]}...'")
             except Exception:
                 pass
 

@@ -73,7 +73,7 @@ def _analyze_deepfake_signatures(samples: np.ndarray | None) -> Dict[str, Any]:
     if samples is None or len(samples) < 1024:
         return {
             "synthetic_prob": 12.0,
-            "verdict": "AUTHENTIC BIOLOGICAL VOICE 🟢",
+            "verdict": "AUTHENTIC BIOLOGICAL VOICE ",
             "cutoff_detected": False,
             "pitch_variance": "Normal biological tremor",
             "confidence": "Moderate (Estimated Baseline)",
@@ -96,7 +96,7 @@ def _analyze_deepfake_signatures(samples: np.ndarray | None) -> Dict[str, Any]:
 
     # Measure frame-to-frame pitch variance
     synth_score = 75.0 if is_cutoff else 14.0
-    verdict = "POTENTIAL AI VOICE CLONE / SYNTHETIC 🔴" if synth_score > 60 else "AUTHENTIC HUMAN VOICEPRINT 🟢"
+    verdict = "POTENTIAL AI VOICE CLONE / SYNTHETIC " if synth_score > 60 else "AUTHENTIC HUMAN VOICEPRINT "
 
     return {
         "synthetic_prob": synth_score,
@@ -109,21 +109,21 @@ def _analyze_deepfake_signatures(samples: np.ndarray | None) -> Dict[str, Any]:
 
 def _render_hud_card(data: Dict[str, Any], path_info: str) -> str:
     lines = [
-        "### 🎙️ AUDIO DEEPFAKE & AI CLONE DETECTOR (JARVIS MARK-LVII)\n",
+        "### ️ AUDIO DEEPFAKE & AI CLONE DETECTOR (JARVIS MARK-LVII)\n",
         f"**Forensic Verdict:** `{data['verdict']}`",
         f"**Synthetic Voice Probability:** `{data['synthetic_prob']}%`",
         f"**Sample Target:** `{path_info}`\n",
-        "#### 🔬 Neural Vocoder Forensic Indicators",
+        "####  Neural Vocoder Forensic Indicators",
         f"- **High-Frequency Spectral Cutoff:** `{'DETECTED (Vocoder brickwall)' if data['cutoff_detected'] else 'ABSENT (Natural roll-off)'}`",
         f"- **Pitch Prosody Modulation:** `{data['pitch_variance']}`",
         f"- **Analysis Confidence:** `{data['confidence']}`\n",
-        "#### 🛡️ Authentication Assessment",
+        "#### ️ Authentication Assessment",
     ]
 
     if data["synthetic_prob"] > 60:
-        lines.append("- ⚠️ **ADVISORY:** Audio exhibits strong statistical signatures of a neural TTS or voice cloning model (e.g. ElevenLabs, RVC, VITS). Treat claims with skepticism.")
+        lines.append("-  **ADVISORY:** Audio exhibits strong statistical signatures of a neural TTS or voice cloning model (e.g. ElevenLabs, RVC, VITS). Treat claims with skepticism.")
     else:
-        lines.append("- 🟢 **ADVISORY:** Spectral distribution and harmonic jitter are consistent with an authentic biological human speaker.")
+        lines.append("-  **ADVISORY:** Spectral distribution and harmonic jitter are consistent with an authentic biological human speaker.")
 
     lines.append(f"\n*Audio forensics concluded at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -139,13 +139,13 @@ def _worker(audio_path: str, player):
         if player:
             try:
                 player.show_content("AUDIO DEEPFAKE DETECTOR", card)
-                player.write_log(f"🎙️ [DeepfakeDetector] Verdict: {data['verdict']} ({data['synthetic_prob']}%).")
+                player.write_log(f"️ [DeepfakeDetector] Verdict: {data['verdict']} ({data['synthetic_prob']}%).")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [DeepfakeDetector] Error: {e}")
+                player.write_log(f"[DeepfakeDetector] Error: {e}")
             except Exception:
                 pass
 

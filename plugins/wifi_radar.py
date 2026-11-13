@@ -279,13 +279,13 @@ def _audit_security(networks: list[dict]) -> list[str]:
     hidden_nets = [n for n in networks if "[Hidden" in n.get("ssid", "")]
 
     if open_nets:
-        flags.append(f"🔴 **{len(open_nets)} Open/Unencrypted Network(s)** detected: {', '.join(n['ssid'] for n in open_nets[:3])} (prone to packet sniffing).")
+        flags.append(f" **{len(open_nets)} Open/Unencrypted Network(s)** detected: {', '.join(n['ssid'] for n in open_nets[:3])} (prone to packet sniffing).")
     if wep_nets:
-        flags.append(f"🔴 **{len(wep_nets)} Legacy WEP Network(s)** detected (broken RC4 encryption, trivially cracked).")
+        flags.append(f" **{len(wep_nets)} Legacy WEP Network(s)** detected (broken RC4 encryption, trivially cracked).")
     if hidden_nets:
-        flags.append(f"🟡 **{len(hidden_nets)} Hidden SSID(s)** observed in the area.")
+        flags.append(f" **{len(hidden_nets)} Hidden SSID(s)** observed in the area.")
     if not flags:
-        flags.append("🟢 All detected ambient wireless networks enforce modern WPA2/WPA3 authentication.")
+        flags.append(" All detected ambient wireless networks enforce modern WPA2/WPA3 authentication.")
     return flags
 
 
@@ -301,8 +301,8 @@ def _radar_worker(action: str, player):
 
         if action == "current_link":
             hud_lines = [
-                "### 📡 Current Wi-Fi Link Telemetry\n",
-                f"**Status:** {'ONLINE 🟢' if curr['connected'] else 'DISCONNECTED 🔴'}\n",
+                "###  Current Wi-Fi Link Telemetry\n",
+                f"**Status:** {'ONLINE ' if curr['connected'] else 'DISCONNECTED '}\n",
                 f"- **SSID:** `{curr['ssid']}`\n",
                 f"- **BSSID:** `{curr['bssid']}`\n",
                 f"- **Frequency Band:** `{curr['band']}` *(Channel {curr['channel']})*\n",
@@ -313,7 +313,7 @@ def _radar_worker(action: str, player):
             if player:
                 try:
                     player.show_content("WI-FI LINK TELEMETRY", "\n".join(hud_lines))
-                    player.write_log(f"📡 [WiFi] Active link: '{curr['ssid']}' ({curr['signal_pct']}% | Ch {curr['channel']})")
+                    player.write_log(f"[WiFi] Active link: '{curr['ssid']}' ({curr['signal_pct']}% | Ch {curr['channel']})")
                 except Exception:
                     pass
             return
@@ -321,18 +321,18 @@ def _radar_worker(action: str, player):
         elif action == "channel_optimizer":
             _, opt_text = _analyze_channel_congestion(networks)
             hud_lines = [
-                "### 📊 RF Channel Congestion & Optimization\n",
+                "###  RF Channel Congestion & Optimization\n",
                 f"**Ambient Access Points Analyzed:** `{len(networks)}`\n\n",
-                f"> 💡 **Recommendation:** {opt_text}\n\n",
+                f">  **Recommendation:** {opt_text}\n\n",
                 "**Spectrum Density Breakdown:**\n",
             ]
             for n in sorted(networks, key=lambda x: x.get("signal", 0), reverse=True)[:10]:
-                hud_lines.append(f"- **Ch {n.get('channel', '?')}** *({n.get('band', '?')})* — `{n.get('ssid')}` [{n.get('signal')}%]")
+                hud_lines.append(f"- **Ch {n.get('channel', '?')}** *({n.get('band', '?')})* — `{n.get('ssid')}`[{n.get('signal')}%]")
 
             if player:
                 try:
                     player.show_content("CHANNEL OPTIMIZER", "\n".join(hud_lines))
-                    player.write_log("📊 [WiFi] Evaluated RF channel congestion and generated channel recommendation.")
+                    player.write_log("[WiFi] Evaluated RF channel congestion and generated channel recommendation.")
                 except Exception:
                     pass
             return
@@ -340,7 +340,7 @@ def _radar_worker(action: str, player):
         elif action == "security_hygiene":
             sec_flags = _audit_security(networks)
             hud_lines = [
-                "### 🛡️ Wireless Perimeter Security Audit\n",
+                "### ️ Wireless Perimeter Security Audit\n",
                 f"**Ambient Networks Assessed:** `{len(networks)}`\n\n",
                 "**Security Assessment Findings:**\n",
             ]
@@ -349,14 +349,14 @@ def _radar_worker(action: str, player):
             if player:
                 try:
                     player.show_content("WIRELESS HYGIENE AUDIT", "\n".join(hud_lines))
-                    player.write_log(f"🛡️ [WiFi] Completed wireless security audit ({len(sec_flags)} findings).")
+                    player.write_log(f"️ [WiFi] Completed wireless security audit ({len(sec_flags)} findings).")
                 except Exception:
                     pass
             return
 
         # Default: spectrum_map / scan_networks
         hud_lines = [
-            "### 🛰️ TACTICAL WI-FI RF SPECTRUM (JARVIS MARK-LVII)\n",
+            "### ️ TACTICAL WI-FI RF SPECTRUM (JARVIS MARK-LVII)\n",
             f"**Connected SSID:** `{curr['ssid']}` *({curr['signal_pct']}% | Ch {curr['channel']})*\n",
             f"**Ambient Access Points Detected:** `{len(networks)}`\n",
             "```text",
@@ -381,14 +381,14 @@ def _radar_worker(action: str, player):
         if player:
             try:
                 player.show_content("TACTICAL WI-FI RADAR", "\n".join(hud_lines))
-                player.write_log(f"🛰️ [WiFi] Mapped RF spectrum: {len(networks)} access points observed.")
+                player.write_log(f"️ [WiFi] Mapped RF spectrum: {len(networks)} access points observed.")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [WiFi] Radar error: {e}")
+                player.write_log(f"[WiFi] Radar error: {e}")
             except Exception:
                 pass
 

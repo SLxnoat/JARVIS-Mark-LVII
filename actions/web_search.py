@@ -120,7 +120,7 @@ def _get_ddgs():
     except ImportError:
         from duckduckgo_search import DDGS
         print(
-            "[WebSearch] ⚠️ Using the deprecated 'duckduckgo-search' package — "
+            "[WebSearch]  Using the deprecated 'duckduckgo-search' package — "
             "DuckDuckGo blocks its endpoints, so every search will come back "
             "empty.  Fix with:  pip install -U ddgs"
         )
@@ -139,7 +139,7 @@ def _ddg_search(query: str, max_results: int = 6) -> list[dict]:
                     "url":     r.get("href",   ""),
                 })
     except Exception as e:
-        print(f"[WebSearch] ⚠️ DDG text() failed: {e}")
+        print(f"[WebSearch]  DDG text() failed: {e}")
     return results
 
 
@@ -157,7 +157,7 @@ def _ddg_news(query: str, max_results: int = 8) -> list[dict]:
                     "source":  r.get("source", ""),
                 })
     except Exception as e:
-        print(f"[WebSearch] ⚠️ DDG news() failed ({e}) — falling back to text search")
+        print(f"[WebSearch]  DDG news() failed ({e}) — falling back to text search")
     # Also covers the legacy-package case, where news() returns an empty list
     # instead of raising.
     if not results:
@@ -187,7 +187,7 @@ def _format_news(query: str, results: list[dict]) -> str:
         title = r.get("title", "")
         if not title:
             continue
-        src = f"  [{r['source']}]" if r.get("source") else ""
+        src = f"[{r['source']}]" if r.get("source") else ""
         lines.append(f"{i}. {title}{src}")
         if r.get("snippet"):
             lines.append(f"   {r['snippet'][:140]}")
@@ -366,7 +366,7 @@ def web_search(
     if player:
         print(f"[WebSearch] {mode}: {query or ', '.join(items)}")  # terminal
 
-    print(f"[WebSearch] 🔍 mode={mode!r}  query={query!r}")
+    print(f"[WebSearch]  mode={mode!r}  query={query!r}")
 
     try:
         if mode == "compare" and items:
@@ -381,7 +381,7 @@ def web_search(
             found = _search(query)
 
     except Exception as e:
-        print(f"[WebSearch] ❌ All backends failed: {e}")
+        print(f"[WebSearch]  All backends failed: {e}")
         return outcome.failed("web_search", f"the search failed: {e}",
                               query=query or ", ".join(items))
 

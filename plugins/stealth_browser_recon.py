@@ -76,9 +76,9 @@ def _summarize_article(text: str, url: str) -> str:
         f"Webpage Target: {url}\n\n"
         f"Clean Extracted Text:\n{text[:3000]}\n\n"
         "Provide:\n"
-        "1. 📰 Article Title & Subject\n"
-        "2. 💡 3 Key Executive Takeaways (bullet points)\n"
-        "3. 📖 Core Article Content Summary (clean markdown paragraph)\n\n"
+        "1.  Article Title & Subject\n"
+        "2.  3 Key Executive Takeaways (bullet points)\n"
+        "3.  Core Article Content Summary (clean markdown paragraph)\n\n"
         "Return clean markdown."
     )
     res = gemini.text(prompt, tier=gemini.SMART, default="")
@@ -87,7 +87,7 @@ def _summarize_article(text: str, url: str) -> str:
 
 def _render_hud_card(url: str, summary_md: str) -> str:
     lines = [
-        "### 🌐 STEALTH WEB RECON & INTELLIGENCE (JARVIS MARK-LVII)\n",
+        "###  STEALTH WEB RECON & INTELLIGENCE (JARVIS MARK-LVII)\n",
         f"**Source URL:** `{url}`\n",
         summary_md,
         f"\n*Intelligence extracted at {time.strftime('%H:%M:%S')}.*",
@@ -104,13 +104,13 @@ def _worker(url: str, player):
         if player:
             try:
                 player.show_content("WEB INTELLIGENCE RECON", card)
-                player.write_log(f"🌐 [WebRecon] Extracted ad-free intelligence from '{url[:40]}'.")
+                player.write_log(f"[WebRecon] Extracted ad-free intelligence from '{url[:40]}'.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [WebRecon] Error: {e}")
+                player.write_log(f"[WebRecon] Error: {e}")
             except Exception:
                 pass
 

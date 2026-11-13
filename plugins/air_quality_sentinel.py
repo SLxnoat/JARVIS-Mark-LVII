@@ -87,7 +87,7 @@ def _fetch_air_quality(lat: float, lon: float) -> Dict[str, Any]:
                     "no2": no2,
                     "so2": so2,
                     "o3": o3,
-                    "status": "LIVE TELEMETRY 🟢",
+                    "status": "LIVE TELEMETRY ",
                 }
     except Exception:
         pass
@@ -107,28 +107,28 @@ def _fetch_air_quality(lat: float, lon: float) -> Dict[str, Any]:
 
 def _get_aqi_descriptor(aqi: int) -> tuple[str, str]:
     if aqi <= 20:
-        return "EXCELLENT / CLEAN 🟢", "Air quality is pristine. Ideal for all outdoor and indoor activities."
+        return "EXCELLENT / CLEAN ", "Air quality is pristine. Ideal for all outdoor and indoor activities."
     elif aqi <= 40:
-        return "GOOD / SATISFACTORY 🟢", "Air quality is acceptable; negligible atmospheric pollution."
+        return "GOOD / SATISFACTORY ", "Air quality is acceptable; negligible atmospheric pollution."
     elif aqi <= 60:
-        return "MODERATE 🟡", "Acceptable quality; sensitive individuals may experience minor irritation."
+        return "MODERATE ", "Acceptable quality; sensitive individuals may experience minor irritation."
     elif aqi <= 80:
-        return "POOR 🟠", "Elevated particulate density. Limit prolonged heavy outdoor exertion."
+        return "POOR ", "Elevated particulate density. Limit prolonged heavy outdoor exertion."
     else:
-        return "HAZARDOUS / VERY POOR 🔴", "Significant atmospheric contamination. Close windows, run air filtration."
+        return "HAZARDOUS / VERY POOR ", "Significant atmospheric contamination. Close windows, run air filtration."
 
 
 def _render_hud_card(action: str, data: Dict[str, Any], lat: float, lon: float) -> str:
     rating, advice = _get_aqi_descriptor(data["aqi"])
 
     lines = [
-        "### 🍃 TACTICAL AIR QUALITY & ATMOSPHERIC SENTINEL (JARVIS MARK-LVII)\n",
+        "###  TACTICAL AIR QUALITY & ATMOSPHERIC SENTINEL (JARVIS MARK-LVII)\n",
         f"**Air Quality Index (AQI):** `{data['aqi']} / 100` *({rating})*",
         f"**Health Advisory:** {advice}\n",
-        "#### 🔬 Fine Particulate Density",
+        "####  Fine Particulate Density",
         f"- **PM 2.5 (Fine Particles):** `{data['pm25']} µg/m³` *(WHO Safe Limit: <15 µg/m³)*",
         f"- **PM 10 (Coarse Particles):** `{data['pm10']} µg/m³` *(WHO Safe Limit: <45 µg/m³)*\n",
-        "#### 🧪 Atmospheric Gas Concentrations",
+        "####  Atmospheric Gas Concentrations",
         f"- **Nitrogen Dioxide (NO₂):** `{data['no2']} µg/m³` *(Traffic & Combustion)*",
         f"- **Ozone (O₃):** `{data['o3']} µg/m³` *(Ground-level photochemistry)*",
         f"- **Carbon Monoxide (CO):** `{data['co']} µg/m³` *(Exhaust & Emissions)*",
@@ -148,13 +148,13 @@ def _worker(action: str, lat: float, lon: float, player):
             try:
                 player.show_content("AIR QUALITY SENTINEL", card)
                 rating, _ = _get_aqi_descriptor(data["aqi"])
-                player.write_log(f"🍃 [AirQuality] AQI: {data['aqi']} ({rating}). PM2.5: {data['pm25']} µg/m³.")
+                player.write_log(f"[AirQuality] AQI: {data['aqi']} ({rating}). PM2.5: {data['pm25']} µg/m³.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [AirQuality] Error: {e}")
+                player.write_log(f"[AirQuality] Error: {e}")
             except Exception:
                 pass
 

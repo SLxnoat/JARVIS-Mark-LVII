@@ -83,10 +83,10 @@ def _render_hud_card(mode: str) -> str:
     mem = _get_memory_status()
 
     lines = [
-        "### ⚡ TACTICAL COMMAND MATRIX (JARVIS MARK-LVII)\n",
-        f"**Operating System:** `{sys.platform.upper()}` | **Architecture:** `x86_64` | **Defense Level:** `OMEGA-1 🟢`",
+        "###  TACTICAL COMMAND MATRIX (JARVIS MARK-LVII)\n",
+        f"**Operating System:** `{sys.platform.upper()}` | **Architecture:** `x86_64` | **Defense Level:** `OMEGA-1 `",
         f"**Master System Clock:** `{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}`\n",
-        "#### 💠 Multi-Core Compute Architecture",
+        "####  Multi-Core Compute Architecture",
         "```text",
     ]
 
@@ -97,17 +97,17 @@ def _render_hud_card(mode: str) -> str:
 
     lines.append("```\n")
 
-    lines.append("#### 🧠 Memory & Storage Subsystem")
+    lines.append("####  Memory & Storage Subsystem")
     mem_bar_len = int(mem["pct"] / 5)
     mem_bar = "█" * mem_bar_len + "░" * (20 - mem_bar_len)
     lines.append(f"- **System RAM:** `[{mem_bar}]` `{mem['used']} GB / {mem['total']} GB` *({mem['pct']}%)*")
-    lines.append("- **Storage Bus:** NVMe High-Speed Array `[ONLINE 🟢]` — All mounts verified\n")
+    lines.append("- **Storage Bus:** NVMe High-Speed Array `[ONLINE ]` — All mounts verified\n")
 
-    lines.append("#### 🛡️ Active Security & Sensor Shields")
-    lines.append("- **Firewall Shield:** `ENFORCED 🟢` (UFW / Netfilter Active)")
-    lines.append("- **Perimeter Sentry:** `SECURE 🟢` (USB BadUSB Defense Engaged)")
-    lines.append("- **Memory Integrity:** `NOMINAL 🟢` (Zero unlinked processes detected)")
-    lines.append("- **Telemetry Bus:** `LIVE 🟢` (All 42 tactical modules operational)")
+    lines.append("#### ️ Active Security & Sensor Shields")
+    lines.append("- **Firewall Shield:** `ENFORCED ` (UFW / Netfilter Active)")
+    lines.append("- **Perimeter Sentry:** `SECURE ` (USB BadUSB Defense Engaged)")
+    lines.append("- **Memory Integrity:** `NOMINAL ` (Zero unlinked processes detected)")
+    lines.append("- **Telemetry Bus:** `LIVE ` (All 42 tactical modules operational)")
 
     lines.append(f"\n*Command matrix telemetry refreshed at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -119,13 +119,13 @@ def _worker(mode: str, player):
         if player:
             try:
                 player.show_content("SYSTEM COMMAND MATRIX", card)
-                player.write_log("⚡ [CommandMatrix] Master tactical screen projected to HUD.")
+                player.write_log("[CommandMatrix] Master tactical screen projected to HUD.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [CommandMatrix] Error: {e}")
+                player.write_log(f"[CommandMatrix] Error: {e}")
             except Exception:
                 pass
 

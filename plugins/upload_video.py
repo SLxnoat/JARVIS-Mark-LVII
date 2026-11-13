@@ -73,7 +73,7 @@ def _upload_worker(video_path: Path, title: str, description: str, tags: list, p
         creds_file = Path("config") / "youtube_credentials.json"
         if not creds_file.is_file():
             msg = (
-                f"### 📹 Video Staged for YouTube Upload\n\n"
+                f"###  Video Staged for YouTube Upload\n\n"
                 f"- **File:** `{video_path.name}` ({size_mb:.1f} MB)\n"
                 f"- **Title:** {title}\n"
                 f"- **Privacy:** `{privacy}`\n"
@@ -84,7 +84,7 @@ def _upload_worker(video_path: Path, title: str, description: str, tags: list, p
             if player:
                 try:
                     player.show_content("YouTube Uploader", msg)
-                    player.write_log(f"📹 [YouTube] Staged '{video_path.name}' for upload.")
+                    player.write_log(f"[YouTube] Staged '{video_path.name}' for upload.")
                 except Exception:
                     pass
             return
@@ -97,14 +97,14 @@ def _upload_worker(video_path: Path, title: str, description: str, tags: list, p
         # Simulated upload handshake
         if player:
             try:
-                player.write_log(f"📹 [YouTube] Authenticated and uploading '{title}' ({size_mb:.1f} MB)...")
+                player.write_log(f"[YouTube] Authenticated and uploading '{title}' ({size_mb:.1f} MB)...")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [YouTube] Upload error: {e}")
+                player.write_log(f"[YouTube] Upload error: {e}")
             except Exception:
                 pass
 

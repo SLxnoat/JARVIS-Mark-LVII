@@ -113,8 +113,8 @@ def run(parameters: dict, player: Any = None, session_memory: Any = None) -> str
                 if s["desc"]:
                     content_lines.append(f"   _{s['desc']}_")
                 if s["link"]:
-                    content_lines.append(f"   [Read Source]({s['link']})\n")
-            player.show_content(f"📰 {cat.title()} News Digest", "\n".join(content_lines))
+                    content_lines.append(f"[Read Source]({s['link']})\n")
+            player.show_content(f" {cat.title()} News Digest", "\n".join(content_lines))
 
         return speech
 

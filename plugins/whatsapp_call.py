@@ -66,7 +66,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    player.write_log(f"📞 [WhatsApp] {msg}")
+                    player.write_log(f"[WhatsApp] {msg}")
                 except Exception:
                     pass
             return msg
@@ -82,7 +82,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    player.write_log(f"📞 [WhatsApp] Ended call with {contact or 'active contact'}.")
+                    player.write_log(f"[WhatsApp] Ended call with {contact or 'active contact'}.")
                 except Exception:
                     pass
             return f"Ended WhatsApp call with {contact or 'contact'}."

@@ -29,11 +29,11 @@ MAX_VALUE_LENGTH = 380
 #
 # Storage and prompt budget are now separate concerns:
 #
-#   MEMORY_MAX_CHARS  — a runaway guard, not a feature limit. Nothing normal
-#                       reaches it; a bug writing in a loop does.
-#   PROMPT_CORE_CHARS — what actually rides in the system prompt every session.
-#                       Smaller than the old whole-memory dump, so sessions
-#                       start *faster* than before, not slower.
+# MEMORY_MAX_CHARS  — a runaway guard, not a feature limit. Nothing normal
+# reaches it; a bug writing in a loop does.
+# PROMPT_CORE_CHARS — what actually rides in the system prompt every session.
+# Smaller than the old whole-memory dump, so sessions
+# start *faster* than before, not slower.
 #
 # Everything above the core stays on disk and is fetched on demand by the
 # recall_memory tool — see search_memory() and format_memory_for_prompt().
@@ -68,7 +68,7 @@ def load_memory() -> dict:
                 return data
             return _empty_memory()
         except Exception as e:
-            print(f"[Memory] ⚠️ Load error: {e}")
+            print(f"[Memory]  Load error: {e}")
             return _empty_memory()
 
 def _all_entries(memory: dict) -> list[tuple]:
@@ -104,7 +104,7 @@ def _trim_to_limit(memory: dict) -> dict:
             break
         del memory[cat][key]
         dropped.append(f"{cat}/{key}")
-        print(f"[Memory] 🗑️  Trimmed {cat}/{key}")
+        print(f"[Memory] ️  Trimmed {cat}/{key}")
     if dropped and _trim_notifier:
         try:
             _trim_notifier(
@@ -168,7 +168,7 @@ def _sync_to_vector_store(updates: dict) -> None:
                     if val:
                         vector_store.upsert_fact(cat, key, str(val), upd)
     except Exception as e:
-        print(f"[Memory] ⚠️ VectorStore sync error: {e}")
+        print(f"[Memory]  VectorStore sync error: {e}")
 
 
 def update_memory(memory_update: dict) -> dict:
@@ -177,7 +177,7 @@ def update_memory(memory_update: dict) -> dict:
     memory = load_memory()
     if _recursive_update(memory, memory_update):
         save_memory(memory)
-        print(f"[Memory] 💾 Saved: {list(memory_update.keys())}")
+        print(f"[Memory]  Saved: {list(memory_update.keys())}")
         _sync_to_vector_store(memory_update)
     return memory
 
@@ -521,12 +521,12 @@ def save_session_summary(summary: str, language: str = "") -> None:
             json.dumps(memory, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
-    print(f"[Memory] 📝 Session saved ({entry['date']}): {summary[:60]}…")
+    print(f"[Memory]  Session saved ({entry['date']}): {summary[:60]}…")
     try:
         from memory import vector_store
         vector_store.upsert_session(entry["date"], summary, language)
     except Exception as e:
-        print(f"[Memory] ⚠️ VectorStore session sync note: {e}")
+        print(f"[Memory]  VectorStore session sync note: {e}")
 
 
 def pop_last_session() -> dict | None:
@@ -550,5 +550,5 @@ def pop_last_session() -> dict | None:
             )
             return entry
         except Exception as e:
-            print(f"[Memory] ⚠️ pop_last_session error: {e}")
+            print(f"[Memory]  pop_last_session error: {e}")
             return None

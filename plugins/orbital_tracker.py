@@ -100,10 +100,10 @@ def _render_hud_card(action: str, iss: Dict[str, Any], obs_lat: float, obs_lon: 
     slant_range_km = round(math.sqrt(dist_km ** 2 + 420.0 ** 2), 1)
 
     lines = [
-        "### 🛰️ TACTICAL ORBITAL RADAR (JARVIS MARK-LVII)\n",
+        "### ️ TACTICAL ORBITAL RADAR (JARVIS MARK-LVII)\n",
         f"**Target Satellite:** `INTERNATIONAL SPACE STATION (ISS / ZARYA - NORAD #25544)`",
-        f"**Telemetry Link:** `{iss.get('status', 'NOMINAL')} 🟢`\n",
-        "#### 🌍 Real-Time Orbital Telemetry",
+        f"**Telemetry Link:** `{iss.get('status', 'NOMINAL')} `\n",
+        "####  Real-Time Orbital Telemetry",
         f"- **Current Coordinates:** Latitude `{iss['lat']:.4f}°`, Longitude `{iss['lon']:.4f}°`",
         f"- **Orbital Altitude:** `~418.5 km` (Low Earth Orbit - LEO)",
         f"- **Orbital Velocity:** `27,580 km/h` *(7.66 km/s — 92.8 min orbital period)*",
@@ -113,10 +113,10 @@ def _render_hud_card(action: str, iss: Dict[str, Any], obs_lat: float, obs_lon: 
 
     # Calculate whether in line of sight (approx line of sight ~2200 km ground distance)
     in_los = dist_km < 2200.0
-    los_badge = "🟢 YES (Direct Optical/RF Window Active)" if in_los else "🔴 NO (Below Local Horizon)"
+    los_badge = " YES (Direct Optical/RF Window Active)" if in_los else " NO (Below Local Horizon)"
     lines.append(f"**Line-of-Sight Window:** {los_badge}\n")
 
-    lines.append("#### 🔭 Mission Overview & Constellation Status")
+    lines.append("####  Mission Overview & Constellation Status")
     lines.append("- **Crew Onboard:** Expedition Active")
     lines.append("- **Inclination:** `51.64°` | **Apogee:** `422 km` | **Perigee:** `415 km`")
     lines.append(f"- **Operator Ground Base:** Lat `{obs_lat:.4f}°`, Lon `{obs_lon:.4f}°`")
@@ -136,13 +136,13 @@ def _worker(action: str, lat: float, lon: float, player):
             try:
                 player.show_content("TACTICAL ORBITAL RADAR", card)
                 dist = _haversine_distance_km(lat, lon, iss["lat"], iss["lon"])
-                player.write_log(f"🛰️ [OrbitalRadar] ISS acquired at ({iss['lat']}°, {iss['lon']}°). Distance: {dist} km.")
+                player.write_log(f"️ [OrbitalRadar] ISS acquired at ({iss['lat']}°, {iss['lon']}°). Distance: {dist} km.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [OrbitalRadar] Error: {e}")
+                player.write_log(f"[OrbitalRadar] Error: {e}")
             except Exception:
                 pass
 

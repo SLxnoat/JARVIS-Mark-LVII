@@ -119,7 +119,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             mail.logout()
 
-            hud_md = f"### 📬 Gmail Inbox ({action})\n\n" + "\n".join(email_summaries)
+            hud_md = f"###  Gmail Inbox ({action})\n\n" + "\n".join(email_summaries)
             if player:
                 try:
                     player.show_content("Gmail Messages", hud_md)

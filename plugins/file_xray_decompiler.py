@@ -117,20 +117,20 @@ def _extract_interesting_strings(data: bytes, min_len: int = 5) -> List[str]:
 
 def _detect_packer(data: bytes) -> str:
     if b"UPX!" in data or b"UPX0" in data:
-        return "UPX (Ultimate Packer for eXecutables) ⚠️"
+        return "UPX (Ultimate Packer for eXecutables) "
     if b".aspack" in data.lower():
-        return "Aspack Packer ⚠️"
-    return "Standard / Unpacked 🟢"
+        return "Aspack Packer "
+    return "Standard / Unpacked "
 
 
 def _render_hud_card(path: Path, header_info: Dict[str, str], packer: str, strings: List[str]) -> str:
     lines = [
-        "### 🔬 TACTICAL FILE X-RAY & BINARY DECOMPILER (JARVIS MARK-LVII)\n",
+        "###  TACTICAL FILE X-RAY & BINARY DECOMPILER (JARVIS MARK-LVII)\n",
         f"**Target Entity:** `{path.name}` *({path.stat().st_size:,} bytes)*",
         f"**File Format:** `{header_info['type']}`",
         f"**Architecture:** `{header_info.get('architecture', 'N/A')}` | **Endianness:** `{header_info.get('endianness', 'N/A')}`",
         f"**Packer Signature:** `{packer}`\n",
-        "#### 🔍 Forensic Extracted Strings & Dependencies",
+        "####  Forensic Extracted Strings & Dependencies",
     ]
 
     if strings:
@@ -151,7 +151,7 @@ def _worker(target_str: str, action: str, player):
         if not path.is_file():
             if player:
                 try:
-                    player.write_log(f"⚠️ [FileXRay] Target not found: {target_str}")
+                    player.write_log(f"[FileXRay] Target not found: {target_str}")
                 except Exception:
                     pass
             return
@@ -168,13 +168,13 @@ def _worker(target_str: str, action: str, player):
         if player:
             try:
                 player.show_content("FILE X-RAY DECOMPILER", card)
-                player.write_log(f"🔬 [FileXRay] X-rayed '{path.name}': {header['type']}. Packer: {packer}.")
+                player.write_log(f"[FileXRay] X-rayed '{path.name}': {header['type']}. Packer: {packer}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [FileXRay] Error: {e}")
+                player.write_log(f"[FileXRay] Error: {e}")
             except Exception:
                 pass
 

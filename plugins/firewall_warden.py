@@ -149,23 +149,23 @@ def _get_firewall_rules() -> Dict[str, Any]:
 
 def _render_hud_card(action: str, fw: Dict[str, Any], sockets: List[Dict[str, Any]]) -> str:
     lines = [
-        "### 🛡️ TACTICAL FIREWALL WARDEN (JARVIS MARK-LVII)\n",
+        "### ️ TACTICAL FIREWALL WARDEN (JARVIS MARK-LVII)\n",
         f"**Firewall Engine:** `{fw['engine']}`",
-        f"**Shield Status:** `{'ACTIVE 🟢' if fw['active'] else 'INACTIVE / PERMISSIVE ⚠️'}`",
+        f"**Shield Status:** `{'ACTIVE ' if fw['active'] else 'INACTIVE / PERMISSIVE '}`",
         f"**Default Inbound Policy:** `{fw['default_input']}`\n",
     ]
 
     public_sockets = [s for s in sockets if s.get("public")]
-    lines.append(f"#### 🌐 Listening Network Sockets ({len(sockets)} active, {len(public_sockets)} exposed to public interfaces)")
+    lines.append(f"####  Listening Network Sockets ({len(sockets)} active, {len(public_sockets)} exposed to public interfaces)")
     lines.append("```text")
     for s in sockets[:16]:
-        tag = "[EXPOSED PUBLIC ⚠️]" if s.get("public") else "[LOOPBACK LOCAL 🟢]"
+        tag = "[EXPOSED PUBLIC ]" if s.get("public") else "[LOOPBACK LOCAL ]"
         lines.append(f"{s['proto']:4s} | {s['ip']:15s}:{s['port']:<5d} | {tag}")
     if len(sockets) > 16:
         lines.append(f"... and {len(sockets) - 16} additional socket bindings.")
     lines.append("```\n")
 
-    lines.append("#### 📋 Active Filter Rules & Directives")
+    lines.append("####  Active Filter Rules & Directives")
     if fw["rules"]:
         lines.append("```text")
         for r in fw["rules"][:12]:
@@ -192,14 +192,14 @@ def _worker(action: str, player):
                     player.show_defense_radar()
                 player.show_content("TACTICAL FIREWALL WARDEN", card)
                 pub_count = len([s for s in sockets if s.get("public")])
-                player.write_log(f"🛡️ [FirewallWarden] {fw['engine']} policy: {fw['default_input']}. {pub_count} public socket(s).")
+                player.write_log(f"️ [FirewallWarden] {fw['engine']} policy: {fw['default_input']}. {pub_count} public socket(s).")
             except Exception:
                 pass
         return fw, sockets, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [FirewallWarden] Error: {e}")
+                player.write_log(f"[FirewallWarden] Error: {e}")
             except Exception:
                 pass
         return {"engine": "Unknown", "active": False, "default_input": "Error"}, [], str(e)

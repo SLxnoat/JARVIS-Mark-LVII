@@ -37,7 +37,7 @@ def _get_desktop() -> Path:
     return Path.home() / "Desktop"
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  REMOVED IN MARK LVI: the generated-code path
+# REMOVED IN MARK LVI: the generated-code path
 # ─────────────────────────────────────────────────────────────────────────────
 # This file used to carry three functions the rest of the project has no
 # equivalent of: `_ask_gemini_for_desktop_action` asked Gemini to write Python
@@ -45,32 +45,32 @@ def _get_desktop() -> Path:
 # `_execute_generated_code` ran the result with exec().
 #
 # WHY IT WENT
-#     The sandbox was not one. Its rules — "NO subprocess", "NO file deletion",
-#     "NO import statements" — were sentences in a PROMPT, with nothing in the
-#     code enforcing any of them, and the namespace handed the generated code
-#     `getattr`, the real `pathlib.Path`, `pyautogui` and, on Windows, `ctypes`.
-#     Verified rather than assumed: from inside that namespace,
-#     `getattr(getattr(().__class__, "__bases__")[0], "__subclasses__")()`
-#     reaches `subprocess.Popen` in one line, and `Path.unlink` was never
-#     hidden at all. The only thing standing between a stray instruction and
-#     arbitrary code on the user's machine was the model choosing to behave.
+# The sandbox was not one. Its rules — "NO subprocess", "NO file deletion",
+# "NO import statements" — were sentences in a PROMPT, with nothing in the
+# code enforcing any of them, and the namespace handed the generated code
+# `getattr`, the real `pathlib.Path`, `pyautogui` and, on Windows, `ctypes`.
+# Verified rather than assumed: from inside that namespace,
+# `getattr(getattr(().__class__, "__bases__")[0], "__subclasses__")()`
+# reaches `subprocess.Popen` in one line, and `Path.unlink` was never
+# hidden at all. The only thing standing between a stray instruction and
+# arbitrary code on the user's machine was the model choosing to behave.
 #
-#     It was also the one tool in this project that broke its own architecture.
-#     Every other one of the thirty-eight declares typed parameters and lets the
-#     model FILL THEM IN; this one asked the model to emit a program. The rest
-#     of the file — wallpaper, organize, clean, list, stats — was already doing
-#     it the right way, and those are what remain.
+# It was also the one tool in this project that broke its own architecture.
+# Every other one of the thirty-eight declares typed parameters and lets the
+# model FILL THEM IN; this one asked the model to emit a program. The rest
+# of the file — wallpaper, organize, clean, list, stats — was already doing
+# it the right way, and those are what remain.
 #
 # WHAT REPLACED IT
-#     Nothing new, because nothing was missing. Typing, clicking, hotkeys,
-#     scrolling, screenshots and find-on-screen are `computer_control`; a
-#     multi-step job on the screen is the `screen_agent` plugin; files are
-#     `file_controller`. All of them are typed, checked and reversible in a way
-#     generated code never was.
+# Nothing new, because nothing was missing. Typing, clicking, hotkeys,
+# scrolling, screenshots and find-on-screen are `computer_control`; a
+# multi-step job on the screen is the `screen_agent` plugin; files are
+# `file_controller`. All of them are typed, checked and reversible in a way
+# generated code never was.
 #
-#     An action this file does not recognise is now a failure that names the
-#     ones it does — the shape computer_settings has used since Mark LII —
-#     rather than a prompt asking a model to invent something.
+# An action this file does not recognise is now a failure that names the
+# ones it does — the shape computer_settings has used since Mark LII —
+# rather than a prompt asking a model to invent something.
 
 
 _ACTIONS = ("wallpaper", "wallpaper_url", "current_wallpaper",
@@ -107,17 +107,17 @@ def _unknown(said: str) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Wallpaper
+# Wallpaper
 # ─────────────────────────────────────────────────────────────────────────────
-#  WHY IT FAILED NOW AND THEN
-#      Not one bug but four, each intermittent on its own. Windows writes the
-#      wallpaper to the registry after the call has returned, so reading it
-#      back at once often saw the OLD value, and a change that had worked was
-#      reported as unconfirmed. PNG and WEBP went through a temp BMP, so the
-#      name read back never matched the name that was set. A downloaded
-#      picture was deleted right after being set, which on macOS and Linux
-#      takes the wallpaper away at the next login. And the macOS and Linux
-#      branches threw away every exit code, so a refusal looked like success.
+# WHY IT FAILED NOW AND THEN
+# Not one bug but four, each intermittent on its own. Windows writes the
+# wallpaper to the registry after the call has returned, so reading it
+# back at once often saw the OLD value, and a change that had worked was
+# reported as unconfirmed. PNG and WEBP went through a temp BMP, so the
+# name read back never matched the name that was set. A downloaded
+# picture was deleted right after being set, which on macOS and Linux
+# takes the wallpaper away at the next login. And the macOS and Linux
+# branches threw away every exit code, so a refusal looked like success.
 _WIN_NATIVE = {".bmp", ".dib", ".jpg", ".jpeg", ".jfif",
                ".png", ".gif", ".tif", ".tiff"}
 
@@ -593,14 +593,14 @@ def list_desktop() -> str:
                 count = len(list(item.iterdir()))
             except PermissionError:
                 count = "?"
-            items.append(f"📁 {item.name}/ ({count} items)")
+            items.append(f" {item.name}/ ({count} items)")
         else:
             size     = item.stat().st_size
             size_str = (
                 f"{size / 1024:.1f} KB" if size < 1024 * 1024
                 else f"{size / 1024 / 1024:.1f} MB"
             )
-            items.append(f"📄 {item.name} ({size_str})")
+            items.append(f" {item.name} ({size_str})")
 
     if not items:
         return "Desktop is empty."

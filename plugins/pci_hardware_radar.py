@@ -200,12 +200,12 @@ def _render_hud_card(
     ram: Dict[str, Any],
 ) -> str:
     lines = [
-        "### ⚙️ TACTICAL HARDWARE RADAR (JARVIS MARK-LVII)\n",
-        f"**Inspection Mode:** `{action.upper()}` | **Status:** `OPERATIONAL 🟢`\n",
+        "###  TACTICAL HARDWARE RADAR (JARVIS MARK-LVII)\n",
+        f"**Inspection Mode:** `{action.upper()}` | **Status:** `OPERATIONAL `\n",
     ]
 
     if action in ("bus_scan", "full_audit"):
-        lines.append(f"#### 🛰️ PCIe Bus Hierarchy ({len(pcie)} devices mapped)")
+        lines.append(f"#### ️ PCIe Bus Hierarchy ({len(pcie)} devices mapped)")
         lines.append("```text")
         for dev in pcie[:14]:
             lines.append(f"[{dev['slot']}] {dev['class']} | Dev: {dev['device'][:28]} | Link: {dev['link']}")
@@ -214,7 +214,7 @@ def _render_hud_card(
         lines.append("```\n")
 
     if action in ("nvme_health", "full_audit"):
-        lines.append("#### 💾 Storage Subsystem & NVMe Health")
+        lines.append("####  Storage Subsystem & NVMe Health")
         if nvme:
             for s in nvme:
                 lines.append(f"- **`{s['device']}`** ({s['model']}) — State: `{s['state'].upper()}` | Wear: `{s['wear']}` | Rev: `{s['firmware']}`")
@@ -223,16 +223,16 @@ def _render_hud_card(
         lines.append("")
 
     if action in ("cpu_governors", "full_audit"):
-        lines.append("#### ⚡ CPU Frequency & Thermal Regulation")
+        lines.append("####  CPU Frequency & Thermal Regulation")
         gov_str = ", ".join(f"{g}: {c} cores" for g, c in cpu["governors"].items()) or "standard"
-        throt_status = "⚠️ Active/Historic Throttling" if cpu.get("throttled") else "🟢 Nominal (No Throttling)"
+        throt_status = " Active/Historic Throttling" if cpu.get("throttled") else " Nominal (No Throttling)"
         lines.append(f"- **Active Cores:** `{cpu['cores']}` | **Clock Average:** `{cpu['avg_freq_mhz']} MHz`")
         lines.append(f"- **Scaling Governors:** `{gov_str}`")
         lines.append(f"- **Thermal Status:** `{throt_status}`")
         lines.append("")
 
     if action in ("ram_topology", "full_audit"):
-        lines.append("#### 🧠 Memory Subsystem Topology")
+        lines.append("####  Memory Subsystem Topology")
         lines.append(f"- **Total RAM:** `{ram['total_gb']} GB` | **Available:** `{ram['available_gb']} GB` | **Swap Allocation:** `{ram['swap_gb']} GB`")
         lines.append("")
 
@@ -251,14 +251,14 @@ def _worker(action: str, player):
         if player:
             try:
                 player.show_content("TACTICAL HARDWARE RADAR", card)
-                player.write_log(f"⚙️ [HardwareRadar] Completed {action}: {len(pcie)} PCIe slots, {len(nvme)} drives.")
+                player.write_log(f"[HardwareRadar] Completed {action}: {len(pcie)} PCIe slots, {len(nvme)} drives.")
             except Exception:
                 pass
         return pcie, nvme, cpu, ram, card
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [HardwareRadar] Error: {e}")
+                player.write_log(f"[HardwareRadar] Error: {e}")
             except Exception:
                 pass
         return [], [], {}, {}, str(e)
@@ -280,7 +280,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             drive_names = [f"{d['device']} ({d['model'][:18]})" for d in nvme[:2]]
             return f"Sir, verified {len(nvme)} drive controller(s): {', '.join(drive_names) if drive_names else 'zero active'}. Wear status is optimal."
         elif action == "cpu_governors":
-            throt = "throttling active ⚠️" if cpu.get("throttled") else "zero thermal throttling 🟢"
+            throt = "throttling active " if cpu.get("throttled") else "zero thermal throttling "
             return f"Sir, {cpu.get('cores', 0)} CPU cores running at average {cpu.get('avg_freq_mhz', 0)} MHz with {throt}."
         elif action == "ram_topology":
             return f"Sir, memory subsystem has {ram.get('total_gb', 0)} GB total, with {ram.get('available_gb', 0)} GB available and {ram.get('swap_gb', 0)} GB swap."

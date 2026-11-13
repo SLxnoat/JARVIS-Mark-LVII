@@ -80,7 +80,7 @@ Provide ONLY the draft reply text without preamble or quotation marks.
                 copied_note = ""
 
             hud_md = (
-                f"### 💬 Chat Takeover: Draft Reply ({tone})\n\n"
+                f"###  Chat Takeover: Draft Reply ({tone})\n\n"
                 f"**Incoming Context:**\n> *\"{text[:200]}...\"*\n\n"
                 f"**Suggested Reply:**\n```\n{draft}\n```\n"
                 f"{copied_note}"
@@ -88,7 +88,7 @@ Provide ONLY the draft reply text without preamble or quotation marks.
             if player:
                 try:
                     player.show_content("Chat Takeover", hud_md)
-                    player.write_log(f"💬 [ChatTakeover] Drafted {tone} reply.")
+                    player.write_log(f"[ChatTakeover] Drafted {tone} reply.")
                 except Exception:
                     pass
 
@@ -101,7 +101,7 @@ Provide ONLY the draft reply text without preamble or quotation marks.
             summary = gemini.text(prompt, tier=gemini.FAST)
             if player and summary:
                 try:
-                    player.show_content("Chat Summary", f"### 📝 Chat Summary\n\n{summary}")
+                    player.show_content("Chat Summary", f"###  Chat Summary\n\n{summary}")
                 except Exception:
                     pass
             return f"Chat summarized. Displaying key points on HUD."

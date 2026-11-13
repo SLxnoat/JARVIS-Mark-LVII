@@ -21,17 +21,17 @@ from core import appidentity, outcome
 # import time on the boot path.
 #
 # WHY THIS STILL RAISES WHEN PLAYWRIGHT IS MISSING
-#     The eager import had a second job nobody wrote down: when playwright was
-#     absent this module failed to load, action_loader dropped it, and the model
-#     was never offered a browser tool it could not serve. Deferring the import
-#     without keeping that would declare `browser_control` on a machine that
-#     cannot run it — the model would call it, get an exception, and describe a
-#     page it never opened. Exactly the failure mode this project spent Mark LVI
-#     removing from local engines.
+# The eager import had a second job nobody wrote down: when playwright was
+# absent this module failed to load, action_loader dropped it, and the model
+# was never offered a browser tool it could not serve. Deferring the import
+# without keeping that would declare `browser_control` on a machine that
+# cannot run it — the model would call it, get an exception, and describe a
+# page it never opened. Exactly the failure mode this project spent Mark LVI
+# removing from local engines.
 #
-#     So the check stays at module scope and still stops the module loading; it
-#     just asks find_spec instead of executing the package. 1 ms instead of 198,
-#     same outcome, and a sentence that says what to install.
+# So the check stays at module scope and still stops the module loading; it
+# just asks find_spec instead of executing the package. 1 ms instead of 198,
+# same outcome, and a sentence that says what to install.
 if importlib.util.find_spec("playwright") is None:      # pragma: no cover
     raise ImportError(
         "browser_control needs playwright, which is not installed. "
@@ -45,16 +45,16 @@ if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Page, Playwright
 
 # WHY THIS FILE DOES NOT USE core/lazyimport.py's LazyModule LIKE THE OTHERS
-#     Every other deferral in this project stands a proxy in for a whole module,
-#     because the call sites say `pyautogui.press(...)` and a proxy answers that
-#     the same way the module would. What this file needs are two SYMBOLS out of
-#     a module: a factory function, and an exception class used in `except`.
+# Every other deferral in this project stands a proxy in for a whole module,
+# because the call sites say `pyautogui.press(...)` and a proxy answers that
+# the same way the module would. What this file needs are two SYMBOLS out of
+# a module: a factory function, and an exception class used in `except`.
 #
-#     `except` will not take a proxy. It requires a real class inheriting from
-#     BaseException, checked by the interpreter at the moment the exception is
-#     raised, and a LazyModule there raises TypeError instead of catching
-#     anything — the original error then disappears underneath a complaint about
-#     the except clause. So these two are bound as real globals instead.
+# `except` will not take a proxy. It requires a real class inheriting from
+# BaseException, checked by the interpreter at the moment the exception is
+# raised, and a LazyModule there raises TypeError instead of catching
+# anything — the original error then disappears underneath a complaint about
+# the except clause. So these two are bound as real globals instead.
 #
 # PlaywrightTimeout starts as a private class that is never raised, so an
 # `except PlaywrightTimeout:` somehow reached before a session exists catches
@@ -172,12 +172,12 @@ def _real_profile_dir(browser: str) -> str:
 
     for p in candidates:
         if p.exists():
-            print(f"[Browser] ✅ Real profile found for {browser}: {p}")
+            print(f"[Browser]  Real profile found for {browser}: {p}")
             return str(p)
 
     fallback = home / ".jarvis_profiles" / browser
     fallback.mkdir(parents=True, exist_ok=True)
-    print(f"[Browser] ⚠️  Real profile not found for {browser}, using: {fallback}")
+    print(f"[Browser]   Real profile not found for {browser}, using: {fallback}")
     return str(fallback)
 
 def _firefox_profile_dir() -> Optional[str]:
@@ -344,7 +344,7 @@ def _resolve_browser(name: str) -> dict | None:
     if spec.get("special") == "opera_windows":
         exe = _find_opera_windows()
         if not exe:
-            print(f"[Browser] ⚠️  Opera executable not found on Windows.")
+            print(f"[Browser]   Opera executable not found on Windows.")
         return {"engine": engine, "exe": exe, "channel": channel}
 
     for b in bins:
@@ -443,9 +443,9 @@ _WIN_EXE_HINTS: dict[str, str] = {"chrome": "chrome", "edge": "msedge"}
 # But the browser we START is ours to configure, and one flag changes the whole
 # picture. Measured on Edge, same page, same profile:
 #
-#     plain                                21 elements, page text: 4
-#     --force-renderer-accessibility       25 elements, page text: 7,
-#                                          including a clickable link
+# plain                                21 elements, page text: 4
+# --force-renderer-accessibility       25 elements, page text: 7,
+# including a clickable link
 #
 # That is the difference between a page the assistant can read and click by
 # name, in the user's OWN signed-in browser, and one it has to guess at from a
@@ -716,7 +716,7 @@ class _BrowserSession:
                 self._context = await engine_obj.launch_persistent_context(jarvis, **kwargs)
 
             self._page = await self._adopt_page()
-            print(f"[Browser] ✅ Firefox launched")
+            print(f"[Browser]  Firefox launched")
             return
 
         if engine_name == "webkit":
@@ -731,7 +731,7 @@ class _BrowserSession:
             }
             self._context = await engine_obj.launch_persistent_context(safari_profile, **kwargs)
             self._page = await self._adopt_page()
-            print(f"[Browser] ✅ Safari launched")
+            print(f"[Browser]  Safari launched")
             return
 
         profile = _real_profile_dir(self.browser_name)
@@ -786,10 +786,10 @@ class _BrowserSession:
                 self._context = await engine_obj.launch_persistent_context(profile, **kwargs)
                 self._page = await self._adopt_page()
                 self.profile_kind = "real"
-                print(f"[Browser] ✅ Launched [{label}] profile={profile}")
+                print(f"[Browser]  Launched [{label}] profile={profile}")
                 return
             except Exception as e:
-                print(f"[Browser] ⚠️  Real profile failed for {label}: {e}")
+                print(f"[Browser]   Real profile failed for {label}: {e}")
 
         # The real profile could not be opened (browser already open / locked
         # profile / newer Chrome versions block the real profile under
@@ -803,7 +803,7 @@ class _BrowserSession:
             self._context = await engine_obj.launch_persistent_context(jarvis_profile, **kwargs)
             self._page = await self._adopt_page()
             self.profile_kind = "separate"
-            print(f"[Browser] ✅ Launched [{label}] with JARVIS profile "
+            print(f"[Browser]  Launched [{label}] with JARVIS profile "
                   f"(sign-ins persist across sessions)")
         except Exception as e2:
             raise RuntimeError(f"Could not launch {self.browser_name}: {e2}") from e2

@@ -134,7 +134,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    player.write_log(f"📊 [Excel] Created spreadsheet at {path.name} with {len(rows)} row(s).")
+                    player.write_log(f"[Excel] Created spreadsheet at {path.name} with {len(rows)} row(s).")
                 except Exception:
                     pass
             return f"Successfully created spreadsheet '{path.name}' with {len(rows)} row(s)."

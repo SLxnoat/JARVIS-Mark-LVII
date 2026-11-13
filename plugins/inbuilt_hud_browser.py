@@ -91,7 +91,7 @@ PLUGIN = {
     },
 }
 
-SCREENSHOT_PATH = Path("screenshots") / "hud_browser_viewport.png"
+SCREENSHOT_PATH = Path(__file__).resolve().parent.parent / "screenshots" / "hud_browser_viewport.png"
 
 
 class BrowserSessionManager:
@@ -384,7 +384,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
                 if hasattr(player, "write_log"):
-                    player.write_log(f"🌐 [HUD Browser] Opened {res.get('url')} ({page_title})")
+                    player.write_log(f"[HUD Browser] Opened {res.get('url')} ({page_title})")
 
             return f"Displaying {page_title} on the HUD, sir."
 
@@ -401,7 +401,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
                 if hasattr(player, "write_log"):
-                    player.write_log(f"🌐 [HUD Browser] Clicked '{selector}'")
+                    player.write_log(f"[HUD Browser] Clicked '{selector}'")
 
             return f"Clicked '{selector}' on the HUD browser, sir."
 
@@ -419,7 +419,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
                 if hasattr(player, "write_log"):
-                    player.write_log(f"🌐 [HUD Browser] Typed '{text}' into '{selector or 'active element'}'")
+                    player.write_log(f"[HUD Browser] Typed '{text}' into '{selector or 'active element'}'")
 
             target_name = f"'{selector}'" if selector else "the active field"
             return f"Entered text into {target_name} on the HUD browser, sir."
@@ -436,7 +436,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
                 if hasattr(player, "write_log"):
-                    player.write_log(f"🌐 [HUD Browser] Scrolled {direction} by {amount}px")
+                    player.write_log(f"[HUD Browser] Scrolled {direction} by {amount}px")
 
             return f"Scrolled {direction} on the HUD browser, sir."
 
@@ -450,7 +450,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_content") and markdown:
                     player.show_content(f"HUD Browser: {title}", markdown)
                 if hasattr(player, "write_log"):
-                    player.write_log(f"🌐 [HUD Browser] Extracted readable content from {title}")
+                    player.write_log(f"[HUD Browser] Extracted readable content from {title}")
 
             return spoken
 
@@ -463,7 +463,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
                 if hasattr(player, "write_log"):
-                    player.write_log("🌐 [HUD Browser] Refreshed HUD viewport frame")
+                    player.write_log("[HUD Browser] Refreshed HUD viewport frame")
 
             return "HUD browser frame refreshed, sir."
 
@@ -475,7 +475,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                     # Closes image surface and restores the 8K cybernetic hologram avatar
                     player.stop_video()
                 if hasattr(player, "write_log"):
-                    player.write_log("🌐 [HUD Browser] Closed session; cybernetic avatar restored.")
+                    player.write_log("[HUD Browser] Closed session; cybernetic avatar restored.")
 
             return "Browser session closed. Restoring avatar, sir."
 
@@ -485,5 +485,5 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
     except Exception as exc:
         err_msg = str(exc)
         if player and hasattr(player, "write_log"):
-            player.write_log(f"⚠️ [HUD Browser Error] {err_msg}")
+            player.write_log(f"[HUD Browser Error] {err_msg}")
         return f"HUD browser encountered an issue while performing '{action}': {err_msg}"

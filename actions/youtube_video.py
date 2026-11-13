@@ -71,7 +71,7 @@ def _open_url(url: str) -> None:
         else:
             subprocess.Popen(["cmd", "/c", "start", "", url], shell=False)
     except Exception as e:
-        print(f"[YouTube] ⚠️ open_url failed: {e}")
+        print(f"[YouTube]  open_url failed: {e}")
 
 def _scrape_first_video_url(query: str) -> str | None:
 
@@ -101,7 +101,7 @@ def _scrape_first_video_url(query: str) -> str | None:
             return f"https://www.youtube.com/watch?v={vid}"
 
     except Exception as e:
-        print(f"[YouTube] ⚠️ scrape_first_video_url failed: {e}")
+        print(f"[YouTube]  scrape_first_video_url failed: {e}")
 
     return None
 
@@ -129,7 +129,7 @@ def _ask_for_url(prompt_text: str = "YouTube video URL:") -> str | None:
         url = simpledialog.askstring("J.A.R.V.I.S", prompt_text, parent=root)
         return url.strip() if url else None
     except Exception as e:
-        print(f"[YouTube] ⚠️ URL dialog failed: {e}")
+        print(f"[YouTube]  URL dialog failed: {e}")
         return None
 
 
@@ -162,7 +162,7 @@ def _get_transcript(video_id: str) -> str | None:
         return " ".join(entry["text"] for entry in fetched)
 
     except Exception as e:
-        print(f"[YouTube] ⚠️ Transcript fetch failed: {e}")
+        print(f"[YouTube]  Transcript fetch failed: {e}")
         return None
 
 
@@ -217,7 +217,7 @@ def _save_summary(content: str, video_url: str) -> str:
         else:
             subprocess.Popen(["xdg-open", str(filepath)])
     except Exception as e:
-        print(f"[YouTube] ⚠️ Could not open text editor: {e}")
+        print(f"[YouTube]  Could not open text editor: {e}")
 
     return str(filepath)
 
@@ -251,7 +251,7 @@ def _scrape_video_info(video_id: str) -> dict:
 
         return info
     except Exception as e:
-        print(f"[YouTube] ⚠️ Info scrape failed: {e}")
+        print(f"[YouTube]  Info scrape failed: {e}")
         return {}
 
 
@@ -278,7 +278,7 @@ def _scrape_trending(region: str = "TR", max_results: int = 8) -> list[dict]:
 
         return results
     except Exception as e:
-        print(f"[YouTube] ⚠️ Trending scrape failed: {e}")
+        print(f"[YouTube]  Trending scrape failed: {e}")
         return []
 
 def _handle_play(parameters: dict, player) -> str:
@@ -289,7 +289,7 @@ def _handle_play(parameters: dict, player) -> str:
     if player:
         player.write_log(f"[YouTube] Searching: {query}")
 
-    print(f"[YouTube] 🔍 Scraping first non-Shorts video for: {query}")
+    print(f"[YouTube]  Scraping first non-Shorts video for: {query}")
 
     video_url = _scrape_first_video_url(query)
 
@@ -298,7 +298,7 @@ def _handle_play(parameters: dict, player) -> str:
         _open_url(video_url)
         return f"Playing: {query}"
 
-    print(f"[YouTube] ⚠️ Scrape failed, opening filtered search page")
+    print(f"[YouTube]  Scrape failed, opening filtered search page")
     fallback_url = (
         f"https://www.youtube.com/results"
         f"?search_query={quote_plus(query)}"
@@ -437,7 +437,7 @@ def youtube_video(
             return handler(params, player) or "Done."
         return handler(params, player, speak) or "Done."
     except Exception as e:
-        print(f"[YouTube] ❌ Error in {action}: {e}")
+        print(f"[YouTube]  Error in {action}: {e}")
         return f"YouTube {action} failed, sir: {e}"
 
 

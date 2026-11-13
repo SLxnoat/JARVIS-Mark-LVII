@@ -46,32 +46,32 @@ PLUGIN: Dict[str, Any] = {
 }
 
 WMO_CODES: Dict[int, Tuple[str, str]] = {
-    0: ("Clear sky", "☀️"),
-    1: ("Mainly clear", "🌤️"),
-    2: ("Partly cloudy", "⛅"),
-    3: ("Overcast", "☁️"),
-    45: ("Foggy", "🌫️"),
-    48: ("Depositing rime fog", "🌫️"),
-    51: ("Light drizzle", "🌦️"),
-    53: ("Moderate drizzle", "🌦️"),
-    55: ("Dense drizzle", "🌧️"),
-    61: ("Slight rain", "🌧️"),
-    63: ("Moderate rain", "🌧️"),
-    65: ("Heavy rain", "🌧️"),
-    71: ("Slight snow fall", "🌨️"),
-    73: ("Moderate snow fall", "🌨️"),
+    0: ("Clear sky", ""),
+    1: ("Mainly clear", "️"),
+    2: ("Partly cloudy", ""),
+    3: ("Overcast", ""),
+    45: ("Foggy", "️"),
+    48: ("Depositing rime fog", "️"),
+    51: ("Light drizzle", "️"),
+    53: ("Moderate drizzle", "️"),
+    55: ("Dense drizzle", "️"),
+    61: ("Slight rain", "️"),
+    63: ("Moderate rain", "️"),
+    65: ("Heavy rain", "️"),
+    71: ("Slight snow fall", "️"),
+    73: ("Moderate snow fall", "️"),
     75: ("Heavy snow fall", "❄️"),
-    80: ("Slight rain showers", "🌦️"),
-    81: ("Moderate rain showers", "🌧️"),
-    82: ("Violent rain showers", "⛈️"),
-    95: ("Thunderstorm", "⛈️"),
-    96: ("Thunderstorm with slight hail", "⛈️"),
-    99: ("Thunderstorm with heavy hail", "⛈️"),
+    80: ("Slight rain showers", "️"),
+    81: ("Moderate rain showers", "️"),
+    82: ("Violent rain showers", ""),
+    95: ("Thunderstorm", ""),
+    96: ("Thunderstorm with slight hail", ""),
+    99: ("Thunderstorm with heavy hail", ""),
 }
 
 
 def _interpret_wmo(code: int) -> Tuple[str, str]:
-    return WMO_CODES.get(code, ("Variable conditions", "🌡️"))
+    return WMO_CODES.get(code, ("Variable conditions", "️"))
 
 
 def _make_bar(pct: int, length: int = 10) -> str:
@@ -206,7 +206,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
         md = (
             f"## {emoji} Weather & Atmospheric Briefing: `{location_label}`\n\n"
             f"> **Conditions:** `{desc}` &nbsp;|&nbsp; **Temp:** `{temp:.1f}°C` (Feels like `{app_temp:.1f}°C`) &nbsp;|&nbsp; **Wind:** `{wind:.1f} km/h`\n\n"
-            f"### 🌡️ Current Atmospheric Telemetry\n\n"
+            f"### ️ Current Atmospheric Telemetry\n\n"
             f"| Metric | Measurement | Rating / Range |\n"
             f"|:---|:---|:---|\n"
             f"| **Ambient Temperature** | `{temp:.1f} °C` | Real-time sensor readout |\n"
@@ -218,7 +218,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
 
         if include_astronomy:
             md += (
-                f"### 🌅 Solar & Daylight Schedule\n\n"
+                f"###  Solar & Daylight Schedule\n\n"
                 f"- **Sunrise:** `{sunrise_time}`\n"
                 f"- **Sunset:** `{sunset_time}`\n"
                 f"- **Coordinates:** `{lat:.4f}°N, {lon:.4f}°E`\n\n"
@@ -226,7 +226,7 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
 
         if include_hourly and hourly_rows:
             md += (
-                f"### 🌧️ Next 12-Hour Rain Radar & Temperature Curve\n\n"
+                f"### ️ Next 12-Hour Rain Radar & Temperature Curve\n\n"
                 f"| Time | Temp | Precipitation Probability | Sky Condition |\n"
                 f"|:---|:---|:---|:---|\n"
                 + "\n".join(hourly_rows)

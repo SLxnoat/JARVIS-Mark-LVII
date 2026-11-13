@@ -54,10 +54,10 @@ def _summarize_meeting(text: str, title: str) -> str:
         f"Meeting Title: {title or 'Executive Discussion'}\n\n"
         f"Raw Meeting Transcript / Notes:\n{text}\n\n"
         "Generate a structured executive briefing with:\n"
-        "1. 🎯 Executive Overview (2 sentences)\n"
-        "2. 💡 Key Decisions Agreed Upon (bullet points)\n"
-        "3. ✅ Action Items & Deliverables (Action, Owner, Deadline)\n"
-        "4. ⚠️ Blockers & Follow-Up Questions\n\n"
+        "1.  Executive Overview (2 sentences)\n"
+        "2.  Key Decisions Agreed Upon (bullet points)\n"
+        "3.  Action Items & Deliverables (Action, Owner, Deadline)\n"
+        "4.  Blockers & Follow-Up Questions\n\n"
         "Return clean, concise markdown."
     )
     res = gemini.text(prompt, tier=gemini.SMART, default="")
@@ -66,7 +66,7 @@ def _summarize_meeting(text: str, title: str) -> str:
 
 def _render_hud_card(title: str, summary_md: str) -> str:
     lines = [
-        f"### 📋 EXECUTIVE MEETING SCRIBE: {title.upper()} (JARVIS MARK-LVII)\n",
+        f"###  EXECUTIVE MEETING SCRIBE: {title.upper()} (JARVIS MARK-LVII)\n",
         summary_md,
         f"\n*Executive brief transcribed at {time.strftime('%H:%M:%S')}.*",
     ]
@@ -81,13 +81,13 @@ def _worker(text: str, title: str, player):
         if player:
             try:
                 player.show_content("MEETING BRIEFING", card)
-                player.write_log(f"📋 [MeetingScribe] Generated executive brief for '{title or 'Discussion'}'.")
+                player.write_log(f"[MeetingScribe] Generated executive brief for '{title or 'Discussion'}'.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [MeetingScribe] Error: {e}")
+                player.write_log(f"[MeetingScribe] Error: {e}")
             except Exception:
                 pass
 

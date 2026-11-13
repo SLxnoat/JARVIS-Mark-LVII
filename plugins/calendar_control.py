@@ -105,7 +105,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if player:
                 try:
-                    player.write_log(f"📅 [Calendar] Created event: '{title}' at {start_dt_str}")
+                    player.write_log(f"[Calendar] Created event: '{title}' at {start_dt_str}")
                 except Exception:
                     pass
             return f"Scheduled '{title}' for {start_dt_str} ({dur_min} minutes)."
@@ -116,10 +116,10 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             if action == "today":
                 filtered = [e for e in events if e.get("start", "").startswith(today_str)]
-                header = f"### 📅 Today's Schedule ({today_str})"
+                header = f"###  Today's Schedule ({today_str})"
             else:
                 filtered = [e for e in events if e.get("start", "") >= today_str][:10]
-                header = "### 📅 Upcoming Calendar Events"
+                header = "###  Upcoming Calendar Events"
 
             if not filtered:
                 return f"No events scheduled for {action}."

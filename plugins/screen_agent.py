@@ -59,7 +59,7 @@ def _screen_worker(task: str, action: str, player):
         if not img_bytes:
             if player:
                 try:
-                    player.write_log("⚠️ [ScreenAgent] Failed to capture screen (check display permissions).")
+                    player.write_log("[ScreenAgent] Failed to capture screen (check display permissions).")
                 except Exception:
                     pass
             return
@@ -80,16 +80,16 @@ Keep the advice precise, concise, and easy to read.
 
         if player:
             try:
-                hud_md = f"### 🖥️ Screen Navigation Assistant\n\n**Goal:** *\"{task}\"*\n\n{response_text}"
+                hud_md = f"### ️ Screen Navigation Assistant\n\n**Goal:** *\"{task}\"*\n\n{response_text}"
                 player.show_content("Screen Agent", hud_md)
-                player.write_log(f"🖥️ [ScreenAgent] Analyzed screen for: '{task[:40]}'")
+                player.write_log(f"️ [ScreenAgent] Analyzed screen for: '{task[:40]}'")
             except Exception:
                 pass
 
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [ScreenAgent] Error during visual analysis: {e}")
+                player.write_log(f"[ScreenAgent] Error during visual analysis: {e}")
             except Exception:
                 pass
 

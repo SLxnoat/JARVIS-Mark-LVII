@@ -62,7 +62,7 @@ def _timer_worker(target_end: float, mode_name: str, player):
 
         if player:
             try:
-                player.write_log(f"⏰ [Pomodoro] {msg}")
+                player.write_log(f"[Pomodoro] {msg}")
             except Exception:
                 pass
 
@@ -95,7 +95,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
                 if player:
                     try:
-                        player.write_log(f"⏰ [Pomodoro] Started {duration_min}-minute focus session.")
+                        player.write_log(f"[Pomodoro] Started {duration_min}-minute focus session.")
                     except Exception:
                         pass
                 return f"Started a {duration_min}-minute Pomodoro focus session. Stay focused!"

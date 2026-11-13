@@ -347,7 +347,7 @@ class MainWindow(QMainWindow):
             return b
 
         # Sound is on by default and the button indicates state.
-        self._video_mute_btn = _vid_btn("🔊  SOUND ON")
+        self._video_mute_btn = _vid_btn("  SOUND ON")
         self._video_mute_btn.clicked.connect(self._toggle_video_mute)
         _vid_hdr.addWidget(self._video_mute_btn)
 
@@ -885,7 +885,7 @@ class MainWindow(QMainWindow):
     def _sync_video_mute_btn(self) -> None:
         out = self._video_sound_out if self._video_split else self._video_audio
         muted = bool(out and out.isMuted())
-        self._video_mute_btn.setText("🔇  SOUND OFF" if muted else "🔊  SOUND ON")
+        self._video_mute_btn.setText("  SOUND OFF" if muted else "  SOUND ON")
 
     def _toggle_video_mute(self) -> None:
         out = self._video_sound_out if self._video_split else self._video_audio
@@ -1057,7 +1057,7 @@ class MainWindow(QMainWindow):
             )
             return True
         except Exception as e:
-            print(f"[Shortcut] ⚠️  Icon generation failed: {e}")
+            print(f"[Shortcut]   Icon generation failed: {e}")
             return False
 
     @staticmethod
@@ -1911,11 +1911,11 @@ class MainWindow(QMainWindow):
         _btn("◉  REMOTE CONTROL", self._open_remote, self._BTN_PRI)
         _btn("⊞  CREATE DESKTOP SHORTCUT", self._create_desktop_shortcut)
         self._autostart_btn = _btn("◉  AUTO-START: OFF", self._toggle_autostart)
-        _btn("⚙  CUSTOMISE ASSISTANT", self._open_customize)
-        _btn("🎧  AUDIO DEVICES", self._open_audio_devices)
-        _btn("🧠  MEMORY", self._open_memory_panel)
-        _btn("🧩  PLUGINS", self._open_plugin_manager)
-        _btn("⚙  PLUGIN SETTINGS", self._open_plugin_settings)
+        _btn("  CUSTOMISE ASSISTANT", self._open_customize)
+        _btn("  AUDIO DEVICES", self._open_audio_devices)
+        _btn("  MEMORY", self._open_memory_panel)
+        _btn("  PLUGINS", self._open_plugin_manager)
+        _btn("  PLUGIN SETTINGS", self._open_plugin_settings)
         # The button is built here with the rest of the drawer; the panel behind
         # it — and the whole providers package — is imported on the click. The
         # drawer used to stutter for a measured 2.104 seconds because a state
@@ -1923,7 +1923,7 @@ class MainWindow(QMainWindow):
         # second thing that does that would undo the fix rather than repeat it.
         # "&&": a single & in a button label is Qt's shortcut marker, and it
         # was being drawn as an underscore — "ENGINE _PROVIDERS".
-        _btn("🔌  ENGINE && PROVIDERS", self._open_providers)
+        _btn("  ENGINE && PROVIDERS", self._open_providers)
 
         w.adjustSize()
         return w
@@ -1945,7 +1945,7 @@ class MainWindow(QMainWindow):
             lay.addWidget(button)
             return button
 
-        fs_btn = _row(QPushButton("⛶  FULLSCREEN  [F11]"), self._BTN_DIM)
+        fs_btn = _row(QPushButton("  FULLSCREEN  [F11]"), self._BTN_DIM)
         fs_btn.clicked.connect(self._toggle_fullscreen)
 
         self._brief_btn = _row(QPushButton())
@@ -1956,7 +1956,7 @@ class MainWindow(QMainWindow):
         self._wake_sleep_btn = _row(QPushButton())
         self._wake_sleep_btn.clicked.connect(self._tap_wake_manual)
         # Neutral until the real state lands from the background warm-up.
-        self._wake_btn.setText("🎙  WAKE WORD")
+        self._wake_btn.setText("  WAKE WORD")
         self._wake_btn.setStyleSheet(self._BTN_DIM)
         self._wake_sleep_btn.hide()
 
@@ -2880,13 +2880,13 @@ class MainWindow(QMainWindow):
             self._wake_btn.setStyleSheet(_off)
             self._wake_sleep_btn.hide()
         elif st["enabled"]:
-            self._wake_btn.setText("🎙  WAKE WORD: ON")
+            self._wake_btn.setText("  WAKE WORD: ON")
             self._wake_btn.setStyleSheet(_on)
             self._wake_sleep_btn.show()
-            self._wake_sleep_btn.setText("😴  SLEEP NOW" if st["awake"] else "👂  WAKE NOW")
+            self._wake_sleep_btn.setText("  SLEEP NOW" if st["awake"] else "  WAKE NOW")
             self._wake_sleep_btn.setStyleSheet(_off)
         else:
-            self._wake_btn.setText("🎙  WAKE WORD: OFF")
+            self._wake_btn.setText("  WAKE WORD: OFF")
             self._wake_btn.setStyleSheet(_off)
             self._wake_sleep_btn.hide()
 
@@ -2898,8 +2898,8 @@ class MainWindow(QMainWindow):
         from memory.config_manager import get_push_to_talk_enabled
 
         ptt = get_push_to_talk_enabled()
-        self._ptt_btn.setText(f"🎚  PUSH-TO-TALK: {chord_label()}" if ptt
-                              else "🎚  PUSH-TO-TALK: OFF")
+        self._ptt_btn.setText(f"  PUSH-TO-TALK: {chord_label()}" if ptt
+                              else "  PUSH-TO-TALK: OFF")
         self._ptt_btn.setStyleSheet(btn_css("on" if ptt else "off"))
         self._ptt_btn.setToolTip(
             "Microphone stays closed until you hold the key — nothing is sent "
@@ -2911,15 +2911,15 @@ class MainWindow(QMainWindow):
         style = get_hud_style()
         # No state is "off": this is a choice between three looks.
         text, tip = {
-            "face": ("🧑  HUD: HOLOGRAM FACE",
+            "face": ("  HUD: HOLOGRAM FACE",
                      "A dotted point-cloud hologram head that speaks your words and "
                      "shows what JARVIS is doing. Tap for the solid head."),
-            "face_solid": ("🗿  HUD: SOLID FACE",
+            "face_solid": ("  HUD: SOLID FACE",
                            "The lit solid head. Tap to switch to the reactor core."),
             "core": ("◉  HUD: REACTOR CORE",
                      "A 3-D reactor core that turns with the state and moves with "
                      "your voice. Tap to switch to the hologram face."),
-        }.get(style, ("🧑  HUD: HOLOGRAM FACE", ""))
+        }.get(style, ("  HUD: HOLOGRAM FACE", ""))
         self._hud_btn.setText(text)
         self._hud_btn.setStyleSheet(btn_css("choice"))
         self._hud_btn.setToolTip(tip)
@@ -3048,7 +3048,7 @@ class MainWindow(QMainWindow):
     def _update_brief_btn(self, enabled: bool):
         if not hasattr(self, '_brief_btn'):
             return
-        self._brief_btn.setText("☀  MORNING BRIEF: ON" if enabled else "☀  MORNING BRIEF: OFF")
+        self._brief_btn.setText("  MORNING BRIEF: ON" if enabled else "  MORNING BRIEF: OFF")
         self._brief_btn.setStyleSheet(btn_css("on" if enabled else "off"))
 
     def _open_customize(self):

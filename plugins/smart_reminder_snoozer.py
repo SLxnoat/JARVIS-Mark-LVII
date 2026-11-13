@@ -115,7 +115,7 @@ def _fire_timer(t_id: str, message: str, player=None):
             return
         timer_info["status"] = "expired"
 
-    alert_text = f"⏰ TIMER COMPLETE [{t_id}]: {message}"
+    alert_text = f" TIMER COMPLETE [{t_id}]: {message}"
     if player:
         try:
             player.write_log(alert_text)
@@ -244,8 +244,8 @@ def _show_hud_timers(player=None):
         for tid, t in sorted(_active_timers.items(), key=lambda x: x[1]["end_time"]):
             remaining = t["end_time"] - now
             status_badge = (
-                f"🟢 `{_format_time_left(remaining)}`" if t["status"] == "running"
-                else ("🔴 EXPIRED" if t["status"] == "expired" else "⚪ CANCELED")
+                f" `{_format_time_left(remaining)}`" if t["status"] == "running"
+                else (" EXPIRED" if t["status"] == "expired" else " CANCELED")
             )
             rows.append(f"| **{tid}** | {t['label']} | {status_badge} | {t['created_at']} |")
 

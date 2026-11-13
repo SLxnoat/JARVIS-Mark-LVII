@@ -87,7 +87,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             _save_guard(data)
             if player:
                 try:
-                    player.write_log(f"🛡️ [WhatsAppGuard] Mode updated to {mode}.")
+                    player.write_log(f"️ [WhatsAppGuard] Mode updated to {mode}.")
                 except Exception:
                     pass
             return f"WhatsApp Guard mode updated to '{mode}'."

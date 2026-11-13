@@ -130,26 +130,26 @@ def _render_ascii_bars(bands: List[Tuple[str, float]]) -> List[str]:
 
 def _render_hud_card(action: str, metrics: Dict[str, Any] | None) -> str:
     lines = [
-        "### 🎙️ ACOUSTIC SPECTRUM RADAR (JARVIS MARK-LVII)\n",
+        "### ️ ACOUSTIC SPECTRUM RADAR (JARVIS MARK-LVII)\n",
     ]
 
     if not metrics:
-        lines.append("⚠️ **Microphone Stream Inaccessible:** Audio hardware is currently dedicated to another subsystem or uninitialized.\n")
+        lines.append(" **Microphone Stream Inaccessible:** Audio hardware is currently dedicated to another subsystem or uninitialized.\n")
         lines.append("*Ensure PortAudio / ALSA microphone access is permitted.*")
         return "\n".join(lines)
 
     db = metrics["dbfs"]
-    quietness = "Whisper / Library 🟢" if db < -45 else ("Quiet Room 🟡" if db < -30 else "Moderate / Active Audio 🟠" if db < -15 else "Loud Environment 🔴")
+    quietness = "Whisper / Library " if db < -45 else ("Quiet Room " if db < -30 else "Moderate / Active Audio " if db < -15 else "Loud Environment ")
 
     lines.append(f"**Ambient Noise Floor:** `{db} dBFS` *({quietness})*")
     lines.append(f"**Signal RMS Energy:** `{metrics['rms']}`\n")
 
-    lines.append("#### 📊 Octave Energy Spectrum")
+    lines.append("####  Octave Energy Spectrum")
     lines.append("```text")
     lines.extend(_render_ascii_bars(metrics["bands"]))
     lines.append("```\n")
 
-    lines.append("#### 🔍 Dominant Harmonic Peaks")
+    lines.append("####  Dominant Harmonic Peaks")
     if metrics["peaks"]:
         for f, mag in metrics["peaks"]:
             note = ""
@@ -177,15 +177,15 @@ def _worker(action: str, duration: float, player):
             try:
                 player.show_content("ACOUSTIC SPECTRUM RADAR", card)
                 if metrics:
-                    player.write_log(f"🎙️ [AcousticRadar] Sampled {duration}s: Noise floor {metrics['dbfs']} dBFS.")
+                    player.write_log(f"️ [AcousticRadar] Sampled {duration}s: Noise floor {metrics['dbfs']} dBFS.")
                 else:
-                    player.write_log("🎙️ [AcousticRadar] Microphone capture yielded no audio stream.")
+                    player.write_log("️ [AcousticRadar] Microphone capture yielded no audio stream.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [AcousticRadar] Error: {e}")
+                player.write_log(f"[AcousticRadar] Error: {e}")
             except Exception:
                 pass
 

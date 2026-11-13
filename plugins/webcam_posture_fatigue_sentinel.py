@@ -71,9 +71,9 @@ def _evaluate_posture(frame: np.ndarray | None) -> Dict[str, Any]:
         return {
             "posture_score": 88.0,
             "head_tilt_deg": 6.5,
-            "status": "NOMINAL ALIGNMENT 🟢",
+            "status": "NOMINAL ALIGNMENT ",
             "blink_rate_cpm": 16.0,
-            "strain_level": "Low / Rested 🟢",
+            "strain_level": "Low / Rested ",
             "advice": "Spine alignment is within the recommended 10° threshold. Keep monitors at eye level.",
             "source": "Estimated Ergonomic Baseline",
         }
@@ -81,14 +81,14 @@ def _evaluate_posture(frame: np.ndarray | None) -> Dict[str, Any]:
     h, w = frame.shape[:2]
     # Simple brightness and contrast check as proxy for lighting
     brightness = float(np.mean(frame))
-    light_rating = "Adequate 🟢" if 70 <= brightness <= 200 else ("Dim / Low Contrast 🟡" if brightness < 70 else "Overexposed 🟡")
+    light_rating = "Adequate " if 70 <= brightness <= 200 else ("Dim / Low Contrast " if brightness < 70 else "Overexposed ")
 
     return {
         "posture_score": 84.0,
         "head_tilt_deg": 8.2,
-        "status": "GOOD POSTURE 🟢",
+        "status": "GOOD POSTURE ",
         "blink_rate_cpm": 15.4,
-        "strain_level": "Normal 🟢",
+        "strain_level": "Normal ",
         "advice": f"Posture is sound. Ambient workspace lighting is {light_rating} ({brightness:.0f} lux avg).",
         "source": f"Live Optical Vision Sensor ({w}x{h})",
     }
@@ -96,14 +96,14 @@ def _evaluate_posture(frame: np.ndarray | None) -> Dict[str, Any]:
 
 def _render_hud_card(data: Dict[str, Any]) -> str:
     lines = [
-        "### 👁️ ERGONOMIC POSTURE & EYE FATIGUE SENTINEL (JARVIS MARK-LVII)\n",
+        "### ️ ERGONOMIC POSTURE & EYE FATIGUE SENTINEL (JARVIS MARK-LVII)\n",
         f"**Ergonomic Score:** `{data['posture_score']} / 100` *({data['status']})*",
         f"**Visual Sensor Link:** `{data['source']}`\n",
-        "#### 📐 Biomechanical Posture Telemetry",
+        "####  Biomechanical Posture Telemetry",
         f"- **Forward Head Tilt:** `{data['head_tilt_deg']}°` *(Threshold: <15° safe)*",
         f"- **Spine & Shoulder Angle:** Nominal vertical balance",
         f"- **Eye Blink Frequency:** `{data['blink_rate_cpm']} blinks/min` *({data['strain_level']})*\n",
-        "#### 🛡️ Ergonomic Health Directives",
+        "#### ️ Ergonomic Health Directives",
         f"- {data['advice']}",
         "- *Rule of 20-20-20:* Every 20 minutes, focus on an object 20 feet away for 20 seconds.",
         f"\n*Ergonomic audit concluded at {time.strftime('%H:%M:%S')}.*",
@@ -120,13 +120,13 @@ def _worker(action: str, player):
         if player:
             try:
                 player.show_content("POSTURE & FATIGUE SENTINEL", card)
-                player.write_log(f"👁️ [ErgoSentinel] Posture Score: {data['posture_score']}%. Head tilt: {data['head_tilt_deg']}°.")
+                player.write_log(f"️ [ErgoSentinel] Posture Score: {data['posture_score']}%. Head tilt: {data['head_tilt_deg']}°.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [ErgoSentinel] Error: {e}")
+                player.write_log(f"[ErgoSentinel] Error: {e}")
             except Exception:
                 pass
 

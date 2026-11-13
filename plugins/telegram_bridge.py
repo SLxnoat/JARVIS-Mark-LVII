@@ -157,9 +157,9 @@ def _format_telegram_html(text: str) -> str:
 def _quick_keypad() -> dict:
     return {
         "keyboard": [
-            [{"text": "📸 Screen"}, {"text": "👁 Camera"}, {"text": "📊 Status"}],
-            [{"text": "📋 Tasks"}, {"text": "📄 Reports"}, {"text": "🎙 Briefing"}],
-            [{"text": "🔇 Mute"}, {"text": "🔊 Unmute"}, {"text": "❓ Help"}],
+            [{"text": " Screen"}, {"text": " Camera"}, {"text": " Status"}],
+            [{"text": " Tasks"}, {"text": " Reports"}, {"text": " Briefing"}],
+            [{"text": " Mute"}, {"text": " Unmute"}, {"text": " Help"}],
         ],
         "resize_keyboard": True,
         "is_persistent": True,
@@ -449,7 +449,7 @@ class TelegramBridge:
     def send_from_tool(self, message: str) -> str:
         if not self._paired_chat_id:
             return "Telegram bridge is not paired yet. Please scan the pairing QR code first."
-        ok = self.send_push(f"📢 <b>Notification from JARVIS:</b>\n\n{message}")
+        ok = self.send_push(f" <b>Notification from JARVIS:</b>\n\n{message}")
         return "Message sent to your Telegram." if ok else "Failed to deliver message to Telegram."
 
     # ── Confirmation Safety Gate ─────────────────────────────────────────────
@@ -459,13 +459,13 @@ class TelegramBridge:
         keyboard = {
             "inline_keyboard": [
                 [
-                    {"text": "✅ Approve", "callback_data": "confirm:yes"},
-                    {"text": "❌ Deny", "callback_data": "confirm:no"},
+                    {"text": " Approve", "callback_data": "confirm:yes"},
+                    {"text": " Deny", "callback_data": "confirm:no"},
                 ]
             ]
         }
         msg = (
-            f"⚠️ <b>CONFIRMATION REQUIRED</b>\n\n"
+            f" <b>CONFIRMATION REQUIRED</b>\n\n"
             f"<b>Action:</b> {html.escape(title)}\n"
             f"<i>{html.escape(detail)}</i>\n\n"
             f"Please tap Approve or Deny."
@@ -558,13 +558,13 @@ class TelegramBridge:
                     if event == "done":
                         res = (task.get("result") or "").strip()
                         report = task.get("report") or ""
-                        msg = f"📋 <b>Task Completed:</b> {html.escape(title)}\n\n{html.escape(res[:1800])}"
+                        msg = f" <b>Task Completed:</b> {html.escape(title)}\n\n{html.escape(res[:1800])}"
                         if report:
-                            msg += f"\n\n📄 <i>Report saved: {html.escape(report)}</i>"
+                            msg += f"\n\n <i>Report saved: {html.escape(report)}</i>"
                         self.send_push(msg)
                     elif event == "failed":
                         err = (task.get("error") or "Unknown error").strip()
-                        self.send_push(f"⚠️ <b>Task Failed:</b> {html.escape(title)}\n\nError: {html.escape(err[:500])}")
+                        self.send_push(f" <b>Task Failed:</b> {html.escape(title)}\n\nError: {html.escape(err[:500])}")
                 except Exception as ex:
                     print(f"[Telegram] Tasks notify hook error: {ex}")
 
@@ -585,10 +585,10 @@ class TelegramBridge:
                     if not self._paired_chat_id:
                         return
                     if "[SYSTEM_ALERT]" in txt or "CRITICAL" in txt:
-                        self.send_push(f"🚨 <b>Hardware Alert:</b>\n{html.escape(txt)}")
+                        self.send_push(f" <b>Hardware Alert:</b>\n{html.escape(txt)}")
                     elif "SYS: Routine —" in txt:
                         routine_name = txt.partition("—")[2].strip()
-                        self.send_push(f"⏰ <b>Scheduled Routine Fired:</b>\n{html.escape(routine_name)}")
+                        self.send_push(f" <b>Scheduled Routine Fired:</b>\n{html.escape(routine_name)}")
                 except Exception:
                     pass
 
@@ -613,11 +613,11 @@ class TelegramBridge:
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.send_photo(
                 png_bytes,
-                caption=f"🖥 <b>Desktop Snapshot</b> — <code>{now_str}</code>",
+                caption=f" <b>Desktop Snapshot</b> — <code>{now_str}</code>",
                 filename="desktop_screen.png",
             )
         except Exception as e:
-            self.send_push(f"⚠️ Screen capture error: {e}")
+            self.send_push(f" Screen capture error: {e}")
 
     def _cmd_camera(self) -> None:
         try:
@@ -627,11 +627,11 @@ class TelegramBridge:
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.send_photo(
                 jpg_bytes,
-                caption=f"📷 <b>Webcam Snapshot</b> — <code>{now_str}</code>",
+                caption=f" <b>Webcam Snapshot</b> — <code>{now_str}</code>",
                 filename="webcam.jpg",
             )
         except Exception as e:
-            self.send_push(f"⚠️ Webcam capture error: {e}")
+            self.send_push(f" Webcam capture error: {e}")
 
     def _cmd_status(self) -> None:
         import psutil
@@ -645,7 +645,7 @@ class TelegramBridge:
         try:
             bat = psutil.sensors_battery()
             if bat:
-                plugged = "🔌 Plugged In" if bat.power_plugged else "🔋 On Battery"
+                plugged = " Plugged In" if bat.power_plugged else " On Battery"
                 battery_line = f"• <b>Battery:</b> {bat.percent:.0f}% ({plugged})\n"
         except Exception:
             pass
@@ -663,13 +663,13 @@ class TelegramBridge:
             pass
 
         self.send_push(
-            f"📊 <b>JARVIS System Status</b>\n\n"
+            f" <b>JARVIS System Status</b>\n\n"
             f"• <b>CPU Load:</b> {cpu:.0f}%\n"
             f"• <b>RAM Usage:</b> {ram:.0f}%\n"
             f"{battery_line}"
             f"• <b>Host Booted:</b> <code>{boot}</code>\n"
             f"{tasks_line}"
-            f"• <b>Telegram Bridge:</b> 🟢 Active & Paired\n"
+            f"• <b>Telegram Bridge:</b>  Active & Paired\n"
             f"• <b>Authorized User:</b> @{self._paired_info.get('username') or 'Sir'}"
         )
 
@@ -684,18 +684,18 @@ class TelegramBridge:
 
             tasks = eng.list(limit=10)
             if not tasks:
-                self.send_push("📋 <b>No background tasks found.</b>\n\nStart one with: <code>/task research AI</code>")
+                self.send_push(" <b>No background tasks found.</b>\n\nStart one with: <code>/task research AI</code>")
                 return
 
-            lines = ["📋 <b>Background Tasks (Recent)</b>\n"]
+            lines = [" <b>Background Tasks (Recent)</b>\n"]
             for t in tasks:
                 status = t.get("status", "unknown")
                 icon = {
-                    "running": "⚡",
-                    "queued": "⏳",
-                    "done": "✅",
-                    "failed": "❌",
-                    "cancelled": "🚫",
+                    "running": "",
+                    "queued": "",
+                    "done": "",
+                    "failed": "",
+                    "cancelled": "",
                 }.get(status, "▫️")
                 tid = t.get("id", "")
                 title = t.get("title", "Untitled")[:40]
@@ -704,16 +704,16 @@ class TelegramBridge:
             lines.append("\n<i>Tip: Use /cancel &lt;id&gt; or /steer &lt;id&gt; &lt;note&gt;</i>")
             self.send_push("\n".join(lines))
         except Exception as e:
-            self.send_push(f"⚠️ Error fetching tasks: {e}")
+            self.send_push(f" Error fetching tasks: {e}")
 
     def _cmd_reports(self, arg: str = "") -> None:
         if not _REPORTS_DIR.exists():
-            self.send_push("📄 <b>No research reports generated yet.</b>")
+            self.send_push(" <b>No research reports generated yet.</b>")
             return
 
         reports = sorted(_REPORTS_DIR.glob("*.md"), key=lambda f: f.stat().st_mtime, reverse=True)
         if not reports:
-            self.send_push("📄 <b>No research reports found in memory.</b>")
+            self.send_push(" <b>No research reports found in memory.</b>")
             return
 
         arg = arg.strip()
@@ -733,17 +733,17 @@ class TelegramBridge:
             if target and target.exists():
                 try:
                     content = target.read_bytes()
-                    self.send_document(content, filename=target.name, caption=f"📄 <b>Report:</b> {html.escape(target.name)}")
+                    self.send_document(content, filename=target.name, caption=f" <b>Report:</b> {html.escape(target.name)}")
                     return
                 except Exception as e:
-                    self.send_push(f"⚠️ Failed to send report: {e}")
+                    self.send_push(f" Failed to send report: {e}")
                     return
             else:
-                self.send_push(f"❌ Report '{html.escape(arg)}' not found.")
+                self.send_push(f" Report '{html.escape(arg)}' not found.")
                 return
 
         # List reports
-        lines = ["📄 <b>Available Research Reports:</b>\n"]
+        lines = [" <b>Available Research Reports:</b>\n"]
         for i, r in enumerate(reports[:10]):
             size_kb = r.stat().st_size / 1024
             mtime = datetime.fromtimestamp(r.stat().st_mtime).strftime("%b %d %H:%M")
@@ -753,7 +753,7 @@ class TelegramBridge:
         self.send_push("\n".join(lines))
 
     def _cmd_briefing(self) -> None:
-        self.send_push("⏳ <i>Synthesizing executive briefing...</i>")
+        self.send_push(" <i>Synthesizing executive briefing...</i>")
 
         def _worker():
             try:
@@ -787,9 +787,9 @@ class TelegramBridge:
                 if not briefing_res:
                     briefing_res = f"Good day, Sir. It is {now_str}. System load is at {cpu:.0f}% CPU and {ram:.0f}% RAM. All primary modules operating within normal parameters."
 
-                self.send_push(f"☀️ <b>JARVIS Executive Briefing</b>\n\n{briefing_res}")
+                self.send_push(f" <b>JARVIS Executive Briefing</b>\n\n{briefing_res}")
             except Exception as e:
-                self.send_push(f"⚠️ Failed to generate briefing: {e}")
+                self.send_push(f" Failed to generate briefing: {e}")
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -802,9 +802,9 @@ class TelegramBridge:
             p = self.get_player()
             if p and hasattr(p, "muted"):
                 p.muted = muted
-            self.send_push("🔇 <b>Audio muted.</b>" if muted else "🔊 <b>Audio unmuted.</b>")
+            self.send_push(" <b>Audio muted.</b>" if muted else " <b>Audio unmuted.</b>")
         except Exception as e:
-            self.send_push(f"⚠️ Mute toggle error: {e}")
+            self.send_push(f" Mute toggle error: {e}")
 
     def _cmd_volume(self, val_str: str) -> None:
         try:
@@ -813,9 +813,9 @@ class TelegramBridge:
             val = int(re.sub(r"[^\d]", "", val_str) or 50)
             val = max(0, min(100, val))
             computer_settings.computer_settings({"action": "volume_set", "value": str(val)})
-            self.send_push(f"🔊 <b>Volume set to {val}%.</b>")
+            self.send_push(f" <b>Volume set to {val}%.</b>")
         except Exception as e:
-            self.send_push(f"⚠️ Volume error: {e}")
+            self.send_push(f" Volume error: {e}")
 
     def _cmd_media(self, action: str) -> None:
         try:
@@ -824,11 +824,11 @@ class TelegramBridge:
             computer_settings.computer_settings({"action": action})
             self.send_push(f"⏯️ Media action executed: <code>{action}</code>")
         except Exception as e:
-            self.send_push(f"⚠️ Media action error: {e}")
+            self.send_push(f" Media action error: {e}")
 
     def _cmd_help(self) -> None:
         self.send_push(
-            "🤖 <b>JARVIS Telegram Command Center</b>\n\n"
+            " <b>JARVIS Telegram Command Center</b>\n\n"
             "<b>Vision & Remote Capture:</b>\n"
             "• <code>/screen</code> — Live desktop screenshot\n"
             "• <code>/camera</code> — Webcam frame snapshot\n"
@@ -865,26 +865,26 @@ class TelegramBridge:
 
         # Keypad / Button aliases & slash commands
         if cmd_lower in ("/menu", "menu", "keypad"):
-            self.send_push("🎛 <b>Quick Control Keypad Active</b>", reply_markup=_quick_keypad())
+            self.send_push(" <b>Quick Control Keypad Active</b>", reply_markup=_quick_keypad())
             return
 
-        if cmd_lower in ("/screen", "📸 screen", "screen", "screenshot"):
+        if cmd_lower in ("/screen", " screen", "screen", "screenshot"):
             self._cmd_screen()
             return
 
-        if cmd_lower in ("/camera", "👁 camera", "camera", "webcam"):
+        if cmd_lower in ("/camera", " camera", "camera", "webcam"):
             self._cmd_camera()
             return
 
-        if cmd_lower in ("/status", "📊 status", "status", "system status"):
+        if cmd_lower in ("/status", " status", "status", "system status"):
             self._cmd_status()
             return
 
-        if cmd_lower in ("/tasks", "📋 tasks", "tasks"):
+        if cmd_lower in ("/tasks", " tasks", "tasks"):
             self._cmd_tasks()
             return
 
-        if cmd_lower in ("/reports", "📄 reports", "reports"):
+        if cmd_lower in ("/reports", " reports", "reports"):
             self._cmd_reports()
             return
 
@@ -893,15 +893,15 @@ class TelegramBridge:
             self._cmd_reports(arg)
             return
 
-        if cmd_lower in ("/brief", "/briefing", "🎙 briefing", "briefing", "morning brief"):
+        if cmd_lower in ("/brief", "/briefing", " briefing", "briefing", "morning brief"):
             self._cmd_briefing()
             return
 
-        if cmd_lower in ("/mute", "🔇 mute", "mute"):
+        if cmd_lower in ("/mute", " mute", "mute"):
             self._cmd_mute(True)
             return
 
-        if cmd_lower in ("/unmute", "🔊 unmute", "unmute"):
+        if cmd_lower in ("/unmute", " unmute", "unmute"):
             self._cmd_mute(False)
             return
 
@@ -928,14 +928,14 @@ class TelegramBridge:
 
                     tid = tasks_desktop.ensure().start(goal, agent="general", minutes=15, deliver="voice")
                     self.send_push(
-                        f"🚀 <b>Background Task Started</b>\n\n"
+                        f" <b>Background Task Started</b>\n\n"
                         f"• <b>Task ID:</b> <code>{tid}</code>\n"
                         f"• <b>Goal:</b> {html.escape(goal)}\n\n"
                         f"Autonomous agent dispatched. Full report will be pushed when complete."
                     )
                     return
                 except Exception as e:
-                    self.send_push(f"⚠️ Failed to queue task: {e}")
+                    self.send_push(f" Failed to queue task: {e}")
                     return
 
         if cmd_lower.startswith("/steer "):
@@ -946,10 +946,10 @@ class TelegramBridge:
                     from core.tasks import desktop as tasks_desktop
 
                     ok = tasks_desktop.ensure().steer(tid, note)
-                    self.send_push(f"🧭 Steered task <code>{tid}</code>: <i>{html.escape(note)}</i>" if ok else f"❌ Task <code>{tid}</code> not found or already finished.")
+                    self.send_push(f" Steered task <code>{tid}</code>: <i>{html.escape(note)}</i>" if ok else f" Task <code>{tid}</code> not found or already finished.")
                     return
                 except Exception as e:
-                    self.send_push(f"⚠️ Steer error: {e}")
+                    self.send_push(f" Steer error: {e}")
                     return
 
         if cmd_lower.startswith("/cancel "):
@@ -959,13 +959,13 @@ class TelegramBridge:
                     from core.tasks import desktop as tasks_desktop
 
                     ok = tasks_desktop.ensure().cancel(tid, finish=True)
-                    self.send_push(f"🛑 Cancelled task <code>{tid}</code>." if ok else f"❌ Task <code>{tid}</code> not found.")
+                    self.send_push(f" Cancelled task <code>{tid}</code>." if ok else f" Task <code>{tid}</code> not found.")
                     return
                 except Exception as e:
-                    self.send_push(f"⚠️ Cancel error: {e}")
+                    self.send_push(f" Cancel error: {e}")
                     return
 
-        if cmd_lower in ("/help", "❓ help", "help", "/start"):
+        if cmd_lower in ("/help", " help", "help", "/start"):
             self._cmd_help()
             return
 
@@ -1015,10 +1015,10 @@ class TelegramBridge:
                 if reply_evt.wait(timeout=35.0) and reply_holder["text"]:
                     self.send_push(reply_holder["text"])
                 else:
-                    self.send_push("⚡ <i>Command dispatched to JARVIS on host machine.</i>")
+                    self.send_push(" <i>Command dispatched to JARVIS on host machine.</i>")
                 return
             else:
-                self.send_push("⚠️ <i>JARVIS main session is currently offline or reconnecting. Please wait a moment.</i>")
+                self.send_push(" <i>JARVIS main session is currently offline or reconnecting. Please wait a moment.</i>")
                 return
         elif p and hasattr(p, "on_text_command") and callable(p.on_text_command):
             # Fallback: Auto-wake and inject via on_text_command
@@ -1027,7 +1027,7 @@ class TelegramBridge:
                 if state.get("enabled") and not state.get("awake"):
                     p.on_wake_manual()
             p.on_text_command(cmd)
-            self.send_push("⚡ <i>Command injected into JARVIS HUD.</i>")
+            self.send_push(" <i>Command injected into JARVIS HUD.</i>")
             return
 
         # Headless fallback if GUI/player is not running
@@ -1058,17 +1058,17 @@ class TelegramBridge:
             if p and hasattr(p, "write_log"):
                 p.write_log(f"{asst_name} (Telegram): {reply[:90]}...")
         except Exception as e:
-            self.send_push(f"⚠️ Error executing command: {e}")
+            self.send_push(f" Error executing command: {e}")
 
     # ── Multimodal Handlers (Photo, Voice, Document) ─────────────────────────
     def _handle_photo(self, photo_list: list, caption: str) -> None:
-        self.send_push("🔍 <i>Analyzing image with Gemini Vision...</i>")
+        self.send_push(" <i>Analyzing image with Gemini Vision...</i>")
         try:
             largest = photo_list[-1]
             file_id = largest.get("file_id")
             downloaded = self.download_file(file_id)
             if not downloaded:
-                self.send_push("⚠️ Failed to download photo from Telegram.")
+                self.send_push(" Failed to download photo from Telegram.")
                 return
 
             photo_bytes, fname = downloaded
@@ -1093,20 +1093,20 @@ class TelegramBridge:
             if not analysis:
                 analysis = "I examined the image but could not generate a description."
 
-            self.send_push(f"👁 <b>Vision Analysis:</b>\n\n{analysis}")
+            self.send_push(f" <b>Vision Analysis:</b>\n\n{analysis}")
             p = self.get_player()
             if p and hasattr(p, "write_log"):
                 p.write_log(f"[Telegram]: Photo analyzed — {user_caption[:50]}")
         except Exception as e:
-            self.send_push(f"⚠️ Vision analysis error: {e}")
+            self.send_push(f" Vision analysis error: {e}")
 
     def _handle_voice(self, voice_dict: dict) -> None:
-        self.send_push("🎙 <i>Transcribing voice message...</i>")
+        self.send_push(" <i>Transcribing voice message...</i>")
         try:
             file_id = voice_dict.get("file_id")
             downloaded = self.download_file(file_id)
             if not downloaded:
-                self.send_push("⚠️ Failed to download voice message.")
+                self.send_push(" Failed to download voice message.")
                 return
 
             audio_bytes, fname = downloaded
@@ -1123,23 +1123,23 @@ class TelegramBridge:
             ]
             transcribed = (gemini.text(contents, tier=gemini.FAST, timeout_ms=30000) or "").strip()
             if not transcribed:
-                self.send_push("⚠️ Could not transcribe the voice message.")
+                self.send_push(" Could not transcribe the voice message.")
                 return
 
-            self.send_push(f"🎙 <i>\"{html.escape(transcribed)}\"</i>")
+            self.send_push(f" <i>\"{html.escape(transcribed)}\"</i>")
             # Directly execute the transcribed voice command through the main session!
             self._execute_command(transcribed)
         except Exception as e:
-            self.send_push(f"⚠️ Voice processing error: {e}")
+            self.send_push(f" Voice processing error: {e}")
 
     def _handle_document(self, doc_dict: dict, caption: str) -> None:
         file_id = doc_dict.get("file_id")
         fname = doc_dict.get("file_name", "uploaded_file")
-        self.send_push(f"📥 <i>Receiving document <code>{html.escape(fname)}</code>...</i>")
+        self.send_push(f" <i>Receiving document <code>{html.escape(fname)}</code>...</i>")
         try:
             downloaded = self.download_file(file_id)
             if not downloaded:
-                self.send_push(f"⚠️ Failed to download <code>{html.escape(fname)}</code>.")
+                self.send_push(f" Failed to download <code>{html.escape(fname)}</code>.")
                 return
 
             doc_bytes, _ = downloaded
@@ -1167,12 +1167,12 @@ class TelegramBridge:
                 except Exception:
                     pass
 
-            self.send_push(f"✅ <b>File Received:</b>\n\n{summary}")
+            self.send_push(f" <b>File Received:</b>\n\n{summary}")
             p = self.get_player()
             if p and hasattr(p, "write_log"):
                 p.write_log(f"[Telegram]: Received file {fname}")
         except Exception as e:
-            self.send_push(f"⚠️ Document error: {e}")
+            self.send_push(f" Document error: {e}")
 
     # ── Long Polling Worker ──────────────────────────────────────────────────
     def _poll_worker(self) -> None:
@@ -1252,7 +1252,7 @@ class TelegramBridge:
                     {
                         "chat_id": chat_id,
                         "message_id": msg_id,
-                        "text": "✅ <b>Action Approved</b> — Executing on host computer.",
+                        "text": " <b>Action Approved</b> — Executing on host computer.",
                         "parse_mode": "HTML",
                     },
                 )
@@ -1265,7 +1265,7 @@ class TelegramBridge:
                     {
                         "chat_id": chat_id,
                         "message_id": msg_id,
-                        "text": "❌ <b>Action Denied</b> — Cancelled.",
+                        "text": " <b>Action Denied</b> — Cancelled.",
                         "parse_mode": "HTML",
                     },
                 )
@@ -1293,7 +1293,7 @@ class TelegramBridge:
                         p.write_log(f"SYS: Telegram paired with @{username} ({chat_id})")
 
                     self.send_push(
-                        f"🔒 <b>JARVIS Telegram Bridge Paired!</b>\n\n"
+                        f" <b>JARVIS Telegram Bridge Paired!</b>\n\n"
                         f"Welcome, {html.escape(first_name or 'Sir')}! This channel is securely linked to your JARVIS Mark-LVII instance.\n\n"
                         f"• Tap any button on the keypad below or type any command.\n"
                         f"• Type <code>/help</code> for full documentation.",
@@ -1304,7 +1304,7 @@ class TelegramBridge:
                         "sendMessage",
                         {
                             "chat_id": chat_id,
-                            "text": "❌ Invalid or expired pairing token. Please scan the QR code displayed on the JARVIS screen.",
+                            "text": " Invalid or expired pairing token. Please scan the QR code displayed on the JARVIS screen.",
                         },
                     )
             return
@@ -1320,7 +1320,7 @@ class TelegramBridge:
                 "sendMessage",
                 {
                     "chat_id": chat_id,
-                    "text": "🔓 <b>JARVIS Unpaired</b>\n\nThis chat has been disconnected. A new QR code has been generated on the JARVIS screen.",
+                    "text": " <b>JARVIS Unpaired</b>\n\nThis chat has been disconnected. A new QR code has been generated on the JARVIS screen.",
                     "parse_mode": "HTML",
                 },
             )

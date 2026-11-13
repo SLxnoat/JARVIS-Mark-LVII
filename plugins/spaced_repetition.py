@@ -110,9 +110,9 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
 
             card = due_cards[0]
             hud_text = (
-                f"### 📇 Flashcard Review: Deck '{deck}'\n\n"
+                f"###  Flashcard Review: Deck '{deck}'\n\n"
                 f"**Card ID:** `{card['id']}`\n\n"
-                f"### ❓ Question / Front:\n> **{card['front']}**\n\n"
+                f"###  Question / Front:\n> **{card['front']}**\n\n"
                 f"---\n"
                 f"*(Ask JARVIS to reveal the answer or score your recall 1-5)*\n\n"
                 f"<details><summary>Click to Reveal Answer</summary>\n\n> {card['back']}\n</details>"

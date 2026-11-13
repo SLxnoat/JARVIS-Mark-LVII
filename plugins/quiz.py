@@ -90,10 +90,10 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         try:
             questions = _generate_questions(topic, num_q, difficulty)
             player.show_quiz(topic=topic, questions=questions, grade=None)
-            player.write_log(f"🧠 [Quiz] Generated {len(questions)} question(s) on '{topic}' ({difficulty}).")
+            player.write_log(f"[Quiz] Generated {len(questions)} question(s) on '{topic}' ({difficulty}).")
         except Exception as e:
             try:
-                player.write_log(f"⚠️ [Quiz] Failed to launch quiz: {e}")
+                player.write_log(f"[Quiz] Failed to launch quiz: {e}")
             except Exception:
                 pass
 

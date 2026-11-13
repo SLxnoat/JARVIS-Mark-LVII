@@ -161,9 +161,9 @@ def _query_single_resolver(name: str, ip: str, domain: str, qtype: int = 1) -> D
 
 def _render_hud_card(domain: str, results: List[Dict[str, Any]]) -> str:
     lines = [
-        "### 🌐 GLOBAL ANYCAST DNS CARTOGRAPHER (JARVIS MARK-LVII)\n",
+        "###  GLOBAL ANYCAST DNS CARTOGRAPHER (JARVIS MARK-LVII)\n",
         f"**Target Hostname:** `{domain}`\n",
-        "#### 📡 Global Anycast Resolution Matrix",
+        "####  Global Anycast Resolution Matrix",
         "```text",
         f"{'RESOLVER':<22s} {'LATENCY':<10s} {'STATUS':<10s} {'RESOLVED IP(S)'}",
         "-" * 72,
@@ -182,17 +182,17 @@ def _render_hud_card(domain: str, results: List[Dict[str, Any]]) -> str:
     lines.append("```\n")
 
     # Consistency check
-    lines.append("#### 🛡️ Propagation & Integrity Analysis")
+    lines.append("#### ️ Propagation & Integrity Analysis")
     if len(all_ip_sets) >= 2:
         first = all_ip_sets[0]
         consistent = all(bool(s & first) for s in all_ip_sets[1:])
         if consistent:
-            lines.append("🟢 **Propagation Consistency:** `100% SYNCHRONIZED` — All responding anycast backbones agree.")
-            lines.append("🟢 **ISP Poisoning Check:** `CLEAN` — No redirection or resolver tampering detected.")
+            lines.append(" **Propagation Consistency:** `100% SYNCHRONIZED` — All responding anycast backbones agree.")
+            lines.append(" **ISP Poisoning Check:** `CLEAN` — No redirection or resolver tampering detected.")
         else:
-            lines.append("⚠️ **Propagation Inconsistency:** Different anycast nodes are returning disparate IP sets (CDN GeoDNS or propagation in progress).")
+            lines.append(" **Propagation Inconsistency:** Different anycast nodes are returning disparate IP sets (CDN GeoDNS or propagation in progress).")
     else:
-        lines.append("🟡 **Telemetry Note:** Insufficient answering resolvers to assert global consensus.")
+        lines.append(" **Telemetry Note:** Insufficient answering resolvers to assert global consensus.")
 
     lines.append(f"\n*DNS queries concluded at {time.strftime('%H:%M:%S')}.*")
     return "\n".join(lines)
@@ -215,13 +215,13 @@ def _worker(domain: str, action: str, qtype_code: int, player):
                 player.show_content("GLOBAL DNS CARTOGRAPHER", card)
                 fastest = results[0] if results else None
                 f_name = f"{fastest['name']} ({fastest['latency_ms']}ms)" if fastest else "N/A"
-                player.write_log(f"🌐 [DNSPropagator] Queried {len(results)} nodes for '{domain}'. Fastest: {f_name}.")
+                player.write_log(f"[DNSPropagator] Queried {len(results)} nodes for '{domain}'. Fastest: {f_name}.")
             except Exception:
                 pass
     except Exception as e:
         if player:
             try:
-                player.write_log(f"⚠️ [DNSPropagator] Error: {e}")
+                player.write_log(f"[DNSPropagator] Error: {e}")
             except Exception:
                 pass
 

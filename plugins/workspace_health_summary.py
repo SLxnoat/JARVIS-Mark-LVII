@@ -167,9 +167,9 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
         # Markdown HUD Card
         git_section = ""
         if git_info and git_info.get("is_git"):
-            git_badge = "🟢 CLEAN" if git_info.get("clean") else f"🟡 {git_info['modified']} modified, {git_info['untracked']} untracked"
+            git_badge = " CLEAN" if git_info.get("clean") else f" {git_info['modified']} modified, {git_info['untracked']} untracked"
             git_section = (
-                f"### 🌿 Git Workspace Status\n\n"
+                f"###  Git Workspace Status\n\n"
                 f"- **Active Branch:** `{git_info['branch']}`\n"
                 f"- **Working Tree:** {git_badge}\n"
                 f"- **Repository Path:** `{os.getcwd()}`\n\n"
@@ -183,21 +183,21 @@ def run(parameters: dict | None = None, player=None, session_memory=None) -> str
                     for ev in agenda
                 )
                 agenda_section = (
-                    f"### 📅 Today's Agenda ({len(agenda)} Events)\n\n"
+                    f"###  Today's Agenda ({len(agenda)} Events)\n\n"
                     f"| Time | Title | Details |\n"
                     f"|:---|:---|:---|\n"
                     f"{ev_rows}\n\n"
                 )
             else:
                 agenda_section = (
-                    f"### 📅 Today's Agenda\n\n"
+                    f"###  Today's Agenda\n\n"
                     f"No scheduled appointments in calendar for today.\n\n"
                 )
 
         md = (
-            f"## ☀️ Workstation Readiness Briefing\n\n"
+            f"##  Workstation Readiness Briefing\n\n"
             f"> **System Health:** `{system_health}` &nbsp;|&nbsp; **Uptime:** `{uptime_str}` &nbsp;|&nbsp; **Power:** `{bat_str}`\n\n"
-            f"### 💻 System Telemetry\n\n"
+            f"###  System Telemetry\n\n"
             f"| Metric | Utilization | Capacity Details |\n"
             f"|:---|:---|:---|\n"
             f"| **CPU Usage** | `{cpu_pct:.1f}%` | {psutil.cpu_count(logical=True)} logical cores |\n"

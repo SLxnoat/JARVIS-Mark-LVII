@@ -221,11 +221,19 @@ class JarvisUI:
         self._win.wake_get_state = cb
 
     def set_audio_level(self, level: float) -> None:
-        """Thread-safe: feed a 0.0–1.0 live audio level to the HUD waveform.
+        """Thread-safe: feed a 0.0–1.0 live audio level to the HUD waveform
+        and the VU meter widget.
         Called from the audio threads; a plain float store is atomic under the
         GIL, so no signal/lock is needed for this cosmetic value."""
         try:
             self._win.hud.set_audio_level(level)
+        except Exception:
+            pass
+        try:
+            # UI-GAP-05: feed the VU meter (also atomic, safe from any thread)
+            vu = getattr(self._win, "_vu_meter", None)
+            if vu is not None:
+                vu.set_level(level)
         except Exception:
             pass
 
@@ -346,6 +354,26 @@ class JarvisUI:
         folder.
         """
         self._win._image_open_sig.emit(str(path or ""), str(title or ""))
+
+    # UI-GAP-03: AR Browser Viewport — thread-safe player API
+    def show_browser_viewport(self, image_path: str, url: str = "") -> None:
+        """Thread-safe: display the holographic AR browser overlay.
+
+        Shows the Playwright screenshot inside the cyan-framed overlay
+        instead of replacing the avatar slot.  Plugins call this instead
+        of ``show_image`` for browser sessions.
+        """
+        try:
+            self._win._browser_vp_sig.emit(str(image_path or ""), str(url or ""))
+        except Exception:
+            pass
+
+    def close_browser_viewport(self) -> None:
+        """Thread-safe: hide the AR browser overlay."""
+        try:
+            self._win._browser_vp_close_sig.emit()
+        except Exception:
+            pass
 
     def stop_video(self) -> None:
         """Thread-safe: close the video and give the HUD back to the avatar."""

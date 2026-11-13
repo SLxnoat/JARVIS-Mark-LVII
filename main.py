@@ -1408,6 +1408,14 @@ class JarvisLive:
                 self._engine.interrupt()
             except Exception:
                 pass
+        # GAP-05: Signal background plugin worker threads to stop cooperatively
+        try:
+            from core.thread_pool import cancel_all
+            stopped = cancel_all()
+            if stopped:
+                self.ui.write_log(f"SYS: Cancelled {stopped} background worker tasks.")
+        except Exception:
+            pass
         self.ui.write_log("SYS: Interrupted — listening...")
 
     def speak(self, text: str):

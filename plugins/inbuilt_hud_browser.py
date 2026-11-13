@@ -383,6 +383,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                    if hasattr(player, "show_browser_viewport"):
+                        player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log(f"[HUD Browser] Opened {res.get('url')} ({page_title})")
 
@@ -400,6 +402,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                    if hasattr(player, "show_browser_viewport"):
+                        player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log(f"[HUD Browser] Clicked '{selector}'")
 
@@ -418,6 +422,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                    if hasattr(player, "show_browser_viewport"):
+                        player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log(f"[HUD Browser] Typed '{text}' into '{selector or 'active element'}'")
 
@@ -435,6 +441,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                    if hasattr(player, "show_browser_viewport"):
+                        player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log(f"[HUD Browser] Scrolled {direction} by {amount}px")
 
@@ -462,6 +470,8 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             if player:
                 if hasattr(player, "show_image") and screenshot_path:
                     player.show_image(screenshot_path, title=f"HUD Web: {page_title[:35]}")
+                    if hasattr(player, "show_browser_viewport"):
+                        player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log("[HUD Browser] Refreshed HUD viewport frame")
 

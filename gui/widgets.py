@@ -1378,3 +1378,167 @@ class SubHudTabBar(QWidget):
                         border-color: {C.PRI_DIM};
                     }}
                 """)
+
+
+# ---------------------------------------------------------------------------
+# UI-GAP-05: Audio dB VU Meter
+# ---------------------------------------------------------------------------
+
+class VUMeter(QWidget):
+    """
+    Real-time audio dB VU meter for microphone input level.
+
+    The meter shows a vertical bar that fills with a gradient from cyan (low)
+    to green (mid) to amber (peak) based on the 0.0-1.0 normalised level fed
+    via ``set_level()``.  A peak-hold marker decays after 1.5 s.
+
+    Designed to sit in the right panel beneath the MIC button.
+    """
+
+    _PEAK_HOLD_MS = 1500
+    _DECAY_RATE   = 0.04   # fraction per tick (60 fps timer)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(QSize(28, 90))
+        self._level: float = 0.0
+        self._peak: float  = 0.0
+        self._peak_ts: float = 0.0
+
+        self._timer = QTimer(self)
+        self._timer.setInterval(16)       # ~60 fps
+        self._timer.timeout.connect(self._tick)
+        self._timer.start()
+
+    # ------------------------------------------------------------------
+    # Thread-safe level update (safe to call from any thread)
+    # ------------------------------------------------------------------
+
+    def set_level(self, level: float) -> None:
+        """Accept a 0.0-1.0 normalised amplitude."""
+        try:
+            lv = max(0.0, min(1.0, float(level)))
+        except (TypeError, ValueError):
+            return
+        if lv > self._level:
+            self._level = lv
+        if lv >= self._peak:
+            self._peak    = lv
+            self._peak_ts = time.monotonic()
+
+    # ------------------------------------------------------------------
+    # Decay tick
+    # ------------------------------------------------------------------
+
+    def _tick(self) -> None:
+        self._level = max(0.0, self._level - self._DECAY_RATE)
+        if time.monotonic() - self._peak_ts > self._PEAK_HOLD_MS / 1000:
+            self._peak = max(0.0, self._peak - self._DECAY_RATE * 0.5)
+        self.update()
+
+    # ------------------------------------------------------------------
+    # Paint
+    # ------------------------------------------------------------------
+
+    def paintEvent(self, event):  # type: ignore[override]
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+
+        # Background
+        p.fillRect(self.rect(), qcol(C.PANEL))
+
+        # Segmented tick marks
+        seg_h = H / 20
+        for i in range(20):
+            y = H - int((i + 1) * seg_h)
+            frac = i / 19.0
+            if frac < self._level:
+                if frac > 0.85:
+                    col = qcol("#ffaa00")
+                elif frac > 0.6:
+                    col = qcol(C.GREEN)
+                else:
+                    col = qcol(C.PRI)
+            else:
+                col = qcol(C.PRI_GHO)
+            p.fillRect(2, y + 1, W - 4, int(seg_h) - 1, col)
+
+        # Peak hold marker
+        if self._peak > 0.01:
+            py = int(H - self._peak * H)
+            p.setPen(QPen(qcol("#ffaa00"), 2))
+            p.drawLine(2, py, W - 2, py)
+
+        # Border
+        p.setPen(QPen(qcol(C.BORDER), 1))
+        p.drawRect(0, 0, W - 1, H - 1)
+
+        # Label
+        p.setFont(px_font(7))
+        p.setPen(QPen(qcol(C.TEXT_DIM)))
+        p.drawText(QRectF(0, H - 10, W, 10), Qt.AlignmentFlag.AlignCenter, "MIC")
+        p.end()
+
+
+# ---------------------------------------------------------------------------
+# UI-GAP-06: Active Plugin Sentinel Status Pills
+# ---------------------------------------------------------------------------
+
+class SentinelStatusBar(QWidget):
+    """
+    Compact horizontal strip of status pills showing which background
+    plugin sentinels are currently running (alive worker threads).
+
+    Integrates with ``core.thread_pool.active_tags()`` to get the live
+    list and refreshes every 2 s.  Empty when no sentinels are active.
+
+    Add to the left or right panel via ``window.py``.
+    """
+
+    _REFRESH_MS = 2000
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(26)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        self._layout = QHBoxLayout(self)
+        self._layout.setContentsMargins(4, 2, 4, 2)
+        self._layout.setSpacing(4)
+        self._layout.addStretch()
+
+        self._timer = QTimer(self)
+        self._timer.setInterval(self._REFRESH_MS)
+        self._timer.timeout.connect(self._refresh)
+        self._timer.start()
+        self._refresh()
+
+    # ------------------------------------------------------------------
+    # Refresh
+    # ------------------------------------------------------------------
+
+    def _refresh(self) -> None:
+        try:
+            from core.thread_pool import active_tags
+            tags = active_tags()
+        except Exception:
+            tags = []
+
+        # Remove old pills
+        while self._layout.count() > 1:  # keep trailing stretch
+            item = self._layout.takeAt(0)
+            if item and item.widget():
+                item.widget().deleteLater()
+
+        for tag in tags[:8]:  # cap at 8 pills to avoid overflow
+            pill = QLabel(tag.replace("_", " ").upper())
+            pill.setFont(px_font(8, QFont.Weight.Bold))
+            pill.setStyleSheet(
+                f"color: {C.GREEN}; background: rgba(0,255,136,0.08); "
+                f"border: 1px solid {C.GREEN}; border-radius: 3px; padding: 1px 5px;"
+            )
+            pill.setFixedHeight(20)
+            self._layout.insertWidget(self._layout.count() - 1, pill)
+
+        self.setVisible(bool(tags))

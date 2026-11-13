@@ -201,6 +201,9 @@ class MainWindow(QMainWindow):
     _synaptic_show_sig  = pyqtSignal()
     _synaptic_spark_sig = pyqtSignal(str, str, float)      # (rule_id, trigger, confidence)
     _mission_show_sig   = pyqtSignal()
+    # UI-GAP-03: AR Browser Viewport signals
+    _browser_vp_sig     = pyqtSignal(str, str)   # (image_path, url)
+    _browser_vp_close_sig = pyqtSignal()
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -463,6 +466,21 @@ class MainWindow(QMainWindow):
         self._subhud_tab_bar.tab_selected.connect(self._on_subhud_tab_selected)
         _center_top_lay.addWidget(self._subhud_tab_bar, stretch=0)
 
+        # UI-GAP-03: AR Browser Viewport overlay (floats over center column)
+        from gui.browser_viewport import BrowserViewport
+        self._browser_viewport = BrowserViewport(self.centralWidget())
+        self._browser_viewport.closed.connect(self._on_browser_viewport_closed)
+        self._browser_viewport.nav_back.connect(
+            lambda: self._browser_nav("back")
+        )
+        self._browser_viewport.nav_forward.connect(
+            lambda: self._browser_nav("forward")
+        )
+        self._browser_viewport.nav_refresh.connect(
+            lambda: self._browser_nav("refresh")
+        )
+        self._browser_viewport.hide()
+
         self._center_split.addWidget(_center_top)
         self._center_split.addWidget(self._content_panel)
         self._center_split.addWidget(self._quiz_panel)
@@ -528,6 +546,9 @@ class MainWindow(QMainWindow):
         self._synaptic_show_sig.connect(self.show_synaptic_board)
         self._synaptic_spark_sig.connect(self._on_synaptic_spark)
         self._mission_show_sig.connect(self.show_mission_control)
+        # UI-GAP-03: AR Browser Viewport signals
+        self._browser_vp_sig.connect(self._show_browser_viewport)
+        self._browser_vp_close_sig.connect(self._close_browser_viewport)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -1383,6 +1404,7 @@ class MainWindow(QMainWindow):
         self._fit_side_columns()
         if getattr(self, "_is_holodeck", False):
             self._position_fs_exit_btn()
+        self._position_browser_viewport()
         cw = self.centralWidget()
         if self._overlay and self._overlay.isVisible():
             ow, oh = 460, 390
@@ -1885,7 +1907,21 @@ class MainWindow(QMainWindow):
         self._interrupt_btn.setToolTip("Stop the assistant mid-sentence  [ESC]")
         self._interrupt_btn.clicked.connect(self._do_interrupt)
         row.addWidget(self._interrupt_btn, 1)
+
+        # UI-GAP-05: VU meter alongside mic button
+        from gui.widgets import VUMeter
+        self._vu_meter = VUMeter()
+        self._vu_meter.setToolTip("Live microphone input level")
+        row.addWidget(self._vu_meter)
+
         cmd.body.addLayout(row)
+
+        # UI-GAP-06: Sentinel status pills (auto-hidden when no sentinels active)
+        from gui.widgets import SentinelStatusBar
+        self._sentinel_bar = SentinelStatusBar()
+        self._sentinel_bar.setToolTip("Active background plugin sentinels")
+        cmd.body.addWidget(self._sentinel_bar)
+
         lay.addWidget(cmd)
         return w
 
@@ -2122,6 +2158,60 @@ class MainWindow(QMainWindow):
                 self._reveal_below_hud(self._quiz_panel, 250)
             else:
                 self._show_content("Quiz Board", "No active quiz. Ask JARVIS to test your knowledge on any topic!")
+
+    # UI-GAP-03: Browser viewport callbacks
+    def _show_browser_viewport(self, image_path: str, url: str) -> None:
+        """Slot: display the AR browser overlay with a screenshot and URL."""
+        bv = getattr(self, "_browser_viewport", None)
+        if bv is None:
+            return
+        bv.load(image_path, url)
+        self._position_browser_viewport()
+
+    def _close_browser_viewport(self) -> None:
+        """Slot: hide the AR browser overlay."""
+        bv = getattr(self, "_browser_viewport", None)
+        if bv is not None:
+            bv.close_viewport()
+
+    def _on_browser_viewport_closed(self) -> None:
+        """User closed the AR browser viewport — stop any active browser session."""
+        try:
+            import plugins.inbuilt_hud_browser as _br
+            if hasattr(_br, "_session_mgr") and _br._session_mgr is not None:
+                _br._session_mgr.close()
+        except Exception:
+            pass
+
+    def _browser_nav(self, action: str) -> None:
+        """Forward nav button press to the browser plugin."""
+        try:
+            import plugins.inbuilt_hud_browser as _br
+            result = _br.run({"action": action})
+            self.write_log(f"Browser: {result}")
+        except Exception as exc:
+            self.write_log(f"Browser nav error: {exc}")
+
+    def _position_browser_viewport(self) -> None:
+        """Size and position the browser viewport overlay over the center column."""
+        bv = getattr(self, "_browser_viewport", None)
+        if bv is None or not bv.isVisible():
+            return
+        cw = self.centralWidget()
+        if cw is None:
+            return
+        # Place over the HUD area (center column)
+        lw = getattr(self, "_left_panel", None)
+        lw_w = lw.width() if lw and lw.isVisible() else 0
+        rw = getattr(self, "_right_panel", None)
+        rw_w = rw.width() if rw and rw.isVisible() else 0
+        total_w = cw.width()
+        x = lw_w + 4
+        w = total_w - lw_w - rw_w - 8
+        h = int(cw.height() * 0.55)
+        y = int(cw.height() * 0.07)
+        bv.setGeometry(x, y, w, h)
+        bv.raise_()
 
     def _reveal_below_hud(self, panel: QWidget, want: int) -> None:
         """Show a panel under the HUD at a usable height.

@@ -163,3 +163,26 @@ class TestAdvancedTools(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSkillLoader(unittest.TestCase):
+    """Verifies Anthropic/Hermes Agent Skills system integration."""
+
+    def test_skill_loader_list(self):
+        import plugins.skill_loader as sl
+        output = sl.run({"action": "list"})
+        self.assertIn("Available JARVIS Skills", output)
+        self.assertIn("systematic-debugging", output)
+        self.assertIn("test-driven-development", output)
+        self.assertIn("computer-use", output)
+
+    def test_skill_loader_read(self):
+        import plugins.skill_loader as sl
+        output = sl.run({"action": "read", "skill_name": "systematic-debugging"})
+        self.assertIn("Systematic Debugging", output)
+        self.assertIn("NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST", output)
+
+    def test_skill_loader_missing(self):
+        import plugins.skill_loader as sl
+        output = sl.run({"action": "read", "skill_name": "non_existent_skill_xyz"})
+        self.assertIn("not found", output.lower())

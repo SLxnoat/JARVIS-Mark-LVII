@@ -148,13 +148,16 @@ class _JarvisKeyFilter(QObject):
                 self.win.toggle_holodeck_mode()
                 return True
 
-            # 6. Escape: Close open spotlight / radial wheel / holodeck / interrupt
+            # 6. Escape: Close open spotlight / radial wheel / exit holodeck / interrupt
             if k == Qt.Key.Key_Escape:
                 if hasattr(self.win, "_command_spotlight") and self.win._command_spotlight.isVisible():
                     self.win._command_spotlight.hide()
                     return True
                 if hasattr(self.win, "_radial_wheel") and self.win._radial_wheel.isVisible():
                     self.win._radial_wheel.hide()
+                    return True
+                if getattr(self.win, "_is_holodeck", False):
+                    self.win.toggle_holodeck_mode()
                     return True
                 self.win._do_interrupt()
                 return True
@@ -526,6 +529,27 @@ class MainWindow(QMainWindow):
         self._ready = self._check_config()
         if not self._ready:
             self._show_setup()
+
+        # Floating Holodeck Exit Button (Top-Right in fullscreen mode)
+        self._fs_exit_btn = QPushButton("✕  EXIT FULLSCREEN  [ESC / F11]", self.centralWidget())
+        self._fs_exit_btn.setFont(px_font(10, QFont.Weight.DemiBold, spacing=1.5))
+        self._fs_exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._fs_exit_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(4, 10, 18, 0.85);
+                color: {C.PRI};
+                border: 1px solid {C.PRI_DIM};
+                border-radius: 4px;
+                padding: 6px 14px;
+            }}
+            QPushButton:hover {{
+                background: {C.PRI_GHO};
+                color: {C.WHITE};
+                border-color: {C.PRI};
+            }}
+        """)
+        self._fs_exit_btn.clicked.connect(self.toggle_holodeck_mode)
+        self._fs_exit_btn.hide()
 
         # Universal Command Spotlight (Ctrl+K / F1)
         from gui.command_spotlight import CommandSpotlight
@@ -1279,6 +1303,9 @@ class MainWindow(QMainWindow):
             if hasattr(self, "_body_layout"):
                 self._body_layout.setContentsMargins(0, 0, 0, 0)
                 self._body_layout.setSpacing(0)
+            if hasattr(self, "_fs_exit_btn"):
+                self._fs_exit_btn.show()
+                self._position_fs_exit_btn()
             self._fit_side_columns()
             self.showFullScreen()
         else:
@@ -1289,8 +1316,18 @@ class MainWindow(QMainWindow):
             if hasattr(self, "_body_layout"):
                 self._body_layout.setContentsMargins(10, 10, 10, 10)
                 self._body_layout.setSpacing(10)
+            if hasattr(self, "_fs_exit_btn"):
+                self._fs_exit_btn.hide()
             self._fit_side_columns()
             self.showNormal()
+
+    def _position_fs_exit_btn(self):
+        if hasattr(self, "_fs_exit_btn") and self._fs_exit_btn.isVisible():
+            cw = self.centralWidget()
+            bw = self._fs_exit_btn.sizeHint().width() + 10
+            bh = 32
+            self._fs_exit_btn.setGeometry(cw.width() - bw - 20, 16, bw, bh)
+            self._fs_exit_btn.raise_()
 
     def toggle_left_drawer(self):
         """Collapses or expands the left telemetry drawer."""
@@ -1302,9 +1339,37 @@ class MainWindow(QMainWindow):
         self._right_collapsed = not getattr(self, "_right_collapsed", False)
         self._fit_side_columns()
 
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        # Sync _is_holodeck state if window state changed via window manager
+        if event.type() == QEvent.Type.WindowStateChange:
+            is_fs = self.isFullScreen()
+            if is_fs != getattr(self, "_is_holodeck", False):
+                self._is_holodeck = is_fs
+                if is_fs:
+                    if hasattr(self, "_header"): self._header.hide()
+                    if hasattr(self, "_footer"): self._footer.hide()
+                    if hasattr(self, "_body_layout"):
+                        self._body_layout.setContentsMargins(0, 0, 0, 0)
+                        self._body_layout.setSpacing(0)
+                    if hasattr(self, "_fs_exit_btn"):
+                        self._fs_exit_btn.show()
+                        self._position_fs_exit_btn()
+                else:
+                    if hasattr(self, "_header"): self._header.show()
+                    if hasattr(self, "_footer"): self._footer.show()
+                    if hasattr(self, "_body_layout"):
+                        self._body_layout.setContentsMargins(10, 10, 10, 10)
+                        self._body_layout.setSpacing(10)
+                    if hasattr(self, "_fs_exit_btn"):
+                        self._fs_exit_btn.hide()
+                self._fit_side_columns()
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._fit_side_columns()
+        if getattr(self, "_is_holodeck", False):
+            self._position_fs_exit_btn()
         cw = self.centralWidget()
         if self._overlay and self._overlay.isVisible():
             ow, oh = 460, 390

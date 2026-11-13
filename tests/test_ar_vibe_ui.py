@@ -307,8 +307,14 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.assertTrue(getattr(self.win, "_is_holodeck", False))
         self.assertFalse(self.win._left_panel.isVisible())
         self.assertFalse(self.win._right_panel.isVisible())
+        self.assertTrue(self.win._fs_exit_btn.isVisible())
 
-        self.win.toggle_holodeck_mode()
+        # Test escape exit via key filter
+        from PyQt6.QtGui import QKeyEvent
+        from PyQt6.QtCore import QEvent
+        esc_event = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        handled = self.win._key_filter.eventFilter(self.win, esc_event)
+        self.assertTrue(handled)
         self.assertFalse(getattr(self.win, "_is_holodeck", False))
         self.assertTrue(self.win._left_panel.isVisible())
         self.assertTrue(self.win._right_panel.isVisible())

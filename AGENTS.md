@@ -5,6 +5,20 @@ change it makes to this project, and so should any other agent or contributor.
 Each rule below exists because breaking it produced code that looked right,
 passed a syntax check and did nothing when used.
 
+## Autonomous Skills & Instructions (Anthropic & Hermes Standards)
+
+- **Skills Directory**: `skills/` contains operational procedures and domain playbooks (`SKILL.md`).
+  Skills follow the Anthropic / Hermes progressive disclosure pattern.
+- **Skill Instructions**: Read `skills/AGENTS.md` for skill authoring standards, iron laws, and execution protocols.
+- **Progressive Disclosure**: When resolving complex tasks or user instructions, use `plugins/skill_loader.py`:
+  - `skill_loader(action="list")` to discover active skill playbooks without bloating the context window.
+  - `skill_loader(action="read", skill_name="<name>")` to load specific step-by-step instructions.
+- **Learning & Memory**: Read `docs/LEARNING_MEMORY_EXECUTION.md` and `skills/learning-and-memory/autonomous-learning/SKILL.md`.
+  Ingest operator corrections into permanent behavioral rules via `cognitive_neuro_cortex(action="learn_rule", ...)`.
+- **Debugging & Testing**: Follow the Iron Laws:
+  - *No fixes without root cause investigation first* (`skills/software-development/systematic-debugging/SKILL.md`).
+  - *No production code without a failing test first* (`skills/software-development/test-driven-development/SKILL.md`).
+
 ## How the app runs
 
 - `main.py` holds the voice session on an asyncio event loop in a background

@@ -154,16 +154,25 @@ class BrowserSessionManager:
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
+                    "--disable-blink-features=AutomationControlled",
                 ],
             )
 
         if self._context is None:
             self._context = await self._browser.new_context(
-                viewport={"width": 1024, "height": 640},
+                viewport={"width": 1280, "height": 720},
                 color_scheme="dark",
-                user_agent="Mozilla/5.0 (X11; Linux x86_64) JARVIS-HUD/1.0 (Cybernetic Avatar Browser)",
+                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                locale="en-US",
+                timezone_id="America/New_York",
                 ignore_https_errors=True,
             )
+            # Remove navigator.webdriver detection flag
+            await self._context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+            """)
 
         if self._page is None or self._page.is_closed():
             self._page = await self._context.new_page()
@@ -188,10 +197,21 @@ class BrowserSessionManager:
         await page.goto(target_url, wait_until="domcontentloaded", timeout=timeout_ms)
         title = await page.title()
         screenshot_path = await self._async_capture_frame(page)
+
+        # Check if the destination page presents a verification challenge
+        challenge_detected = False
+        try:
+            body_text = (await page.inner_text("body", timeout=1000) or "").lower()
+            if any(term in body_text for term in ("verify you are human", "cf-turnstile", "recaptcha", "hcaptcha", "checking your browser", "security check")):
+                challenge_detected = True
+        except Exception:
+            pass
+
         return {
             "title": title or target_url,
             "url": page.url,
             "screenshot": screenshot_path,
+            "challenge": challenge_detected,
         }
 
     async def _async_click(self, selector: str, timeout_ms: int = 8000) -> Dict[str, Any]:
@@ -387,6 +407,9 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
                         player.show_browser_viewport(screenshot_path, url=res.get("url", "") if isinstance(res, dict) else "")
                 if hasattr(player, "write_log"):
                     player.write_log(f"[HUD Browser] Opened {res.get('url')} ({page_title})")
+
+            if res.get("challenge"):
+                return f"Opened {page_title} on the HUD, sir. Please complete the verification challenge shown on the browser surface directly."
 
             return f"Displaying {page_title} on the HUD, sir."
 

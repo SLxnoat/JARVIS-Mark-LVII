@@ -294,7 +294,7 @@ def _handle_consolidate(params: dict, player=None) -> str:
         if summary:
             try:
                 from memory import vector_store
-                vector_store.index_memory("sessions", f"session_{int(time.time())}", summary)
+                vector_store.upsert_session(datetime.now().strftime("%Y-%m-%d"), summary)
             except Exception:
                 pass
     else:

@@ -38,6 +38,7 @@ class ShortTermMemory:
         turn = DialogueTurn(role=role, text=str(text).strip(), modality=modality)
         with self._lock:
             self._turns.append(turn)
+            turn_idx = len(self._turns)
             if len(self._turns) > self._max_turns:
                 self._turns = self._turns[-self._max_turns:]
 
@@ -50,6 +51,13 @@ class ShortTermMemory:
                     self._entities[k] = (val, ttl - 1)
             for k in expired:
                 del self._entities[k]
+
+        # Dual-write into ChromaDB vector store asynchronously for hybrid recall
+        try:
+            from memory import vector_store
+            vector_store.upsert_short_term_turn(role, text, turn_idx, modality)
+        except Exception:
+            pass
 
     def set_entity(self, key: str, value: Any, ttl_turns: int = 8) -> None:
         """Cache an active entity or topic in working context (e.g. current_file, last_subject)."""

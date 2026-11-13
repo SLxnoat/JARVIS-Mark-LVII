@@ -27,6 +27,7 @@ COLLECTIONS = {
     "knowledge_notes": "Preferences, active projects, technical notes, and goals",
     "episodic_sessions": "Past conversation summaries, dates, and historical context",
     "task_knowledge": "Autonomous research reports, findings, and technical plans",
+    "short_term_dialogue": "Recent live exchanges, active entity mentions, and dialogue turns",
 }
 
 CATEGORY_TO_COLLECTION = {
@@ -39,6 +40,7 @@ CATEGORY_TO_COLLECTION = {
     "sessions": "episodic_sessions",
     "tasks": "task_knowledge",
     "reports": "task_knowledge",
+    "dialogue": "short_term_dialogue",
 }
 
 
@@ -220,6 +222,43 @@ def upsert_session(date_str: str, summary: str, language: str = "") -> bool:
         except Exception as e:
             print(f"[VectorStore]  Session upsert error: {e}")
             return False
+
+
+def upsert_short_term_turn(role: str, text: str, turn_index: int, modality: str = "voice") -> bool:
+    """Index a short-term dialogue turn into ChromaDB for cross-temporal semantic retrieval."""
+    client = _get_client()
+    if not client or not text or not text.strip():
+        return False
+    coll = _collections.get("short_term_dialogue")
+    if not coll:
+        return False
+
+    now_ts = datetime.now()
+    doc_id = f"turn_{turn_index % 100:03d}_{now_ts.strftime('%H%M%S')}"
+    metadata = {
+        "category": "dialogue",
+        "role": str(role),
+        "modality": str(modality),
+        "turn_index": int(turn_index),
+        "timestamp": now_ts.isoformat(),
+        "value": text[:380],
+    }
+
+    with _lock:
+        try:
+            coll.upsert(
+                ids=[doc_id],
+                documents=[f"{role.upper()}: {text}"],
+                metadatas=[metadata],
+            )
+            return True
+        except Exception as e:
+            print(f"[VectorStore]  Turn upsert error: {e}")
+            return False
+
+
+# Compatibility alias for Hippocampal consolidation
+index_memory = upsert_fact
 
 
 def migrate_from_json(json_path: Path | None = None) -> int:

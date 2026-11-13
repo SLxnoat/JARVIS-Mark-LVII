@@ -360,15 +360,18 @@ def _score(query_words: list[str], cat: str, key: str, value: str) -> int:
     """Cheap lexical relevance. No embeddings, no network, no model call - this
     runs in well under a millisecond, which is the entire point: recall must
     cost one model round trip, never two."""
+    raw_key = key.lower()
     hay_key = _pretty(key).lower()
     hay_val = value.lower()
     score   = 0
     for w in query_words:
         if not w:
             continue
-        if w == hay_key:
+        if w == raw_key or w == hay_key:
             score += 10
-        elif w in hay_key:
+        elif w in raw_key or w in hay_key:
+            score += 6
+        elif hay_key in w or raw_key in w:
             score += 6
         if w in hay_val:
             score += 3
@@ -406,7 +409,7 @@ def search_memory(query: str, limit: int = 8) -> str:
                     "source": "exact",
                 }
 
-    # 2. Semantic Vector Search (ChromaDB)
+    # 2. Semantic Vector Search (ChromaDB - Long-term facts & Short-term dialogue)
     if query_str:
         try:
             from memory import vector_store
@@ -429,6 +432,26 @@ def search_memory(query: str, limit: int = 8) -> str:
                         "score": sim_score,
                         "source": "semantic",
                     }
+        except Exception:
+            pass
+
+    # 3. Active Working Short-Term Context (In-Memory Entities & Scratchpad)
+    if query_str:
+        try:
+            from memory.short_term import stm
+            # Search active working entities
+            with stm._lock:
+                for ent_key, (ent_val, _) in stm._entities.items():
+                    s = _score(words, "working_entity", ent_key, str(ent_val)) if words else 1
+                    if s > 0:
+                        pair = ("active_context", ent_key)
+                        scored_rows[pair] = {
+                            "cat": "active_context",
+                            "key": ent_key,
+                            "val": str(ent_val),
+                            "score": (s * 3.0) + 15.0,  # Prioritize immediate working context
+                            "source": "working_stm",
+                        }
         except Exception:
             pass
 

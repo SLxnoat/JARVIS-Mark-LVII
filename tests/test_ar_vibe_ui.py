@@ -316,6 +316,11 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.win._on_spotlight_command_executed("plugin_docker_sentinel", "Docker Sentinel")
         self.assertIn("Run docker_sentinel", self.win._input.text())
 
+        # Verify Radial Wheel node activation dispatch
+        for node in ("radar", "synaptic", "tasks", "browser", "terminal", "settings"):
+            self.win._on_radial_node_activated(node)
+        self.assertIn("Code agent:", self.win._input.text())
+
     def test_holodeck_fullscreen_toggle(self):
         self.assertFalse(getattr(self.win, "_is_holodeck", False))
         self.win.toggle_holodeck_mode()

@@ -2579,7 +2579,7 @@ class MainWindow(QMainWindow):
                 self._input.setFocus()
             self._show_content("Autonomous Dev Sandbox", "Dev agent & sandbox ready.\nDescribe the code, test, or refactor to execute.")
         elif node_id == "settings":
-            self._providers_panel.show_providers()
+            self._open_providers()
 
     def _on_spotlight_command_executed(self, cmd_id: str, title: str) -> None:
         """Dispatches commands selected from the Universal Command Spotlight."""

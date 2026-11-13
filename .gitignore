@@ -61,4 +61,4 @@ config/telegram_qr.png
 
 config/certs/jarvis.crt
 config/certs/jarvis.key
-hermes-agent/*
+hermes-agent/

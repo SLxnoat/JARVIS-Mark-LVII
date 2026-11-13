@@ -120,13 +120,55 @@ class PluginRegistry:
             return f"Plugin '{name}' is not available."
         if not get_plugin_enabled(name):
             return f"The '{name}' plugin is currently disabled."
+
+        # Hermes-style arg coercion: normalize string booleans/ints before dispatch
         try:
-            return _call_run(rec.run, parameters, player, session_memory) or "Done."
+            from plugins._arg_coerce import coerce_params
+            parameters = coerce_params(parameters)
+        except Exception:
+            pass
+
+        # Pre-dispatch hook: log tool call
+        self._pre_hook(name, parameters, player)
+
+        import time as _time
+        _t0 = _time.monotonic()
+        try:
+            result = _call_run(rec.run, parameters, player, session_memory) or "Done."
         except Exception as e:
             self._logger(f"Plugin '{name}' crashed during run(): {e}")
             self._notify(f"Plugin '{name}' failed — see the console for details.")
             traceback.print_exc()
-            return f"Sir, the '{name}' plugin failed: {e}"
+            result = f"Sir, the '{name}' plugin failed: {e}"
+
+        elapsed_ms = (_time.monotonic() - _t0) * 1000
+        # Post-dispatch hook: warn on slow tools, flag errors
+        self._post_hook(name, result, elapsed_ms, player)
+        return result
+
+    @staticmethod
+    def _pre_hook(name: str, parameters: dict, player) -> None:
+        try:
+            if player:
+                keys = list((parameters or {}).keys())
+                sig_str = f"({', '.join(keys)})" if keys else "()"
+                player.write_log(f"JARVIS: → {name}{sig_str}")
+        except Exception:
+            pass
+
+    @staticmethod
+    def _post_hook(name: str, result: str, elapsed_ms: float, player) -> None:
+        try:
+            if not player:
+                return
+            if elapsed_ms > 4000:
+                player.write_log(f"JARVIS: ⚠ {name} completed in {elapsed_ms:.0f} ms")
+            if isinstance(result, str) and (
+                result.startswith("Sir, the") or "[error]" in result.lower() or "failed:" in result.lower()
+            ):
+                player.write_log(f"JARVIS: ✗ {name} reported an issue")
+        except Exception:
+            pass
 
     # -- called by ui.py's settings tab to render per-plugin config forms --
     def settings_schemas(self) -> list[dict]:

@@ -1505,10 +1505,18 @@ class JarvisLive:
 
         _names = {(d.get("name") if isinstance(d, dict) else getattr(d, "name", ""))
                   for d in _all_decls}
+        _caps_desc = _describe_tools(_all_decls)
+        try:
+            _plugs = sorted(self._plugin_registry._plugins.keys()) if hasattr(self, "_plugin_registry") else []
+            if _plugs:
+                _caps_desc += f"\n\nActive plugins in this session ({len(_plugs)}): {', '.join(_plugs)}"
+        except Exception:
+            pass
+
         sys_prompt = _render_prompt(sys_prompt, {
             "assistant_name": self._asst_name,
             "platform": f"{_platform.system()} {_platform.release()}".strip(),
-            "capabilities": _describe_tools(_all_decls),
+            "capabilities": _caps_desc,
             "limits": _describe_limits(
                 has_vision="screen_process" in _names,
                 has_mic=True,
@@ -1634,6 +1642,11 @@ class JarvisLive:
     async def _execute_tool(self, fc) -> types.FunctionResponse:
         name = fc.name
         args = dict(fc.args or {})
+        try:
+            from plugins._arg_coerce import coerce_params
+            args = coerce_params(args)
+        except Exception:
+            pass
 
         print(f"[JARVIS] 🔧 {name}  {args}")
         _t_tool = time.monotonic()

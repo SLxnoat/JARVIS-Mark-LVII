@@ -11,9 +11,14 @@ if str(BASE_DIR) not in sys.path:
 
 from plugins._arg_coerce import coerce_params
 from plugins._result_cache import get_cached, set_cached, cached_tool_call
+from core.plugin_loader import _HUDCaptureProxy
 import plugins.list_plugins as list_plugins
 import plugins.plugin_describe as plugin_describe
 import plugins.tool_chain as tool_chain
+import plugins.docker_sentinel as docker_sentinel
+import plugins.firewall_warden as firewall_warden
+import plugins.crypto_vault_sentinel as crypto_vault_sentinel
+import plugins.multilingual_live_translator as translator
 
 
 class MockPlayer:
@@ -81,6 +86,43 @@ class TestAdvancedTools(unittest.TestCase):
         )
         self.assertIn("Sir", res)
         self.assertIn("pipeline", res.lower())
+
+    def test_hud_capture_proxy(self):
+        player = MockPlayer()
+        proxy = _HUDCaptureProxy(player)
+        proxy.show_content("TEST TITLE", "Telemetry data 12345")
+        title, content = proxy.wait_captured(timeout=0.1)
+        self.assertEqual(title, "TEST TITLE")
+        self.assertIn("Telemetry data 12345", content)
+        self.assertEqual(len(player.content_cards), 1)
+
+    def test_docker_sentinel_factual_return(self):
+        player = MockPlayer()
+        res = docker_sentinel.run({}, player=player)
+        self.assertIn("Sir", res)
+        self.assertTrue("Docker" in res or "container" in res.lower())
+        self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_firewall_warden_factual_return(self):
+        player = MockPlayer()
+        res = firewall_warden.run({}, player=player)
+        self.assertIn("Sir", res)
+        self.assertIn("firewall", res.lower())
+        self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_crypto_vault_sentinel_factual_return(self):
+        player = MockPlayer()
+        res = crypto_vault_sentinel.run({}, player=player)
+        self.assertIn("Sir", res)
+        self.assertIn("SSH", res)
+        self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_translator_direct_return(self):
+        player = MockPlayer()
+        res = translator.run({"text": "Hello world", "target_language": "Spanish"}, player=player)
+        self.assertIn("Spanish", res)
+        self.assertIn("is:", res)
+        self.assertTrue(len(player.content_cards) >= 1)
 
 
 if __name__ == "__main__":

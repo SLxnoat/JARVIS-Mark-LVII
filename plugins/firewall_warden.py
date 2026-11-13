@@ -195,12 +195,14 @@ def _worker(action: str, player):
                 player.write_log(f"🛡️ [FirewallWarden] {fw['engine']} policy: {fw['default_input']}. {pub_count} public socket(s).")
             except Exception:
                 pass
+        return fw, sockets, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [FirewallWarden] Error: {e}")
             except Exception:
                 pass
+        return {"engine": "Unknown", "active": False, "default_input": "Error"}, [], str(e)
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -215,13 +217,17 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         else:
             action = "full_audit"
 
-        threading.Thread(target=_worker, args=(action, player), daemon=True).start()
+        fw, sockets, card = _worker(action, player)
+        pub_sockets = [s for s in sockets if s.get("public")]
+        pub_ports = [f"{s['proto']}/{s['port']}" for s in pub_sockets[:3]]
+        pub_str = f" ({', '.join(pub_ports)})" if pub_ports else ""
 
         if action == "listening_sockets":
-            return "Inspecting active TCP and UDP listening sockets across all network interfaces, sir."
+            return f"Sir, detected {len(sockets)} listening sockets. {len(pub_sockets)} are publicly exposed{pub_str}. Full table is on your HUD."
         elif action == "audit_rules":
-            return "Auditing firewall rules and packet filtering chains, sir."
+            rule_count = len(fw.get("rules", []))
+            return f"Sir, {fw['engine']} has {rule_count} active rules with default inbound policy set to {fw['default_input']}."
         else:
-            return "Evaluating workstation firewall posture and socket exposure, sir. Status report is on the HUD."
+            return f"Sir, firewall is {fw['engine']} with default inbound policy {fw['default_input']}. {len(sockets)} listening sockets found, {len(pub_sockets)} publicly accessible{pub_str}. Tactical card is on your HUD."
     except Exception as e:
         return f"Sir, firewall warden encountered an issue: {e}"

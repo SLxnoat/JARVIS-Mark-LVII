@@ -12,6 +12,7 @@ import importlib.util
 import inspect
 import re
 import sys
+import threading
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -71,6 +72,54 @@ class PluginRecord:
     brief: Optional[str] = None
 
 
+class _HUDCaptureProxy:
+    """Pass-through proxy for `player` that forwards all calls to Qt while
+    capturing show_content / show_review content to bridge it into the LLM's
+    tool response payload.
+    """
+    def __init__(self, player):
+        self._player = player
+        self._captured_lock = threading.Lock()
+        self._captured_event = threading.Event()
+        self._captured_title: str = ""
+        self._captured_content: str = ""
+
+    def show_content(self, title: str, text: str):
+        with self._captured_lock:
+            self._captured_title = str(title or "")
+            self._captured_content = str(text or "")
+            self._captured_event.set()
+        if self._player and hasattr(self._player, "show_content"):
+            try:
+                self._player.show_content(title, text)
+            except Exception:
+                pass
+
+    def show_review(self, title: str, summary: str, findings: list):
+        formatted = f"{summary}\n\nFindings:\n" + "\n".join(f"- {f}" for f in (findings or []))
+        with self._captured_lock:
+            self._captured_title = str(title or "")
+            self._captured_content = formatted
+            self._captured_event.set()
+        if self._player and hasattr(self._player, "show_review"):
+            try:
+                self._player.show_review(title, summary, findings)
+            except Exception:
+                pass
+
+    def wait_captured(self, timeout: float = 0.45) -> tuple[str, str]:
+        """Wait briefly for an async worker thread to post telemetry to the HUD."""
+        if not self._captured_event.is_set():
+            self._captured_event.wait(timeout=timeout)
+        with self._captured_lock:
+            return self._captured_title, self._captured_content
+
+    def __getattr__(self, item):
+        if self._player is not None:
+            return getattr(self._player, item)
+        raise AttributeError(item)
+
+
 class PluginRegistry:
     def __init__(self, plugins: dict[str, PluginRecord], logger: Callable[[str], None],
                  notify: Callable[[str], None] | None = None):
@@ -128,18 +177,37 @@ class PluginRegistry:
         except Exception:
             pass
 
+        # Wrap player in capture proxy to harvest real data from plugins
+        proxy = _HUDCaptureProxy(player) if player else None
+        target_player = proxy if proxy is not None else player
+
         # Pre-dispatch hook: log tool call
         self._pre_hook(name, parameters, player)
 
         import time as _time
         _t0 = _time.monotonic()
         try:
-            result = _call_run(rec.run, parameters, player, session_memory) or "Done."
+            result = _call_run(rec.run, parameters, target_player, session_memory) or "Done."
         except Exception as e:
             self._logger(f"Plugin '{name}' crashed during run(): {e}")
             self._notify(f"Plugin '{name}' failed — see the console for details.")
             traceback.print_exc()
             result = f"Sir, the '{name}' plugin failed: {e}"
+
+        # If a HUD card was rendered or if the result is an async placeholder stub,
+        # harvest the telemetry from the proxy so Gemini Live receives real data:
+        if proxy is not None:
+            res_str = str(result).lower()
+            is_stub = any(w in res_str for w in [
+                "auditing", "scanning", "inspecting", "evaluating", "synthesizing",
+                "measuring", "analyzing", "computing", "checking", "querying",
+                "on the hud", "on your hud", "will appear", "heading to", "sweep"
+            ])
+            wait_time = 0.55 if is_stub else 0.05
+            title, content = proxy.wait_captured(timeout=wait_time)
+            if content:
+                clean_content = content[:2500] + ("..." if len(content) > 2500 else "")
+                result = f"{result}\n\n[INSPECTED HUD TELEMETRY DATA — {title}]:\n{clean_content}"
 
         elapsed_ms = (_time.monotonic() - _t0) * 1000
         # Post-dispatch hook: warn on slow tools, flag errors

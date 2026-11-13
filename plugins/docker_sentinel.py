@@ -165,12 +165,14 @@ def _worker(action: str, player):
                 player.write_log(f"🐳 [DockerSentinel] Found {len(containers)} containers ({running} running).")
             except Exception:
                 pass
+        return containers, dangling, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [DockerSentinel] Error: {e}")
             except Exception:
                 pass
+        return [], [], f"Error: {e}"
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -179,13 +181,20 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         if action not in ("list_containers", "container_stats", "dangling_images", "full_fleet_radar"):
             action = "full_fleet_radar"
 
-        threading.Thread(target=_worker, args=(action, player), daemon=True).start()
+        containers, dangling, card = _worker(action, player)
+        total = len(containers)
+        running = len([c for c in containers if c.get("running")])
+        restarting = len([c for c in containers if c.get("restarting")])
 
-        if action == "list_containers":
-            return "Enumerating active Docker and Podman container states, sir."
-        elif action == "dangling_images":
-            return "Inspecting unreferenced dangling images and reclaimable container storage, sir."
-        else:
-            return "Auditing local container fleet health, port mappings, and restart loops, sir."
+        if total == 0:
+            if action == "dangling_images" and dangling:
+                return f"Sir, no containers running, but found {len(dangling)} reclaimable dangling image(s)."
+            return "Sir, no active or stopped Docker/Podman containers were found on this system."
+
+        names = [c.get("name", "container") for c in containers[:3]]
+        name_str = f" ({', '.join(names)})" if names else ""
+        loop_str = f", with {restarting} in crash loops" if restarting else ", zero crash loops"
+
+        return f"Sir, Docker fleet has {total} container{'s' if total > 1 else ''}: {running} running{name_str}{loop_str}. Full breakdown is on your display."
     except Exception as e:
         return f"Sir, docker sentinel encountered an issue: {e}"

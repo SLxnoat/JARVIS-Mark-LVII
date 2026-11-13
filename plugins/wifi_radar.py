@@ -396,14 +396,16 @@ def _radar_worker(action: str, player):
 def run(parameters: dict, player=None, session_memory=None) -> str:
     action = str(parameters.get("action") or "current_link").strip().lower()
 
-    threading.Thread(target=_radar_worker, args=(action, player), daemon=True).start()
-
     if action == "current_link":
         curr = _get_current_link()
+        _radar_worker("current_link", player)
         if curr["connected"]:
-            return f"Connected to {curr['ssid']} on channel {curr['channel']} with {curr['signal_pct']}% signal quality, sir."
-        return "Wi-Fi is currently disconnected or in flight mode, sir. Telemetry is displayed on screen."
-    elif action == "channel_optimizer":
+            return f"Sir, connected to {curr['ssid']} on channel {curr['channel']} ({curr.get('bitrate', 'active')}) with {curr['signal_pct']}% signal quality. Details on HUD."
+        return "Sir, Wi-Fi is currently disconnected or in flight mode. Wireless status is displayed on your HUD."
+
+    threading.Thread(target=_radar_worker, args=(action, player), daemon=True).start()
+
+    if action == "channel_optimizer":
         return "Analyzing ambient channel congestion across 2.4 GHz and 5 GHz spectrum, sir. Optimization matrix rendering on HUD."
     elif action == "security_hygiene":
         return "Auditing wireless perimeter security hygiene for open access points and encryption vulnerabilities, sir."

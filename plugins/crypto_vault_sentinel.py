@@ -186,12 +186,14 @@ def _worker(action: str, target_path: str, input_text: str, player):
                 player.write_log(f"🔐 [CryptoSentinel] Audited {len(ssh_keys)} SSH keys. Cryptographic integrity confirmed.")
             except Exception:
                 pass
+        return ssh_keys, file_hashes, entropy, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [CryptoSentinel] Error: {e}")
             except Exception:
                 pass
+        return [], None, None, str(e)
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -203,15 +205,20 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         target_path = str(parameters.get("target_path") or "").strip()
         input_text = str(parameters.get("input_text") or "").strip()
 
-        threading.Thread(target=_worker, args=(action, target_path, input_text, player), daemon=True).start()
+        ssh_keys, file_hashes, entropy, card = _worker(action, target_path, input_text, player)
 
-        if action == "audit_ssh_keys":
-            return "Auditing local SSH keys for algorithm strength and modern cipher standards, sir."
-        elif action == "hash_file":
-            return f"Computing multi-hash cryptographic checksums for {Path(target_path).name or 'target file'}, sir."
-        elif action == "string_entropy":
-            return "Evaluating Shannon entropy and randomness distribution, sir."
+        if action == "audit_ssh_keys" or (action == "full_crypto_audit" and not target_path and not input_text):
+            if not ssh_keys:
+                return "Sir, no public SSH keys were found in ~/.ssh."
+            strong_keys = [k for k in ssh_keys if "RECOMMENDED" in k.get("status", "") or "SECURE" in k.get("status", "")]
+            weak_keys = [k for k in ssh_keys if "LEGACY" in k.get("status", "") or "WEAK" in k.get("status", "")]
+            weak_str = f" with {len(weak_keys)} legacy key(s) detected" if weak_keys else ", all using modern secure ciphers"
+            return f"Sir, audited {len(ssh_keys)} SSH key(s){weak_str}. Key breakdown is displayed on your HUD."
+        elif action == "hash_file" and file_hashes:
+            return f"Sir, computed checksums for {file_hashes['file']}: SHA-256 is {file_hashes['sha256'][:16]}..., BLAKE2b is {file_hashes['blake2b'][:16]}... Full hashes on HUD."
+        elif action == "string_entropy" and entropy is not None:
+            return f"Sir, measured Shannon entropy is {entropy:.3f} bits per byte ({'High randomness/strong' if entropy > 6.0 else 'Moderate/readable'})."
         else:
-            return "Conducting a comprehensive cryptographic hygiene and key review, sir. Report is on the HUD."
+            return f"Sir, cryptographic hygiene check complete: {len(ssh_keys)} SSH keys audited. Full report is on your HUD."
     except Exception as e:
         return f"Sir, crypto sentinel encountered an issue: {e}"

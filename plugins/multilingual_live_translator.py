@@ -108,12 +108,14 @@ def _worker(text: str, target_lang: str, player):
                 player.write_log(f"🌐 [Translator] {data.get('source_language')} ➔ {target_lang}: \"{data.get('translated_text')[:40]}\".")
             except Exception:
                 pass
+        return data, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [Translator] Error: {e}")
             except Exception:
                 pass
+        return {"translated_text": text, "source_language": "Auto"}, str(e)
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -123,8 +125,12 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             return "Please provide text or a spoken phrase to translate, sir."
 
         target_lang = str(parameters.get("target_language") or "English").strip()
-        threading.Thread(target=_worker, args=(text, target_lang, player), daemon=True).start()
+        data, card = _worker(text, target_lang, player)
 
-        return f"Translating phrase into {target_lang}, sir. Live subtitles are rendering on your HUD."
+        translated = data.get("translated_text", "")
+        phonetic = data.get("phonetic_pronunciation", "")
+        phonetic_str = f" (pronounced: {phonetic})" if phonetic and phonetic != "N/A" else ""
+
+        return f"In {target_lang.title()}, that is: \"{translated}\"{phonetic_str}. Details are on your HUD."
     except Exception as e:
         return f"Sir, live translator encountered an issue: {e}"

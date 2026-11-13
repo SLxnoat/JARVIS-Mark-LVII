@@ -342,11 +342,11 @@ def format_memory_for_prompt(memory: dict | None) -> str:
     if rules_file.exists():
         try:
             rules_data = json.loads(rules_file.read_text(encoding="utf-8"))
-            active_rules = [r for r in rules_data if r.get("active", True) and r.get("confidence", 0) >= 0.8]
+            active_rules = [r for r in rules_data if r.get("active", True) and r.get("confidence", 0) >= 0.7]
             if active_rules:
                 out.append("")
-                out.append("[LEARNED OPERATOR RULES — strict self-learned behaviors from feedback]")
-                for r in active_rules[:6]:
+                out.append("[LEARNED OPERATOR RULES — strict self-learned behaviors from feedback; ALWAYS follow these]")
+                for r in active_rules[:10]:
                     out.append(f"- When {r.get('trigger')}: {r.get('rule')}")
         except Exception:
             pass

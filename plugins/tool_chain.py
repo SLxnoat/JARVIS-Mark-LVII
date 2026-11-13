@@ -58,20 +58,31 @@ def _resolve_plugin_runner(name: str):
     except Exception:
         return None
 
-def _execute_pipeline(goal: str, step_names: list[str], player):
+def _execute_pipeline(goal: str, raw_steps: list, player):
     results = []
-    total = len(step_names)
+    total = len(raw_steps)
+    step_history = []
 
     if player:
         try:
-            player.write_log(f"JARVIS: Starting pipeline '{goal}' ({total} steps)")
+            player.write_log(f"JARVIS: Starting autonomous pipeline '{goal}' ({total} steps)")
         except Exception:
             pass
 
-    for i, step_name in enumerate(step_names, 1):
-        clean_name = str(step_name).strip()
+    for i, step_item in enumerate(raw_steps, 1):
+        if isinstance(step_item, dict):
+            clean_name = str(step_item.get("tool") or step_item.get("name") or "").strip()
+            step_params = dict(step_item.get("params") or step_item.get("parameters") or {})
+        else:
+            clean_name = str(step_item).strip()
+            step_params = {}
+
         if not clean_name:
             continue
+
+        # If previous step had an output, inject into context for downstream steps
+        if step_history and "previous_output" not in step_params:
+            step_params["context"] = step_history[-1]
 
         if player:
             try:
@@ -91,8 +102,9 @@ def _execute_pipeline(goal: str, step_names: list[str], player):
             continue
 
         try:
-            res = runner({}, player=player)
+            res = runner(step_params, player=player)
             results.append(f"Step {i} ({clean_name}): {res}")
+            step_history.append(str(res))
         except Exception as e:
             err = f"Error executing {clean_name}: {e}"
             results.append(f"Step {i} ({clean_name}): FAILED — {err}")
@@ -115,20 +127,19 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
     steps_raw = parameters.get("steps", [])
 
     if not isinstance(steps_raw, list) or not steps_raw:
-        return "Sir, please provide a list of plugin names to execute in the pipeline."
+        return "Sir, please provide a list of plugin names or step dicts to execute in the pipeline."
 
-    step_names = [str(s).strip() for s in steps_raw if str(s).strip()][:8]
-
-    if not step_names:
-        return "Sir, no valid step names were provided for the pipeline."
+    valid_steps = steps_raw[:8]
+    if not valid_steps:
+        return "Sir, no valid steps were provided for the pipeline."
 
     # Launch background thread to prevent blocking Qt and main loop
     thread = threading.Thread(
         target=_execute_pipeline,
-        args=(goal, step_names, player),
+        args=(goal, valid_steps, player),
         daemon=True,
         name=f"ToolChain-{goal[:20]}",
     )
     thread.start()
 
-    return f"Sir, I have initiated the {len(step_names)}-step pipeline for '{goal}'. Progress will be tracked on your HUD."
+    return f"Sir, I have initiated the {len(valid_steps)}-step pipeline for '{goal}'. Real-time progress is streaming to your HUD."

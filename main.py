@@ -1649,6 +1649,11 @@ class JarvisLive:
             pass
 
         print(f"[JARVIS] 🔧 {name}  {args}")
+        try:
+            from memory.session_recovery import write_turn_marker
+            write_turn_marker(str(args), name)
+        except Exception:
+            pass
         _t_tool = time.monotonic()
         self.ui.set_state("THINKING")
         self._last_tool_executed = f"Executed {name}"
@@ -1845,6 +1850,11 @@ class JarvisLive:
         _sched = (self._action_registry.scheduling(name)
                   or self._plugin_registry.scheduling(name))
         _extra = {"scheduling": _sched} if _sched else {}
+        try:
+            from memory.session_recovery import clear_turn_marker
+            clear_turn_marker()
+        except Exception:
+            pass
         return types.FunctionResponse(
             id=fc.id, name=name,
             response={"result": result},
@@ -2836,6 +2846,23 @@ class JarvisLive:
         except Exception as e:
             print(f"[Dashboard] Disabled: {e}")
             self._dashboard = None
+
+        # Check Hermes-style session crash recovery marker
+        try:
+            from memory.session_recovery import check_recovery_marker
+            _rec = check_recovery_marker()
+            if _rec:
+                _tool = _rec.get("tool_name", "task")
+                self.ui.write_log(f"SYS: Recovered from prior interruption during {_tool}.")
+                self.ui.show_content(
+                    "SESSION AUTO-RECOVERY",
+                    f"### 🔄 Restored Following System Restart\n\n"
+                    f"Prior in-flight execution was interrupted:\n"
+                    f"- **Tool:** `{_tool}`\n"
+                    f"- **Status:** Session state recovered. Ready for operator directives."
+                )
+        except Exception:
+            pass
 
         while True:
             try:

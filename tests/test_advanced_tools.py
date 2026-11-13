@@ -19,6 +19,9 @@ import plugins.docker_sentinel as docker_sentinel
 import plugins.firewall_warden as firewall_warden
 import plugins.crypto_vault_sentinel as crypto_vault_sentinel
 import plugins.multilingual_live_translator as translator
+import plugins.pci_hardware_radar as pci_radar
+import plugins.celestial_ephemeris as celestial
+from memory.session_recovery import write_turn_marker, check_recovery_marker, clear_turn_marker
 
 
 class MockPlayer:
@@ -123,6 +126,39 @@ class TestAdvancedTools(unittest.TestCase):
         self.assertIn("Spanish", res)
         self.assertIn("is:", res)
         self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_pci_radar_factual_return(self):
+        player = MockPlayer()
+        res = pci_radar.run({}, player=player)
+        self.assertIn("Sir", res)
+        self.assertIn("PCIe", res)
+        self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_celestial_ephemeris_factual_return(self):
+        player = MockPlayer()
+        res = celestial.run({}, player=player)
+        self.assertIn("Sir", res)
+        self.assertIn("moon", res.lower())
+        self.assertTrue(len(player.content_cards) >= 1)
+
+    def test_tool_chain_structured_steps(self):
+        player = MockPlayer()
+        steps = [
+            {"tool": "list_plugins", "params": {"category": "security"}},
+            {"tool": "plugin_describe", "params": {"name": "firewall_warden"}},
+        ]
+        res = tool_chain.run({"goal": "Security audit pipeline", "steps": steps}, player=player)
+        self.assertIn("Sir", res)
+        self.assertIn("pipeline", res.lower())
+
+    def test_session_recovery_markers(self):
+        write_turn_marker(prompt="Audit container fleet", tool_name="docker_sentinel")
+        marker = check_recovery_marker()
+        self.assertIsNotNone(marker)
+        self.assertEqual(marker["tool_name"], "docker_sentinel")
+        # Ensure it was cleared after recovery
+        marker_again = check_recovery_marker()
+        self.assertIsNone(marker_again)
 
 
 if __name__ == "__main__":

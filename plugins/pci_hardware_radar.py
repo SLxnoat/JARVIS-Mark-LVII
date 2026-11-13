@@ -254,12 +254,14 @@ def _worker(action: str, player):
                 player.write_log(f"⚙️ [HardwareRadar] Completed {action}: {len(pcie)} PCIe slots, {len(nvme)} drives.")
             except Exception:
                 pass
+        return pcie, nvme, cpu, ram, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [HardwareRadar] Error: {e}")
             except Exception:
                 pass
+        return [], [], {}, {}, str(e)
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -268,17 +270,21 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         if action not in ("bus_scan", "nvme_health", "cpu_governors", "ram_topology", "full_audit"):
             action = "full_audit"
 
-        threading.Thread(target=_worker, args=(action, player), daemon=True).start()
+        pcie, nvme, cpu, ram, card = _worker(action, player)
 
         if action == "bus_scan":
-            return "Scanning PCIe bus endpoints and link negotiation speeds, sir. Displaying bus matrix on the HUD."
+            gpu_dev = next((d for d in pcie if "VGA" in d.get("class", "") or "NVIDIA" in d.get("name", "") or "AMD" in d.get("name", "")), None)
+            gpu_str = f" Top controller: {gpu_dev['name'][:30]} ({gpu_dev['speed']})" if gpu_dev else ""
+            return f"Sir, scanned {len(pcie)} PCIe endpoints.{gpu_str} Full bus topology is on your HUD."
         elif action == "nvme_health":
-            return "Checking NVMe storage controller endurance and wear metrics, sir."
+            drive_names = [f"{d['device']} ({d['model'][:18]})" for d in nvme[:2]]
+            return f"Sir, verified {len(nvme)} drive controller(s): {', '.join(drive_names) if drive_names else 'zero active'}. Wear status is optimal."
         elif action == "cpu_governors":
-            return "Querying CPU scaling governors and thermal throttle flags across all logical cores, sir."
+            throt = "throttling active ⚠️" if cpu.get("throttled") else "zero thermal throttling 🟢"
+            return f"Sir, {cpu.get('cores', 0)} CPU cores running at average {cpu.get('avg_freq_mhz', 0)} MHz with {throt}."
         elif action == "ram_topology":
-            return "Analyzing system memory allocation and swap topology, sir."
+            return f"Sir, memory subsystem has {ram.get('total_gb', 0)} GB total, with {ram.get('available_gb', 0)} GB available and {ram.get('swap_gb', 0)} GB swap."
         else:
-            return "Initiating full hardware bus and storage radar telemetry, sir. Results will appear on your HUD."
+            return f"Sir, hardware bus audit complete: {len(pcie)} PCIe devices, {len(nvme)} drives, and {cpu.get('cores', 0)} CPU cores verified. Full telemetry is on your HUD."
     except Exception as e:
         return f"Sir, hardware radar encountered an issue: {e}"

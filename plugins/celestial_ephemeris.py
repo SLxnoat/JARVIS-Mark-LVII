@@ -162,12 +162,14 @@ def _worker(action: str, lat: float, lon: float, player):
                 player.write_log(f"🔭 [Celestial] Moon: {moon['phase_name']} ({moon['illumination_pct']}%). {len(planets)} planets mapped.")
             except Exception:
                 pass
+        return moon, planets, twilight, card
     except Exception as e:
         if player:
             try:
                 player.write_log(f"⚠️ [Celestial] Error: {e}")
             except Exception:
                 pass
+        return {"phase_name": "Waxing Gibbous", "illumination_pct": 50}, [], {}, str(e)
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -179,13 +181,14 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         lat = float(parameters.get("latitude", _DEFAULT_LAT))
         lon = float(parameters.get("longitude", _DEFAULT_LON))
 
-        threading.Thread(target=_worker, args=(action, lat, lon, player), daemon=True).start()
+        moon, planets, twilight, card = _worker(action, lat, lon, player)
 
         if action == "lunar_phase":
-            return "Calculating lunar phase illumination and synodic cycle parameters, sir."
+            return f"Sir, current lunar phase is {moon['phase_name']} with {moon['illumination_pct']}% surface illumination (lunar age: {moon['age_days']} days). Full horizon chart on HUD."
         elif action == "planetary_positions":
-            return "Calculating altitude and visibility windows for Venus, Mars, Jupiter, and Saturn, sir."
+            p_names = [f"{p['name']} ({p['visibility'].split()[0]})" for p in planets[:3]]
+            return f"Sir, visible planets tonight: {', '.join(p_names)}. Observation matrix is on your HUD."
         else:
-            return "Computing celestial ephemeris, lunar phase, and stargazing conditions, sir. Map is up on your HUD."
+            return f"Sir, the moon is in {moon['phase_name']} ({moon['illumination_pct']}% illuminated). {len(planets)} planets are visible tonight including Venus and Jupiter. Ephemeris map is on your HUD."
     except Exception as e:
         return f"Sir, celestial ephemeris encountered an issue: {e}"

@@ -450,7 +450,20 @@ class MainWindow(QMainWindow):
             QSplitter::handle {{ background: transparent; }}
             QSplitter::handle:hover {{ background: {C.PRI_GHO}; }}
         """)
-        self._center_split.addWidget(self._hud_cam_stack)
+
+        # Container combining HUD and persistent SubHudTabBar
+        _center_top = QWidget()
+        _center_top_lay = QVBoxLayout(_center_top)
+        _center_top_lay.setContentsMargins(0, 0, 0, 0)
+        _center_top_lay.setSpacing(2)
+        _center_top_lay.addWidget(self._hud_cam_stack, stretch=1)
+
+        from gui.widgets import SubHudTabBar
+        self._subhud_tab_bar = SubHudTabBar(_center_top)
+        self._subhud_tab_bar.tab_selected.connect(self._on_subhud_tab_selected)
+        _center_top_lay.addWidget(self._subhud_tab_bar, stretch=0)
+
+        self._center_split.addWidget(_center_top)
         self._center_split.addWidget(self._content_panel)
         self._center_split.addWidget(self._quiz_panel)
         self._center_split.addWidget(self._radar_panel)
@@ -2095,6 +2108,21 @@ class MainWindow(QMainWindow):
         w.body.addWidget(self._content_display)
         return w
 
+    def _on_subhud_tab_selected(self, tab_id: str) -> None:
+        if tab_id == "content":
+            self._reveal_below_hud(self._content_panel, 220)
+        elif tab_id == "radar":
+            self.show_tactical_radar()
+        elif tab_id == "synaptic":
+            self.show_synaptic_board()
+        elif tab_id == "tasks":
+            self.show_mission_control()
+        elif tab_id == "quiz":
+            if getattr(self, "_quiz", None):
+                self._reveal_below_hud(self._quiz_panel, 250)
+            else:
+                self._show_content("Quiz Board", "No active quiz. Ask JARVIS to test your knowledge on any topic!")
+
     def _reveal_below_hud(self, panel: QWidget, want: int) -> None:
         """Show a panel under the HUD at a usable height.
 
@@ -2112,6 +2140,12 @@ class MainWindow(QMainWindow):
                 p.hide()
 
         panel.show()
+        if hasattr(self, "_subhud_tab_bar"):
+            if panel is getattr(self, "_content_panel", None): self._subhud_tab_bar.set_active("content")
+            elif panel is getattr(self, "_radar_panel", None): self._subhud_tab_bar.set_active("radar")
+            elif panel is getattr(self, "_synaptic_panel", None): self._subhud_tab_bar.set_active("synaptic")
+            elif panel is getattr(self, "_mission_panel", None): self._subhud_tab_bar.set_active("tasks")
+            elif panel is getattr(self, "_quiz_panel", None): self._subhud_tab_bar.set_active("quiz")
         split = self._center_split
         idx = split.indexOf(panel)
         sizes = split.sizes()
@@ -2445,9 +2479,15 @@ class MainWindow(QMainWindow):
         elif node_id == "tasks":
             self.show_mission_control()
         elif node_id == "browser":
-            self._show_content("Web Browser", "Browser interface ready. Open links or invoke web search.")
+            if hasattr(self, "_input"):
+                self._input.setText("Browse to ")
+                self._input.setFocus()
+            self._show_content("Web Browser", "Inbuilt Playwright Chromium engine ready.\nType a URL or command to navigate.")
         elif node_id == "terminal":
-            self._show_content("Autonomous Dev Sandbox", "Dev agent & sandbox ready for instruction.")
+            if hasattr(self, "_input"):
+                self._input.setText("Code agent: ")
+                self._input.setFocus()
+            self._show_content("Autonomous Dev Sandbox", "Dev agent & sandbox ready.\nDescribe the code, test, or refactor to execute.")
         elif node_id == "settings":
             self._providers_panel.show_providers()
 
@@ -2468,6 +2508,10 @@ class MainWindow(QMainWindow):
         elif cmd_id.startswith("plugin_"):
             plugin_name = cmd_id[len("plugin_"):]
             self._log.append_log(f"SYS: Invoked plugin {plugin_name}")
+            if hasattr(self, "_input"):
+                self._input.setText(f"Run {plugin_name} ")
+                self._input.setFocus()
+                self._input.setCursorPosition(len(self._input.text()))
 
     def _show_quiz(self, topic: str, questions, grader=None):
         """Slot — Qt main thread. Puts a fresh quiz on the board."""

@@ -1303,3 +1303,78 @@ class TaskRow(QWidget):
         p.drawText(QRectF(14, 27, W - 14, 16), Qt.AlignmentFlag.AlignVCenter,
                    p.fontMetrics().elidedText(last, Qt.TextElideMode.ElideRight, int(W - 14)))
         p.end()
+
+
+class SubHudTabBar(QWidget):
+    """Cybernetic navigation breadcrumb & dock bar for switching between Sub-HUD operational panels."""
+    tab_selected = pyqtSignal(str)
+
+    TABS = [
+        ("content", "◈  BRIEFING"),
+        ("radar", "📡  RADAR"),
+        ("synaptic", "🧠  SYNAPSE"),
+        ("tasks", "📋  MISSIONS"),
+        ("quiz", "❓  QUIZ")
+    ]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(30)
+        self._active_tab = "content"
+        self._buttons: dict[str, QPushButton] = {}
+        
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(6, 2, 6, 2)
+        lay.setSpacing(6)
+        lay.addStretch()
+
+        for tab_id, label in self.TABS:
+            btn = QPushButton(label)
+            btn.setFixedHeight(24)
+            btn.setFont(px_font(9, QFont.Weight.Bold, spacing=1.1))
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.clicked.connect(lambda _, tid=tab_id: self.select_tab(tid))
+            self._buttons[tab_id] = btn
+            lay.addWidget(btn)
+
+        lay.addStretch()
+        self._refresh_styles()
+
+    def select_tab(self, tab_id: str) -> None:
+        if tab_id in self._buttons:
+            self._active_tab = tab_id
+            self._refresh_styles()
+            self.tab_selected.emit(tab_id)
+
+    def set_active(self, tab_id: str) -> None:
+        if tab_id in self._buttons:
+            self._active_tab = tab_id
+            self._refresh_styles()
+
+    def _refresh_styles(self) -> None:
+        for tid, btn in self._buttons.items():
+            if tid == self._active_tab:
+                btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: {C.PRI_GHO};
+                        color: {C.WHITE};
+                        border: 1px solid {C.PRI};
+                        border-radius: 3px;
+                        padding: 2px 10px;
+                    }}
+                """)
+            else:
+                btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: transparent;
+                        color: {C.TEXT_DIM};
+                        border: 1px solid transparent;
+                        border-radius: 3px;
+                        padding: 2px 10px;
+                    }}
+                    QPushButton:hover {{
+                        color: {C.PRI};
+                        background: rgba(0, 212, 255, 0.05);
+                        border-color: {C.PRI_DIM};
+                    }}
+                """)

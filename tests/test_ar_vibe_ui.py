@@ -301,6 +301,21 @@ class TestIntegrationAndThreadAudit(unittest.TestCase):
         self.assertEqual(self.win._left_panel.width(), 0)
         self.assertFalse(self.win._left_panel.isVisible())
 
+    def test_subhud_tab_bar_and_spotlight_dispatch(self):
+        tab_bar = self.win._subhud_tab_bar
+        tab_bar.select_tab("radar")
+        self.assertEqual(tab_bar._active_tab, "radar")
+        self.assertTrue(self.win._radar_panel.isVisible())
+
+        tab_bar.select_tab("synaptic")
+        self.assertEqual(tab_bar._active_tab, "synaptic")
+        self.assertTrue(self.win._synaptic_panel.isVisible())
+        self.assertFalse(self.win._radar_panel.isVisible())
+
+        # Verify Spotlight dispatch pre-populates input
+        self.win._on_spotlight_command_executed("plugin_docker_sentinel", "Docker Sentinel")
+        self.assertIn("Run docker_sentinel", self.win._input.text())
+
     def test_holodeck_fullscreen_toggle(self):
         self.assertFalse(getattr(self.win, "_is_holodeck", False))
         self.win.toggle_holodeck_mode()

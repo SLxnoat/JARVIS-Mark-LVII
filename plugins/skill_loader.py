@@ -7,8 +7,10 @@ Follows Anthropic & Hermes Agent standards (anthropics/skills):
 - Thread-safe HUD feedback via player
 - Never raises exceptions
 """
+import json
 import os
 import re
+import time
 from pathlib import Path
 
 PLUGIN = {
@@ -86,6 +88,22 @@ def _list_skills() -> str:
     return "\n".join(lines)
 
 
+_USAGE_PATH = _BASE_DIR / "memory" / "skills_usage.json"
+
+def _record_skill_usage(skill_name: str) -> None:
+    try:
+        data = {}
+        if _USAGE_PATH.exists():
+            data = json.loads(_USAGE_PATH.read_text(encoding="utf-8"))
+        entry = data.get(skill_name, {"use_count": 0, "last_used": None})
+        entry["use_count"] += 1
+        entry["last_used"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        data[skill_name] = entry
+        _USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _USAGE_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
 def _read_skill(skill_name: str) -> str:
     target = skill_name.strip().lower()
     if not _SKILLS_DIR.exists():
@@ -102,6 +120,7 @@ def _read_skill(skill_name: str) -> str:
                     parts = text.split("---", 2)
                     if len(parts) >= 3:
                         text = parts[2].strip()
+                _record_skill_usage(name)
                 return text
         except Exception as e:
             return f"Error reading skill {skill_name}: {e}"

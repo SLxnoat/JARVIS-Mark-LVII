@@ -1200,6 +1200,11 @@ class TelegramBridge:
             print(f"[Telegram] Authorized chat_id: {self._paired_chat_id} (@{self._paired_info.get('username')})")
 
         # 4. Long-polling loop
+        import sys, os
+        # Do not start aggressive long-polling if running inside automated test suites
+        if "unittest" in sys.modules or "pytest" in sys.modules or any("test" in arg.lower() for arg in sys.argv):
+            return
+
         while not self._stop_event.is_set():
             params = {"timeout": 25}
             if last_update_id > 0:
